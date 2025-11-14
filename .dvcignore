@@ -1,3 +1,8 @@
-# Add patterns of files dvc should ignore, which could improve
-# the performance. Learn more at
-# https://dvc.org/doc/user-guide/dvcignore
+# Files/dirs DVC should ignore when looking for data
+.git/
+.github/
+.mlflow/
+mlruns/
+__pycache__/
+*.log
+htmlcov/
