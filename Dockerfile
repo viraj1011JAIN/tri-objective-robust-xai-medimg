@@ -5,7 +5,16 @@ FROM pytorch/pytorch:2.9.0-cuda13.0-cudnn9-runtime
 WORKDIR /workspace
 
 # Basic OS deps
-RUN apt-get update &&     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends         git         wget         ca-certificates         build-essential     && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+        git \
+        wget \
+        ca-certificates \
+        build-essential \
+        libgl1 \
+        libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/*
+
 
 # Copy dependency manifests first (Docker layer caching)
 COPY requirements.txt pyproject.toml environment.yml ./ 
