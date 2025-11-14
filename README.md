@@ -1,4 +1,8 @@
-﻿# tri-objective-robust-xai-medimg
+﻿=======
+# tri-objective-robust-xai-medimg
+
+## Docker environment
+
 
 Adversarially robust and explainable deep learning for medical imaging, with a fully reproducible MLOps backbone.
 
