@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tri_objective_robust_xai_medimg"
+version = "0.1.0"
+description = "Adversarially robust and concept-grounded explainable deep learning for medical imaging"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+  { name = "Viraj Pankaj Jain" }
+]
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+dev = [
+  "black",
+  "isort",
+  "flake8",
+  "mypy",
+  "pytest",
+  "pytest-cov",
+  "pre-commit",
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+known_first_party = ["src"]
+default_section = "THIRDPARTY"
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = [
+  "tests",
+]
+python_files = "test_*.py"
