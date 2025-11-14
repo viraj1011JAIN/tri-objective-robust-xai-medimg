@@ -60,21 +60,24 @@ $env:MLFLOW_ARTIFACT_ROOT = ".\mlruns"
 ```
 
 
+### 1.2 MLOps – MLflow Setup
+
 ## MLflow Tracking Setup
 
-We use **MLflow** for experiment tracking (metrics, parameters, and artifacts).
+We use **MLflow** for experiment tracking (metrics, parameters and artifacts).
 
 ### Tracking backend and artifact store
 
-- Backend store: `sqlite:///mlruns.db` (local SQLite database in repo root)
+- Backend store: `sqlite:///mlruns.db` (local SQLite database in the repo root)
 - Artifact store: `./mlruns` (MLflow’s default artifact directory)
 
-On Windows/PowerShell, activate the virtualenv and set:
+On Windows / PowerShell:
 
 ```powershell
 cd C:\Users\Dissertation\tri-objective-robust-xai-medimg
 .\.venv\Scripts\Activate.ps1
 
+# Local MLflow backend + artifact root
 $env:MLFLOW_TRACKING_URI  = "sqlite:///mlruns.db"
 $env:MLFLOW_ARTIFACT_ROOT = ".\mlruns"
 ```
