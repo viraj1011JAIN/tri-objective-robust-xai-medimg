@@ -1,9 +1,16 @@
-# Things DVC should ignore when scanning for data
-.git/
-.github/
-mlruns/
-mlruns.db
-__pycache__/
+# Large / raw data that DVC will manage
+data/raw/
+data/tmp/
+data/cache/
+data/interim/
+
+# Local DVC cache remote (not tracked by git)
+.dvcstore/
+
+# Python junk
+**/__pycache__/
+**/*.py[cod]
+*.ipynb_checkpoints
+
+# Misc
 *.log
-htmlcov/
-tmp_artifacts/

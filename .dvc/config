@@ -1,4 +1,6 @@
 [core]
-    remote = local-storage
+    remote = localcache
 ['remote "local-storage"']
     url = ../dvc-storage
+['remote "localcache"']
+    url = ../.dvcstore
