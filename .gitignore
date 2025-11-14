@@ -37,3 +37,11 @@ htmlcov/
 .coverage
 .coverage.*
 .pytest_cache/
+
+
+# MLflow tracking artifacts (local only)
+mlruns/
+mlruns.db
+
+# Local temp debug artifacts
+tmp_artifacts/
