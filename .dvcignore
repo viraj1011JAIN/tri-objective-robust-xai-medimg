@@ -1,8 +1,9 @@
-# Files/dirs DVC should ignore when looking for data
+# Things DVC should ignore when scanning for data
 .git/
 .github/
-.mlflow/
 mlruns/
+mlruns.db
 __pycache__/
 *.log
 htmlcov/
+tmp_artifacts/
