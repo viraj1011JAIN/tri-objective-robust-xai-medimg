@@ -38,3 +38,43 @@ python scripts/check_env.py
 ```
 
 This prints the Python and library versions and shows whether CUDA is available.
+
+
+## MLflow Tracking Setup
+
+We use **MLflow** for experiment tracking (metrics, parameters, and artifacts).
+
+### Tracking backend and artifact store
+
+- Backend store: `sqlite:///mlruns.db` (local SQLite database in repo root)
+- Artifact store: `./mlruns` (MLflow’s default artifact directory)
+
+On Windows/PowerShell, activate the virtualenv and set:
+
+```powershell
+cd C:\Users\Dissertation\tri-objective-robust-xai-medimg
+.\.venv\Scripts\Activate.ps1
+
+$env:MLFLOW_TRACKING_URI  = "sqlite:///mlruns.db"
+$env:MLFLOW_ARTIFACT_ROOT = ".\mlruns"
+```
+
+
+## MLflow Tracking Setup
+
+We use **MLflow** for experiment tracking (metrics, parameters, and artifacts).
+
+### Tracking backend and artifact store
+
+- Backend store: `sqlite:///mlruns.db` (local SQLite database in repo root)
+- Artifact store: `./mlruns` (MLflow’s default artifact directory)
+
+On Windows/PowerShell, activate the virtualenv and set:
+
+```powershell
+cd C:\Users\Dissertation\tri-objective-robust-xai-medimg
+.\.venv\Scripts\Activate.ps1
+
+$env:MLFLOW_TRACKING_URI  = "sqlite:///mlruns.db"
+$env:MLFLOW_ARTIFACT_ROOT = ".\mlruns"
+```
