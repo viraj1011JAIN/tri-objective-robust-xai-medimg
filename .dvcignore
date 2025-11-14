@@ -1,16 +1,19 @@
-# Large / raw data that DVC will manage
-data/raw/
-data/tmp/
-data/cache/
-data/interim/
+# Files/folders DVC should ignore when tracking data
 
-# Local DVC cache remote (not tracked by git)
-.dvcstore/
+# Python + build artefacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.dll
 
-# Python junk
-**/__pycache__/
-**/*.py[cod]
-*.ipynb_checkpoints
+# Virtual environments
+.venv/
+.env/
 
-# Misc
-*.log
+# MLflow runs (we version data and models via DVC/MLflow, not raw logs)
+mlruns/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
