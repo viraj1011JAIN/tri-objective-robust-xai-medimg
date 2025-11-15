@@ -1,0 +1,20 @@
+name: Docs
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Placeholder docs step so CI is green even before full docs exist.
+      - name: Build docs (placeholder)
+        run: |
+          echo "Docs build not yet implemented. This workflow is a placeholder."
