@@ -1,0 +1,492 @@
+Metadata-Version: 2.4
+Name: tri_objective_robust_xai_medimg
+Version: 0.1.0
+Summary: Adversarially robust and concept-grounded explainable deep learning for medical imaging
+Author: Viraj Pankaj Jain
+Author-email: v.jain.1@research.gla.ac.uk
+License: MIT
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Provides-Extra: dev
+Requires-Dist: black; extra == "dev"
+Requires-Dist: isort; extra == "dev"
+Requires-Dist: flake8; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-cov; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"
+Dynamic: author-email
+Dynamic: license-file
+Dynamic: requires-python
+
+﻿# tri-objective-robust-xai-medimg
+
+Adversarially robust and explainable deep learning for medical imaging, built as a **research-grade, fully reproducible MLOps project**.
+
+Core pillars:
+
+- **Robustness**: adversarial training and robustness evaluation
+- **Explainability**: Grad-CAM, concept-based explanations, stability under perturbations
+- **MLOps**: DVC, MLflow, pre-commit, tests, and (CI-ready) GitHub Actions
+
+At the moment, a **CIFAR-10 debug pipeline** acts as a fast smoke-test for all infrastructure. Medical imaging datasets (NIH CXR, PadChest, ISIC, Derm7pt) plug into the same framework in later phases.
+
+---
+
+## 1. Environment Setup (Windows / PowerShell)
+
+### 1.1 Clone and create virtual environment
+
+```powershell
+# From a suitable workspace directory
+cd C:\Users\Dissertation
+
+# Clone the repository
+git clone https://github.com/viraj1011JAIN/tri-objective-robust-xai-medimg.git
+cd .\tri-objective-robust-xai-medimg
+
+# Create and activate a virtual environment
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+# Upgrade pip and install dependencies
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### 1.2 Install and enable pre-commit
+
+```powershell
+pre-commit install
+pre-commit run --all-files
+```
+
+This installs git hooks that automatically run formatting, linting, and type-checking on every commit.
+
+---
+
+## 2. Project Structure
+
+High-level layout (some folders are created on demand):
+
+```text
+tri-objective-robust-xai-medimg/
+├── .dvc/                     # DVC configuration (data versioning)
+├── .github/                  # (Optional) CI workflows (tests, lint)
+├── configs/                  # YAML configs for datasets, models, experiments
+├── data/                     # Data directory (can be DVC-tracked)
+│   ├── raw/                  # Raw datasets (NIH CXR, ISIC, etc.)
+│   ├── processed/            # Preprocessed / standardized data
+│   └── concepts/             # Concept banks for TCAV-style methods
+├── src/                      # Python package: core library
+│   ├── attacks/              # Adversarial attacks (FGSM, PGD, etc.)
+│   ├── datasets/             # Dataset and dataloader utilities
+│   ├── losses/               # Task, robustness, and explanation losses
+│   ├── models/               # CNN / ViT architectures and wrappers
+│   ├── eval/                 # Metrics, robustness & explanation evaluation
+│   ├── xai/                  # Explainability utilities (e.g. Grad-CAM)
+│   ├── train/                # Training loops (baseline, adversarial, tri-objective)
+│   └── utils/                # Shared utilities (logging, MLflow helpers, etc.)
+├── scripts/                  # CLI-style entrypoints
+│   ├── train_cifar10_debug.py   # CIFAR-10 debug training script
+│   ├── check_env.py             # Environment sanity check
+│   └── mlflow_smoketest.py      # Minimal MLflow smoke test
+├── tests/                    # Unit + integration tests (CIFAR-10 debug pipeline)
+│   ├── integration/          # End-to-end pipeline + MLflow tests
+│   └── unit/                 # Attacks, dataloaders, losses, metrics, models, seeds
+├── notebooks/                # Jupyter notebooks (experiments, visualizations)
+├── results/                  # Training outputs, metrics, plots, etc.
+├── docs/                     # Additional documentation
+├── .dvcignore                # Ignore patterns for DVC
+├── .flake8                   # flake8 configuration
+├── .pre-commit-config.yaml   # pre-commit hooks (black, isort, flake8, mypy)
+├── Dockerfile                # Reproducible Docker environment
+├── pytest.ini                # pytest & coverage configuration
+├── requirements.txt          # Python dependencies
+└── README.md                 # This file
+```
+
+---
+
+## 3. Quick Start: CIFAR-10 Debug Smoke Test
+
+The CIFAR-10 pipeline is a fast regression test for the whole stack (PyTorch, MLflow, DVC presence, tests, etc.).
+
+### 3.1 Check environment
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+python scripts/check_env.py
+```
+
+This script is a quick sanity check that required libraries are importable and the GPU / CPU stack is visible.
+
+### 3.2 Run the test suite (recommended)
+
+```powershell
+pytest tests -v
+```
+
+You should see all tests passing, including:
+
+- Integration tests for the end-to-end training pipeline
+- MLflow integration tests
+- Unit tests for attacks, data loaders, losses, metrics, and reproducibility
+
+### 3.3 Run a CIFAR-10 debug experiment
+
+```powershell
+python scripts/train_cifar10_debug.py --epochs 1
+```
+
+This:
+
+- Trains a small debug model on a CIFAR-10 subset
+- Logs metrics, parameters, and artefacts to MLflow
+- Exercises the core training loop, dataloaders, and logging logic
+
+---
+
+## 4. MLOps Infrastructure
+
+### 4.1 Data management with DVC
+
+This project is DVC-ready:
+
+- DVC is initialised (`.dvc/` and `.dvc/config` exist).
+- A default remote called `localstore` can point to a local folder outside the repo, for example:
+
+```powershell
+# Example configuration (already done in this environment):
+dvc remote modify localstore url ..\triobj-dvc-remote
+```
+
+Currently, no large datasets are tracked in DVC yet. Once you have local copies of datasets, you can track them via:
+
+```powershell
+# Example: track a raw dataset (NIH CXR)
+dvc add data/raw/NIH_CXR
+git add data/raw/NIH_CXR.dvc .gitignore
+git commit -m "Track NIH_CXR dataset with DVC"
+```
+
+To fetch DVC-tracked data in a fresh clone:
+
+```powershell
+dvc pull
+```
+
+To push updated artefacts to the configured remote:
+
+```powershell
+dvc push
+```
+
+This allows future medical imaging pipelines (NIH CXR, PadChest, ISIC, Derm7pt) to be versioned and reproducible.
+
+### 4.2 Experiment tracking with MLflow
+
+The project uses MLflow for experiment tracking.
+
+Typical workflow:
+
+```powershell
+# Run a debug training job (writes to ./mlruns by default)
+python scripts/train_cifar10_debug.py --epochs 1
+
+# Start the MLflow UI (from repo root)
+mlflow ui --backend-store-uri "file:./mlruns"
+```
+
+Then open the printed URL (usually `http://127.0.0.1:5000`) in your browser to:
+
+- Inspect metrics (loss, accuracy, robustness metrics)
+- Compare runs
+- Download artefacts such as model checkpoints
+
+A small helper module (`src/utils/mlflow_utils.py`) standardises:
+
+- The tracking URI (local file store at `file:./mlruns`)
+- Experiment naming
+- Run naming (dataset, model, objective, seed)
+
+Example convention:
+
+- Experiment name: `<dataset>__<objective>`
+- Run name: `<model>[__<extra_tag>]`
+- e.g. `NIH-CXR__tri-objective` with run `resnet50__pgd-eps-0.03`.
+
+---
+
+## 5. Code Quality, Testing, and Coverage
+
+### 5.1 Pre-commit hooks
+
+Configured in `.pre-commit-config.yaml` and `.flake8`:
+
+- **black** – code formatting
+- **isort** – import sorting
+- **flake8** – linting (with sensible ignores)
+- **mypy** – static type checking (on `src/`)
+
+Run all checks manually:
+
+```powershell
+pre-commit run --all-files
+```
+
+### 5.2 Tests and coverage
+
+`pytest` is configured via `pytest.ini` to:
+
+- Run all tests in `tests/`
+- Collect coverage for the `src/` package
+- Show missing lines for partially covered files
+- Enforce a minimum coverage threshold (e.g. 80% or higher)
+
+Typical command:
+
+```powershell
+# From repo root, with .venv active
+pytest
+```
+
+or explicitly with coverage:
+
+```powershell
+coverage erase
+pytest -q ^
+  --cov=src --cov-branch ^
+  --cov-report=term-missing:skip-covered
+```
+
+The test suite currently includes:
+
+**Integration tests**
+
+- End-to-end CIFAR-10 debug pipeline (training + evaluation)
+- MLflow logging and run completion
+
+**Unit tests**
+
+- Adversarial attacks (FGSM, PGD basic properties)
+- Data loaders (length, indexing, batching)
+- Losses (cross-entropy sanity checks, TRADES-style KL loss)
+- Metrics (accuracy vs sklearn, F1 ranges, AUROC bounds)
+- Model sanity (Simple debug network forward/backward)
+- Reproducibility (seed determinism for torch, NumPy, and model init)
+
+---
+
+## 6. Continuous Integration (GitHub Actions)
+
+The repository is structured to support GitHub Actions for:
+
+- Running tests with coverage on every push / PR
+- Running pre-commit (black, isort, flake8, mypy) in CI
+
+Typical workflow files (placed in `.github/workflows/`):
+
+- `tests.yml` – runs `pytest` with coverage
+- `lint.yml` – runs `pre-commit run --all-files`
+
+Once workflows are created and pushed:
+
+- Every push to `main` will trigger automated tests and linting.
+- The Actions tab on GitHub shows green/red status for each commit and pull request.
+
+---
+
+## 7. Research Questions (Dissertation Focus)
+
+This repository underpins the MSc dissertation:
+
+**"Balancing Accuracy and Interpretability: Explainable Deep Learning for Medical Image Classification"**
+
+### RQ1: Joint Optimization of Robustness & Generalisation
+
+Can adversarial robustness and cross-site generalisation be jointly optimised through a unified training objective?
+
+**Hypotheses (target, future experiments):**
+
+- **H1a**: Tri-objective training improves robust accuracy by ≥ 35 percentage points over a clean baseline.
+- **H1b**: Tri-objective training reduces cross-site AUROC drop by ≥ 50%.
+- **H1c**: Standard adversarial training alone does not reliably improve cross-site generalisation.
+
+### RQ2: Concept-Grounded Explanation Stability
+
+Does concept-grounded regularisation produce explanations that are both adversarially stable and clinically meaningful?
+
+**Hypotheses:**
+
+- **H2a**: Explanation SSIM under adversarial perturbations increases from ~0.60 to ≥ 0.75.
+- **H2b**: Spurious / artefact concept TCAV scores decrease (e.g. from 0.45 to ≤ 0.20).
+- **H2c**: Clinically meaningful concept TCAV scores increase (e.g. from 0.58 to ≥ 0.68).
+
+### RQ3: Safe Selective Prediction
+
+Can we combine predictive confidence and explanation stability to enable safer clinical deployment?
+
+**Hypotheses:**
+
+- **H3a**: At 90% coverage, selective accuracy is ≥ 4 percentage points higher than overall accuracy.
+- **H3b**: Error rate on rejected cases is ≥ 3× higher than on accepted cases.
+- **H3c**: Selective prediction yields larger gains on cross-site test sets.
+- **H3d**: Expected Calibration Error (ECE) decreases under selective rejection.
+
+---
+
+## 8. Datasets (Planned Integration)
+
+The infrastructure is designed for the following medical imaging datasets:
+
+**Dermoscopy**
+
+- ISIC 2018 – Melanoma classification (~10k images)
+- ISIC 2019 – Multi-class lesion classification (~25k images)
+- ISIC 2020 – Melanoma classification (~33k images)
+- Derm7pt – 7-point checklist (~2k images)
+
+**Chest X-ray**
+
+- NIH ChestX-ray14 – 14 thoracic diseases (~112k images)
+- PadChest – Multi-label chest X-rays (~160k images)
+
+CIFAR-10 is used for fast smoke-testing and regression tests before running heavy experiments on medical datasets.
+
+---
+
+## 9. Core Method (Tri-Objective Training)
+
+The central training objective combines task performance, adversarial robustness, and explanation stability:
+
+```
+L_total = L_task + λ_rob * L_rob + λ_expl * L_expl
+```
+
+Where:
+
+- **L_task** – standard supervised loss (e.g. cross-entropy with temperature scaling)
+- **L_rob** – robustness loss (TRADES-style KL divergence between clean and adversarial predictions)
+- **L_expl** – explanation-based loss (e.g. SSIM stability of Grad-CAM + concept regularisation via TCAV)
+
+Selective prediction uses both confidence and explanation stability:
+
+```
+Accept prediction if:
+  (confidence > τ_conf) AND (stability > τ_stab)
+else:
+  "Refer to human"
+```
+
+---
+
+## 10. Docker Support
+
+For full reproducibility on another machine or cluster:
+
+### 10.1 Build image
+
+```powershell
+docker build -t tri-objective-xai:latest .
+```
+
+### 10.2 Run container (example with bind-mounts)
+
+```powershell
+docker run -it ^
+  -v C:\Users\Dissertation\tri-objective-robust-xai-medimg\data:/workspace/data ^
+  -v C:\Users\Dissertation\tri-objective-robust-xai-medimg\results:/workspace/results ^
+  tri-objective-xai:latest
+```
+
+GPU support can be enabled with `--gpus all` on compatible systems.
+
+---
+
+## 11. Development Roadmap (High Level)
+
+- [x] Core MLOps infrastructure
+  - [x] Virtualenv + requirements
+  - [x] DVC initialised + remote configured
+  - [x] MLflow integration and tests
+  - [x] Pre-commit (black, isort, flake8, mypy)
+  - [x] CIFAR-10 debug training script and tests
+- [ ] GitHub Actions CI (tests + lint) fully wired and running on GitHub
+- [ ] Medical dataset loaders (NIH CXR, PadChest, ISIC, Derm7pt)
+- [ ] Baseline and adversarial training for medical datasets
+- [ ] Tri-objective training loop implementation & ablation studies
+- [ ] Robustness + XAI evaluation (Grad-CAM stability, TCAV, etc.)
+- [ ] Selective prediction mechanism and calibration analysis
+- [ ] Publication-ready figures, tables, and web demo
+
+---
+
+## 12. Citation
+
+If you use this codebase in academic work, please cite:
+
+```bibtex
+@misc{jain2025triobjective,
+  title        = {Tri-Objective Robust XAI for Medical Imaging},
+  author       = {Jain, Viraj Pankaj},
+  year         = {2025},
+  institution  = {University of Glasgow, School of Computing Science},
+  howpublished = {\url{https://github.com/viraj1011JAIN/tri-objective-robust-xai-medimg}}
+}
+```
+
+---
+
+## 13. License
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+---
+
+## 14. Contact
+
+- **Author**: Viraj Pankaj Jain
+- **Institution**: University of Glasgow, School of Computing Science
+- **Email**: v.jain.1@research.gla.ac.uk
+- **GitHub**: [https://github.com/viraj1011JAIN](https://github.com/viraj1011JAIN)
+
+---
+
+## 15. Troubleshooting
+
+### Pre-commit hooks failing
+
+```powershell
+pre-commit autoupdate
+pre-commit run --all-files
+```
+
+### DVC: "There are no data or pipelines tracked"
+
+This is expected if you have not yet added datasets with `dvc add`. Once you have local data in `data/raw/...`, run:
+
+```powershell
+dvc add data/raw/<dataset-name>
+git add data/raw/<dataset-name>.dvc .gitignore
+git commit -m "Track <dataset-name> with DVC"
+```
+
+### MLflow: tracking URI issues on Windows
+
+Use an explicit file URI:
+
+```powershell
+mlflow ui --backend-store-uri "file:./mlruns"
+```
+
+### CUDA out of memory
+
+- Reduce batch size in the config
+- Use gradient accumulation
+- Enable mixed precision (AMP) where supported
+
+---
+
+**Status**: Core infrastructure validated via CIFAR-10 debug pipeline and tests. Ready for phase-2 medical imaging integration and tri-objective experiments.

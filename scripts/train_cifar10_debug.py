@@ -10,9 +10,18 @@ Designed as an MSc A1-grade example:
 - Reproducible training (seeds, deterministic flags)
 - Rich MLflow logging (hyperparameters, metrics, artifacts)
 - Clean model architecture suitable as a template for other datasets
+- Uses standardized MLflow helper utilities from src.utils.mlflow_utils
 
 It stays lightweight enough to run on CPU with small subsets by default,
 so you can use it as a fast smoke test for your tri-objective project.
+
+Usage:
+    python scripts/train_cifar10_debug.py --epochs 5
+    python scripts/train_cifar10_debug.py --subset-size 2048 --epochs 3 --batch-size 64
+    python scripts/train_cifar10_debug.py --help
+
+After training:
+    mlflow ui --backend-store-uri "file:./mlruns"
 """
 
 from __future__ import annotations
@@ -38,6 +47,9 @@ from sklearn.metrics import classification_report, confusion_matrix
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
+# Import standardized MLflow utilities
+from src.utils.mlflow_utils import build_experiment_and_run_name, init_mlflow
+
 # -----------------------------------------------------------------------------
 # Logging setup
 # -----------------------------------------------------------------------------
@@ -46,7 +58,14 @@ LOG_FILE_NAME = "train_cifar10_debug.log"
 
 
 def configure_logging(log_dir: Path) -> logging.Logger:
-    """Configure logger with stream + file handlers."""
+    """Configure logger with stream + file handlers.
+
+    Args:
+        log_dir: Directory to store log files
+
+    Returns:
+        Configured logger instance
+    """
     log_dir.mkdir(parents=True, exist_ok=True)
     log_file = log_dir / LOG_FILE_NAME
 
@@ -80,6 +99,33 @@ def configure_logging(log_dir: Path) -> logging.Logger:
 
 @dataclass
 class TrainingConfig:
+    """Training configuration with sensible defaults for CIFAR-10 debug runs.
+
+    Attributes:
+        model: Model architecture name
+        dropout: Dropout rate for regularization
+        epochs: Number of training epochs
+        batch_size: Batch size for training
+        lr: Initial learning rate
+        weight_decay: L2 regularization weight
+        optimizer: Optimizer type (adam, sgd, adamw)
+        scheduler: Learning rate scheduler (cosine, step, none)
+        log_interval: Batches between training logs
+        grad_clip_norm: Gradient clipping threshold (None to disable)
+        data_root: Root directory for CIFAR-10 data
+        subset_size: Training subset size for fast debug (None = full dataset)
+        num_workers: DataLoader workers for parallel loading
+        seed: Random seed for reproducibility
+        checkpoint_dir: Directory for saving checkpoints
+        results_artifact_dir: MLflow artifact path for results
+        checkpoints_artifact_dir: MLflow artifact path for checkpoints
+        dataset_name: Dataset identifier for MLflow naming
+        objective: Training objective for MLflow naming
+        run_tag: Optional tag for MLflow run name
+        tracking_uri: MLflow tracking URI (None = use default)
+        max_epochs_without_improvement: Early stopping patience
+    """
+
     # Model / training
     model: str = "SimpleCIFARNet"
     dropout: float = 0.5
@@ -105,10 +151,11 @@ class TrainingConfig:
     results_artifact_dir: str = "results"
     checkpoints_artifact_dir: str = "checkpoints"
 
-    # MLflow
-    experiment_name: str = "triobj/cifar10/debug"
-    run_name: Optional[str] = None
-    tracking_uri: Optional[str] = None  # env var or SQLite fallback
+    # MLflow (using standardized naming convention)
+    dataset_name: str = "CIFAR10-debug"
+    objective: str = "baseline"
+    run_tag: Optional[str] = None  # e.g., "seed-42", "subset-2k"
+    tracking_uri: Optional[str] = None  # None = use default from mlflow_utils
 
     # Misc
     max_epochs_without_improvement: int = 10  # early stopping patience
@@ -124,10 +171,14 @@ class SimpleCIFARNet(nn.Module):
     Simple CNN architecture for CIFAR-10 classification.
 
     Architecture:
-        - Conv2d(3, 32, 3x3) + BN + ReLU + MaxPool
-        - Conv2d(32, 64, 3x3) + BN + ReLU + MaxPool
-        - Conv2d(64, 128, 3x3) + BN + ReLU + AdaptiveAvgPool
+        - Conv2d(3, 32, 3x3) + BN + ReLU + MaxPool  [32x32 -> 16x16]
+        - Conv2d(32, 64, 3x3) + BN + ReLU + MaxPool [16x16 -> 8x8]
+        - Conv2d(64, 128, 3x3) + BN + ReLU + AdaptiveAvgPool [8x8 -> 1x1]
         - Linear(128, num_classes)
+
+    Attributes:
+        num_classes: Number of output classes
+        dropout_rate: Dropout probability before final linear layer
     """
 
     def __init__(self, num_classes: int = 10, dropout_rate: float = 0.5):
@@ -171,13 +222,28 @@ class SimpleCIFARNet(nn.Module):
                 nn.init.constant_(m.bias, 0.0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        """Forward pass.
+
+        Args:
+            x: Input tensor of shape (batch_size, 3, 32, 32)
+
+        Returns:
+            Logits of shape (batch_size, num_classes)
+        """
         x = self.features(x)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
 
     def get_feature_maps(self, x: torch.Tensor) -> torch.Tensor:
-        """Expose feature maps for later XAI methods."""
+        """Expose feature maps for later XAI methods (e.g., Grad-CAM).
+
+        Args:
+            x: Input tensor of shape (batch_size, 3, 32, 32)
+
+        Returns:
+            Feature maps of shape (batch_size, 128, 1, 1)
+        """
         return self.features(x)
 
 
@@ -187,19 +253,32 @@ class SimpleCIFARNet(nn.Module):
 
 
 def set_seed(seed: int, logger: logging.Logger) -> None:
-    """Set seeds for reproducibility."""
+    """Set seeds for reproducibility across PyTorch, NumPy, and Python.
+
+    Args:
+        seed: Random seed value
+        logger: Logger instance for reporting
+    """
     logger.info(f"Setting random seed to {seed}")
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
     np.random.seed(seed)
     os.environ["PYTHONHASHSEED"] = str(seed)
 
+    # Enable deterministic operations (may impact performance)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
 
 def get_device(logger: logging.Logger) -> torch.device:
-    """Return CUDA device if available, otherwise CPU."""
+    """Return CUDA device if available, otherwise CPU.
+
+    Args:
+        logger: Logger instance for reporting device info
+
+    Returns:
+        PyTorch device object
+    """
     if torch.cuda.is_available():
         device = torch.device("cuda")
         props = torch.cuda.get_device_properties(0)
@@ -218,9 +297,19 @@ def get_data_loaders(
     device: torch.device,
     logger: logging.Logger,
 ) -> Tuple[DataLoader, DataLoader]:
-    """Create CIFAR-10 dataloaders with augmentation and optional subset."""
+    """Create CIFAR-10 dataloaders with augmentation and optional subset.
+
+    Args:
+        cfg: Training configuration
+        device: Device for pin_memory optimization
+        logger: Logger instance
+
+    Returns:
+        Tuple of (train_loader, test_loader)
+    """
     logger.info("Setting up CIFAR-10 datasets and dataloaders")
 
+    # CIFAR-10 standard normalization values
     mean = [0.4914, 0.4822, 0.4465]
     std = [0.2470, 0.2435, 0.2616]
 
@@ -252,6 +341,7 @@ def get_data_loaders(
         transform=test_transform,
     )
 
+    # Create subset for fast debugging if specified
     if cfg.subset_size is not None:
         subset = min(cfg.subset_size, len(train_dataset))
         logger.info(f"Using training subset size: {subset}")
@@ -294,7 +384,19 @@ def get_data_loaders(
 def build_model(
     cfg: TrainingConfig, device: torch.device, logger: logging.Logger
 ) -> nn.Module:
-    """Instantiate model and log parameter counts."""
+    """Instantiate model and log parameter counts.
+
+    Args:
+        cfg: Training configuration
+        device: Device to place model on
+        logger: Logger instance
+
+    Returns:
+        Initialized model on specified device
+
+    Raises:
+        ValueError: If unsupported model type specified
+    """
     if cfg.model != "SimpleCIFARNet":
         raise ValueError(f"Unsupported model: {cfg.model}")
 
@@ -316,7 +418,18 @@ def build_optimizer_and_scheduler(
     cfg: TrainingConfig,
     model: nn.Module,
 ) -> Tuple[optim.Optimizer, Optional[optim.lr_scheduler._LRScheduler]]:
-    """Create optimizer and optional scheduler from config."""
+    """Create optimizer and optional scheduler from config.
+
+    Args:
+        cfg: Training configuration
+        model: Model to optimize
+
+    Returns:
+        Tuple of (optimizer, scheduler) where scheduler may be None
+
+    Raises:
+        ValueError: If unsupported optimizer or scheduler specified
+    """
     if cfg.optimizer.lower() == "adam":
         optimizer = optim.Adam(
             model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay
@@ -362,7 +475,21 @@ def train_epoch(
     cfg: TrainingConfig,
     logger: logging.Logger,
 ) -> Dict[str, float]:
-    """Run one training epoch."""
+    """Run one training epoch.
+
+    Args:
+        model: Neural network model
+        train_loader: Training data loader
+        criterion: Loss function
+        optimizer: Optimizer
+        device: Device for computation
+        epoch: Current epoch number
+        cfg: Training configuration
+        logger: Logger instance
+
+    Returns:
+        Dictionary containing train_loss and train_acc
+    """
     model.train()
     running_loss = 0.0
     correct = 0
@@ -409,7 +536,17 @@ def evaluate(
     criterion: nn.Module,
     device: torch.device,
 ) -> Dict[str, float]:
-    """Evaluate model and compute per-class accuracy + confusion matrix."""
+    """Evaluate model and compute per-class accuracy + confusion matrix.
+
+    Args:
+        model: Neural network model
+        test_loader: Test/validation data loader
+        criterion: Loss function
+        device: Device for computation
+
+    Returns:
+        Dictionary containing test metrics, confusion matrix, and classification report
+    """
     model.eval()
 
     test_loss = 0.0
@@ -458,6 +595,7 @@ def evaluate(
         "truck",
     ]
 
+    # Compute per-class accuracy
     for idx, name in enumerate(class_names):
         mask = all_targets_np == idx
         if mask.sum() > 0:
@@ -490,7 +628,20 @@ def save_checkpoint(
     filename: str,
     logger: logging.Logger,
 ) -> Path:
-    """Save model checkpoint and return its path."""
+    """Save model checkpoint and return its path.
+
+    Args:
+        model: Model to save
+        optimizer: Optimizer state to save
+        epoch: Current epoch number
+        metrics: Metrics dictionary to include
+        checkpoint_dir: Directory to save checkpoint
+        filename: Checkpoint filename
+        logger: Logger instance
+
+    Returns:
+        Path to saved checkpoint
+    """
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     ckpt_path = checkpoint_dir / filename
 
@@ -512,27 +663,13 @@ def save_checkpoint(
 # -----------------------------------------------------------------------------
 
 
-def setup_mlflow(cfg: TrainingConfig, logger: logging.Logger) -> None:
-    """Configure MLflow tracking URI and experiment."""
-    if cfg.tracking_uri is not None:
-        tracking_uri = cfg.tracking_uri
-    else:
-        env_uri = os.environ.get("MLFLOW_TRACKING_URI")
-        if env_uri:
-            tracking_uri = env_uri
-        else:
-            repo_root = Path(__file__).parent.parent.resolve()
-            tracking_uri = f"sqlite:///{repo_root.as_posix()}/mlruns.db"
-
-    logger.info(f"MLflow tracking URI: {tracking_uri}")
-    mlflow.set_tracking_uri(tracking_uri)
-
-    mlflow.set_experiment(cfg.experiment_name)
-    logger.info(f"MLflow experiment: {cfg.experiment_name}")
-
-
 def log_environment_to_mlflow(cfg: TrainingConfig, device: torch.device) -> None:
-    """Log useful run metadata as MLflow tags."""
+    """Log useful run metadata as MLflow tags.
+
+    Args:
+        cfg: Training configuration
+        device: Compute device being used
+    """
     mlflow.set_tags(
         {
             "host": socket.gethostname(),
@@ -540,11 +677,12 @@ def log_environment_to_mlflow(cfg: TrainingConfig, device: torch.device) -> None
             "script": Path(__file__).name,
             "framework": "pytorch",
             "dataset": "CIFAR10",
+            "model_architecture": cfg.model,
         }
     )
 
     # Log config as a single JSON param for reproducibility
-    mlflow.log_param("config_json", json.dumps(asdict(cfg)))
+    mlflow.log_param("config_json", json.dumps(asdict(cfg), indent=2))
 
 
 # -----------------------------------------------------------------------------
@@ -553,8 +691,14 @@ def log_environment_to_mlflow(cfg: TrainingConfig, device: torch.device) -> None
 
 
 def parse_args() -> TrainingConfig:
+    """Parse command line arguments and return training configuration.
+
+    Returns:
+        TrainingConfig instance populated from arguments
+    """
     parser = argparse.ArgumentParser(
-        description="CIFAR-10 debug training with MLflow (A1-grade pipeline)"
+        description="CIFAR-10 debug training with MLflow (A1-grade pipeline)",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
     # Model / training
@@ -575,7 +719,12 @@ def parse_args() -> TrainingConfig:
 
     # Data
     parser.add_argument("--data-root", type=str, default="./data/cifar10")
-    parser.add_argument("--subset-size", type=int, default=None)
+    parser.add_argument(
+        "--subset-size",
+        type=int,
+        default=None,
+        help="Training subset size for fast debugging (None = full dataset)",
+    )
     parser.add_argument("--num-workers", type=int, default=4)
 
     # Reproducibility
@@ -588,9 +737,15 @@ def parse_args() -> TrainingConfig:
         default="./results/checkpoints/cifar10_debug",
     )
 
-    # MLflow
-    parser.add_argument("--experiment-name", type=str, default="triobj/cifar10/debug")
-    parser.add_argument("--run-name", type=str, default=None)
+    # MLflow (using standardized naming)
+    parser.add_argument("--dataset-name", type=str, default="CIFAR10-debug")
+    parser.add_argument("--objective", type=str, default="baseline")
+    parser.add_argument(
+        "--run-tag",
+        type=str,
+        default=None,
+        help="Optional tag for MLflow run name (e.g., 'seed-42', 'subset-2k')",
+    )
     parser.add_argument("--tracking-uri", type=str, default=None)
 
     # Misc
@@ -613,8 +768,9 @@ def parse_args() -> TrainingConfig:
         num_workers=args.num_workers,
         seed=args.seed,
         checkpoint_dir=args.checkpoint_dir,
-        experiment_name=args.experiment_name,
-        run_name=args.run_name,
+        dataset_name=args.dataset_name,
+        objective=args.objective,
+        run_tag=args.run_tag,
         tracking_uri=args.tracking_uri,
         max_epochs_without_improvement=args.max_epochs_without_improvement,
     )
@@ -627,6 +783,14 @@ def parse_args() -> TrainingConfig:
 
 
 def main() -> Dict[str, float]:
+    """Main training function with full MLflow integration.
+
+    Returns:
+        Dictionary containing training summary metrics
+
+    Raises:
+        Exception: Any error during training (with full traceback)
+    """
     # Directories
     repo_root = Path(__file__).parent.parent.resolve()
     logs_dir = repo_root / "logs"
@@ -635,7 +799,7 @@ def main() -> Dict[str, float]:
     logger = configure_logging(logs_dir)
     cfg = parse_args()
 
-    # If checkpoint_dir is the default string, resolve from repo_root
+    # Resolve checkpoint directory
     cfg.checkpoint_dir = str(
         (
             checkpoints_root
@@ -647,15 +811,27 @@ def main() -> Dict[str, float]:
     set_seed(cfg.seed, logger)
     device = get_device(logger)
 
-    setup_mlflow(cfg, logger)
+    # Build experiment and run names using standardized helper
+    experiment_name, run_name = build_experiment_and_run_name(
+        dataset=cfg.dataset_name,
+        model=cfg.model,
+        objective=cfg.objective,
+        extra_tag=cfg.run_tag or f"seed-{cfg.seed}",
+    )
 
-    # Create run name if needed
-    if cfg.run_name is None:
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        cfg.run_name = f"debug_{cfg.model}_{timestamp}"
+    logger.info(f"MLflow Experiment: {experiment_name}")
+    logger.info(f"MLflow Run: {run_name}")
 
-    with mlflow.start_run(run_name=cfg.run_name):
-        logger.info(f"Starting MLflow run: {cfg.run_name}")
+    # Initialize MLflow using standardized helper
+    run = init_mlflow(
+        experiment_name=experiment_name,
+        run_name=run_name,
+        tracking_uri=cfg.tracking_uri,
+    )
+
+    try:
+        logger.info(f"Starting MLflow run: {run_name}")
+        logger.info(f"Run ID: {run.info.run_id}")
 
         # Log basic hyperparameters
         mlflow.log_params(
@@ -671,6 +847,7 @@ def main() -> Dict[str, float]:
                 "subset_size": cfg.subset_size,
                 "seed": cfg.seed,
                 "num_workers": cfg.num_workers,
+                "grad_clip_norm": cfg.grad_clip_norm,
             }
         )
 
@@ -818,7 +995,7 @@ def main() -> Dict[str, float]:
             str(final_ckpt_path), artifact_path=cfg.checkpoints_artifact_dir
         )
 
-        # Log full model
+        # Log full model for MLflow model registry
         mlflow.pytorch.log_model(model, "model")
 
         total_time = time.time() - start_time
@@ -828,7 +1005,7 @@ def main() -> Dict[str, float]:
         logger.info("Training complete")
         logger.info(f"Total time: {total_time:.2f}s")
         logger.info(f"Best test accuracy: {best_test_acc:.2f}%")
-        logger.info(f"MLflow run id: {mlflow.active_run().info.run_id}")
+        logger.info(f"MLflow run id: {run.info.run_id}")
         logger.info("=" * 80)
 
         summary = {
@@ -836,7 +1013,7 @@ def main() -> Dict[str, float]:
             "total_training_time": total_time,
             "final_train_loss": float(last_train_metrics.get("train_loss", 0.0)),
             "final_test_loss": float(last_test_metrics.get("test_loss", 0.0)),
-            "run_id": mlflow.active_run().info.run_id,
+            "run_id": run.info.run_id,
         }
 
         summary_path = Path(cfg.checkpoint_dir) / "summary.json"
@@ -844,13 +1021,22 @@ def main() -> Dict[str, float]:
             json.dump(summary, f_sum, indent=2)
         mlflow.log_artifact(str(summary_path), artifact_path=cfg.results_artifact_dir)
 
+        logger.info("")  # Blank line for readability
+        logger.info("To view results in MLflow UI, run:")
+        logger.info('  mlflow ui --backend-store-uri "file:./mlruns"')
+
         return summary
+
+    finally:
+        # Ensure MLflow run is ended even if error occurs
+        mlflow.end_run()
 
 
 if __name__ == "__main__":
     try:
         main()
         sys.exit(0)
-    except Exception as exc:  # defensive: surfaces full traceback
+    except Exception as exc:
+        # Defensive: surfaces full traceback for debugging
         print(f"Training failed with error: {exc}", file=sys.stderr)
         raise
