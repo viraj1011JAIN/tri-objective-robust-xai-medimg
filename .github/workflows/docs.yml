@@ -11,10 +11,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      # Placeholder docs step so CI is green even before full docs exist.
-      - name: Build docs (placeholder)
+      - name: Check docs directory exists
         run: |
-          echo "Docs build not yet implemented. This workflow is a placeholder."
+          python - << 'EOF'
+          from pathlib import Path
+          docs = Path("docs")
+          assert docs.exists(), "docs/ directory is missing"
+          EOF
