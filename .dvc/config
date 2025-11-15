@@ -1,6 +1,8 @@
 [core]
-    remote = localcache
+    remote = localstore
 ['remote "local-storage"']
     url = ../dvc-storage
 ['remote "localcache"']
     url = ../.dvcstore
+['remote "localstore"']
+    url = ../../triobj-dvc-remote
