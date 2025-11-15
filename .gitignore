@@ -45,3 +45,8 @@ mlruns.db
 
 # Local temp debug artifacts
 tmp_artifacts/
+# Test / coverage artifacts
+htmlcov/
+coverage.xml
+.pytest_cache/
+logs/

@@ -24,7 +24,7 @@ import os
 import socket
 import sys
 import time
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Dict, Optional, Tuple
 
@@ -77,6 +77,7 @@ def configure_logging(log_dir: Path) -> logging.Logger:
 # Configuration dataclass
 # -----------------------------------------------------------------------------
 
+
 @dataclass
 class TrainingConfig:
     # Model / training
@@ -86,8 +87,8 @@ class TrainingConfig:
     batch_size: int = 128
     lr: float = 1e-3
     weight_decay: float = 1e-4
-    optimizer: str = "adam"       # ["adam", "sgd", "adamw"]
-    scheduler: str = "cosine"     # ["cosine", "step", "none"]
+    optimizer: str = "adam"  # ["adam", "sgd", "adamw"]
+    scheduler: str = "cosine"  # ["cosine", "step", "none"]
     log_interval: int = 20
     grad_clip_norm: Optional[float] = 5.0
 
@@ -116,6 +117,7 @@ class TrainingConfig:
 # -----------------------------------------------------------------------------
 # Model
 # -----------------------------------------------------------------------------
+
 
 class SimpleCIFARNet(nn.Module):
     """
@@ -182,6 +184,7 @@ class SimpleCIFARNet(nn.Module):
 # -----------------------------------------------------------------------------
 # Utilities
 # -----------------------------------------------------------------------------
+
 
 def set_seed(seed: int, logger: logging.Logger) -> None:
     """Set seeds for reproducibility."""
@@ -288,7 +291,9 @@ def get_data_loaders(
     return train_loader, test_loader
 
 
-def build_model(cfg: TrainingConfig, device: torch.device, logger: logging.Logger) -> nn.Module:
+def build_model(
+    cfg: TrainingConfig, device: torch.device, logger: logging.Logger
+) -> nn.Module:
     """Instantiate model and log parameter counts."""
     if cfg.model != "SimpleCIFARNet":
         raise ValueError(f"Unsupported model: {cfg.model}")
@@ -345,6 +350,7 @@ def build_optimizer_and_scheduler(
 # -----------------------------------------------------------------------------
 # Training / evaluation loops
 # -----------------------------------------------------------------------------
+
 
 def train_epoch(
     model: nn.Module,
@@ -505,6 +511,7 @@ def save_checkpoint(
 # MLflow helpers
 # -----------------------------------------------------------------------------
 
+
 def setup_mlflow(cfg: TrainingConfig, logger: logging.Logger) -> None:
     """Configure MLflow tracking URI and experiment."""
     if cfg.tracking_uri is not None:
@@ -544,6 +551,7 @@ def log_environment_to_mlflow(cfg: TrainingConfig, device: torch.device) -> None
 # Argument parsing
 # -----------------------------------------------------------------------------
 
+
 def parse_args() -> TrainingConfig:
     parser = argparse.ArgumentParser(
         description="CIFAR-10 debug training with MLflow (A1-grade pipeline)"
@@ -581,16 +589,12 @@ def parse_args() -> TrainingConfig:
     )
 
     # MLflow
-    parser.add_argument(
-        "--experiment-name", type=str, default="triobj/cifar10/debug"
-    )
+    parser.add_argument("--experiment-name", type=str, default="triobj/cifar10/debug")
     parser.add_argument("--run-name", type=str, default=None)
     parser.add_argument("--tracking-uri", type=str, default=None)
 
     # Misc
-    parser.add_argument(
-        "--max-epochs-without-improvement", type=int, default=10
-    )
+    parser.add_argument("--max-epochs-without-improvement", type=int, default=10)
 
     args = parser.parse_args()
     cfg = TrainingConfig(
@@ -620,6 +624,7 @@ def parse_args() -> TrainingConfig:
 # -----------------------------------------------------------------------------
 # Main training entrypoint
 # -----------------------------------------------------------------------------
+
 
 def main() -> Dict[str, float]:
     # Directories
@@ -790,7 +795,9 @@ def main() -> Dict[str, float]:
             report_path = results_dir / f"classification_report_epoch_{epoch}.txt"
             with report_path.open("w") as f_rep:
                 f_rep.write(cls_report)
-            mlflow.log_artifact(str(report_path), artifact_path=cfg.results_artifact_dir)
+            mlflow.log_artifact(
+                str(report_path), artifact_path=cfg.results_artifact_dir
+            )
 
         # Final checkpoint
         final_metrics = {

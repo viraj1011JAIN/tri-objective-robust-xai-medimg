@@ -1,5 +1,7 @@
 from pathlib import Path
+
 import mlflow
+
 
 def main() -> None:
     # 1) Backend store: SQLite DB in repo root
@@ -39,6 +41,7 @@ def main() -> None:
         print("Tracking URI:", mlflow.get_tracking_uri())
         print("Experiment:", experiment_name)
         print("Run created successfully.")
+
 
 if __name__ == "__main__":
     main()

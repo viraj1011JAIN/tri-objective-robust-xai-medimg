@@ -35,6 +35,7 @@ for name, import_name in modules:
 
 try:
     import torch
+
     print("CUDA available:", torch.cuda.is_available())
 except ImportError:
     print("torch: NOT INSTALLED")

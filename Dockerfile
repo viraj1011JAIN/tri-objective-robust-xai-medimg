@@ -17,7 +17,7 @@ RUN apt-get update && \
 
 
 # Copy dependency manifests first (Docker layer caching)
-COPY requirements.txt pyproject.toml environment.yml ./ 
+COPY requirements.txt pyproject.toml environment.yml ./
 
 # Install Python deps (image already has Python + pip)
 RUN pip install --upgrade pip &&     pip install --no-cache-dir -r requirements.txt
