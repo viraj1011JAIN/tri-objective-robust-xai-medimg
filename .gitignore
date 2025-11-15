@@ -4,49 +4,48 @@ __pycache__/
 *.pyd
 *.so
 
+# Git internals
+.git/
+.gitignore
+
+# Virtual environments
 .venv/
-vend/
+venv/
 env/
 .env
 .env.*
 
+# Jupyter notebooks
 .ipynb_checkpoints/
 
-data/raw/
-data/processed/
-data/governance/
-
-results/checkpoints/
-results/figures/
-results/metrics/*.tmp
-
-
-.dvc/cache/
-.dvc/tmp/
-
-# VSCode / editors
+# IDE / editor config
 .vscode/
 .idea/
 
-# OS
+# OS cruft
 .DS_Store
 Thumbs.db
 
-# Coverage / test artifacts
-htmlcov/
-.coverage
-.coverage.*
-.pytest_cache/
-
+# DVC internals
+.dvc/cache/
+.dvc/tmp/
 
 # MLflow tracking artifacts (local only)
 mlruns/
 mlruns.db
 
-# Local temp debug artifacts
-tmp_artifacts/
-# Test / coverage artifacts
+# Training outputs tracked via Git / artifacts, not DVC
+results/checkpoints/
+results/figures/
+results/metrics/*.tmp
+logs/
+
+# Coverage / test artifacts
 htmlcov/
 coverage.xml
+.coverage
+.coverage.*
 .pytest_cache/
-logs/
+
+# Local temp debug artifacts
+tmp_artifacts/
