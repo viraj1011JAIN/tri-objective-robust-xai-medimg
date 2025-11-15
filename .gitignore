@@ -19,7 +19,7 @@ data/governance/
 results/checkpoints/
 results/figures/
 results/metrics/*.tmp
-mlruns/
+
 
 .dvc/cache/
 .dvc/tmp/
