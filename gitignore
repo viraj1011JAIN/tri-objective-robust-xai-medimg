@@ -12,14 +12,9 @@ env/
 
 .ipynb_checkpoints/
 
-data/raw/
-data/processed/
-data/governance/
-
 results/checkpoints/
 results/figures/
 results/metrics/*.tmp
-mlruns/
 
 .dvc/cache/
 .dvc/tmp/
