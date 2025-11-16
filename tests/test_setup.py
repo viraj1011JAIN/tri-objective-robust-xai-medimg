@@ -7,6 +7,7 @@ before running heavier unit / integration tests.
 
 from __future__ import annotations
 
+import importlib
 from pathlib import Path
 
 import pytest
@@ -14,6 +15,7 @@ import torch
 
 
 def _project_root() -> Path:
+    """Return the absolute path to the project root."""
     # tests/ lives directly under the project root
     return Path(__file__).resolve().parents[1]
 
@@ -78,8 +80,6 @@ def test_core_project_imports() -> None:
 
     If any of these fail, something is wrong with the installation or src layout.
     """
-    import importlib
-
     modules = [
         "src",
         "src.attacks",
@@ -111,7 +111,8 @@ def test_cuda_flag_is_consistent() -> None:
     """
     is_available = torch.cuda.is_available()
     assert isinstance(
-        is_available, bool
+        is_available,
+        bool,
     ), "torch.cuda.is_available() must return a bool"
 
     if is_available:
