@@ -15,17 +15,19 @@ RUN apt-get update && \
         libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-
 # Copy dependency manifests first (Docker layer caching)
 COPY requirements.txt pyproject.toml environment.yml ./
 
 # Install Python deps (image already has Python + pip)
-RUN pip install --upgrade pip &&     pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of the repo
 COPY . .
 
+# Make project importable
 ENV PYTHONPATH=/workspace
 
-# Default shell – you'll usually override this with 'docker run -it ...'
-CMD ["bash"]
+# Default command: environment sanity check
+# (make sure scripts/check_docker_env.py exists)
+CMD ["python", "scripts/check_docker_env.py"]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 from typing import Dict
@@ -12,6 +13,11 @@ import numpy as np
 import pytest
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+
+# Ensure project root is on sys.path so `import src` works in tests.
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:  # pragma: no cover - trivial
+    sys.path.insert(0, str(ROOT))
 
 
 @pytest.fixture(scope="session")
@@ -38,7 +44,7 @@ def set_random_seeds(random_seed: int) -> None:
 
 
 @pytest.fixture(scope="session")
-def temp_dir() -> Path:
+def temp_dir():
     """Temporary directory for test artifacts (cleaned up at end)."""
     tmp = tempfile.mkdtemp()
     path = Path(tmp)
@@ -75,7 +81,7 @@ def mlflow_test_uri(temp_dir: Path) -> str:
     """Configure MLflow to use an isolated local directory for tracking.
 
     Important: on Windows we pass a plain path (not file:// URI), otherwise
-    mlflow can throw 'not a valid remote uri' errors.
+    MLflow can throw 'not a valid remote uri' errors.
     """
     tracking_dir = temp_dir / "mlruns"
     tracking_dir.mkdir(parents=True, exist_ok=True)

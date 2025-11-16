@@ -1,0 +1,28 @@
+# CIFAR-10 Debug Dataset Configuration
+# ====================================
+# Uses a small subset (512 train / 512 test) for quick experiments.
+
+dataset:
+  name: "cifar10"
+  root: "data/raw/cifar10"
+
+  batch_size: 128
+  num_workers: 4
+  pin_memory: true
+
+  # Subset settings for fast debug runs
+  # These match what the debug script prints:
+  #   "Using training subset size: 512"
+  #   "Using test subset size: 512"
+  train_subset: 512
+  test_subset: 512
+
+  # Backwards-compatible field if any older code expects `subset_size`
+  subset_size: 512
+
+  # Extra options (harmless if unused by code, allowed by DatasetConfig)
+  train_split: 0.7
+  val_split: 0.15
+  val_subset: null
+  augmentation_mode: "standard"   # none | light | standard | heavy
+  use_class_weights: false

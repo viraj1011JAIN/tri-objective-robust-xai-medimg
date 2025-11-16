@@ -1,0 +1,34 @@
+# CIFAR-10 Debug Baseline Experiment
+# ==================================
+# Small, fast experiment for sanity-checking training, logging, MLflow, and configs.
+
+experiment:
+  name: "CIFAR10-debug__baseline"
+  description: "SimpleCIFARNet on CIFAR-10 debug subset (512 train / 512 test)."
+  tags:
+    kind: "baseline"
+    dataset: "cifar10"
+    mode: "debug"
+    purpose: "sanity_check"
+  notes: "Use this run to verify end-to-end training, MLflow logging, and config loading."
+
+# Optionally override reproducibility settings just for this experiment
+# (otherwise values from configs/base.yaml are used)
+reproducibility:
+  seed: 42
+  deterministic_cudnn: true
+  benchmark_cudnn: false
+  enable_tf32: false
+  use_deterministic_algorithms: false
+  dataloader_seed_offset: 0
+
+training:
+  # keep this tiny so it's fast to run
+  max_epochs: 1
+  eval_every_n_epochs: 1
+  log_every_n_steps: 50
+
+  # override base defaults for debug run if you like
+  gradient_clip_val: 0.0
+  learning_rate: 0.001
+  weight_decay: 0.0

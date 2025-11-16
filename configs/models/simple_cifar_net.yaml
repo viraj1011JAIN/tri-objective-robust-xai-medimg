@@ -1,0 +1,12 @@
+# Simple CIFAR-10 CNN model configuration
+# =======================================
+
+model:
+  name: "SimpleCIFARNet"
+  num_classes: 10
+  pretrained: false
+  checkpoint_path: null
+
+  # extra fields (ignored by Pydantic but useful for logging / future use)
+  dropout_rate: 0.3
+  freeze_backbone: false

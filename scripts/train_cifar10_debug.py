@@ -47,13 +47,6 @@ from sklearn.metrics import classification_report, confusion_matrix
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 
-# Import standardized MLflow utilities
-from src.utils.mlflow_utils import build_experiment_and_run_name, init_mlflow
-
-# -----------------------------------------------------------------------------
-# Logging setup
-# -----------------------------------------------------------------------------
-
 LOG_FILE_NAME = "train_cifar10_debug.log"
 
 
@@ -92,9 +85,9 @@ def configure_logging(log_dir: Path) -> logging.Logger:
     return logger
 
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Configuration dataclass
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 
 @dataclass
@@ -161,9 +154,9 @@ class TrainingConfig:
     max_epochs_without_improvement: int = 10  # early stopping patience
 
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Model
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 
 class SimpleCIFARNet(nn.Module):
@@ -222,43 +215,24 @@ class SimpleCIFARNet(nn.Module):
                 nn.init.constant_(m.bias, 0.0)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        """Forward pass.
-
-        Args:
-            x: Input tensor of shape (batch_size, 3, 32, 32)
-
-        Returns:
-            Logits of shape (batch_size, num_classes)
-        """
+        """Forward pass."""
         x = self.features(x)
         x = torch.flatten(x, 1)
         x = self.classifier(x)
         return x
 
     def get_feature_maps(self, x: torch.Tensor) -> torch.Tensor:
-        """Expose feature maps for later XAI methods (e.g., Grad-CAM).
-
-        Args:
-            x: Input tensor of shape (batch_size, 3, 32, 32)
-
-        Returns:
-            Feature maps of shape (batch_size, 128, 1, 1)
-        """
+        """Expose feature maps for later XAI methods (e.g., Grad-CAM)."""
         return self.features(x)
 
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Utilities
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 
 def set_seed(seed: int, logger: logging.Logger) -> None:
-    """Set seeds for reproducibility across PyTorch, NumPy, and Python.
-
-    Args:
-        seed: Random seed value
-        logger: Logger instance for reporting
-    """
+    """Set seeds for reproducibility across PyTorch, NumPy, and Python."""
     logger.info(f"Setting random seed to {seed}")
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
@@ -271,14 +245,7 @@ def set_seed(seed: int, logger: logging.Logger) -> None:
 
 
 def get_device(logger: logging.Logger) -> torch.device:
-    """Return CUDA device if available, otherwise CPU.
-
-    Args:
-        logger: Logger instance for reporting device info
-
-    Returns:
-        PyTorch device object
-    """
+    """Return CUDA device if available, otherwise CPU."""
     if torch.cuda.is_available():
         device = torch.device("cuda")
         props = torch.cuda.get_device_properties(0)
@@ -297,16 +264,7 @@ def get_data_loaders(
     device: torch.device,
     logger: logging.Logger,
 ) -> Tuple[DataLoader, DataLoader]:
-    """Create CIFAR-10 dataloaders with augmentation and optional subset.
-
-    Args:
-        cfg: Training configuration
-        device: Device for pin_memory optimization
-        logger: Logger instance
-
-    Returns:
-        Tuple of (train_loader, test_loader)
-    """
+    """Create CIFAR-10 dataloaders with augmentation and optional subset."""
     logger.info("Setting up CIFAR-10 datasets and dataloaders")
 
     # CIFAR-10 standard normalization values
@@ -384,19 +342,7 @@ def get_data_loaders(
 def build_model(
     cfg: TrainingConfig, device: torch.device, logger: logging.Logger
 ) -> nn.Module:
-    """Instantiate model and log parameter counts.
-
-    Args:
-        cfg: Training configuration
-        device: Device to place model on
-        logger: Logger instance
-
-    Returns:
-        Initialized model on specified device
-
-    Raises:
-        ValueError: If unsupported model type specified
-    """
+    """Instantiate model and log parameter counts."""
     if cfg.model != "SimpleCIFARNet":
         raise ValueError(f"Unsupported model: {cfg.model}")
 
@@ -418,18 +364,7 @@ def build_optimizer_and_scheduler(
     cfg: TrainingConfig,
     model: nn.Module,
 ) -> Tuple[optim.Optimizer, Optional[optim.lr_scheduler._LRScheduler]]:
-    """Create optimizer and optional scheduler from config.
-
-    Args:
-        cfg: Training configuration
-        model: Model to optimize
-
-    Returns:
-        Tuple of (optimizer, scheduler) where scheduler may be None
-
-    Raises:
-        ValueError: If unsupported optimizer or scheduler specified
-    """
+    """Create optimizer and optional scheduler from config."""
     if cfg.optimizer.lower() == "adam":
         optimizer = optim.Adam(
             model.parameters(), lr=cfg.lr, weight_decay=cfg.weight_decay
@@ -460,9 +395,9 @@ def build_optimizer_and_scheduler(
     return optimizer, scheduler
 
 
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 # Training / evaluation loops
-# -----------------------------------------------------------------------------
+# -------------------------------------------------------------------------
 
 
 def train_epoch(
@@ -475,21 +410,7 @@ def train_epoch(
     cfg: TrainingConfig,
     logger: logging.Logger,
 ) -> Dict[str, float]:
-    """Run one training epoch.
-
-    Args:
-        model: Neural network model
-        train_loader: Training data loader
-        criterion: Loss function
-        optimizer: Optimizer
-        device: Device for computation
-        epoch: Current epoch number
-        cfg: Training configuration
-        logger: Logger instance
-
-    Returns:
-        Dictionary containing train_loss and train_acc
-    """
+    """Run one training epoch."""
     model.train()
     running_loss = 0.0
     correct = 0
@@ -536,17 +457,7 @@ def evaluate(
     criterion: nn.Module,
     device: torch.device,
 ) -> Dict[str, float]:
-    """Evaluate model and compute per-class accuracy + confusion matrix.
-
-    Args:
-        model: Neural network model
-        test_loader: Test/validation data loader
-        criterion: Loss function
-        device: Device for computation
-
-    Returns:
-        Dictionary containing test metrics, confusion matrix, and classification report
-    """
+    """Evaluate model and compute per-class accuracy + confusion matrix."""
     model.eval()
 
     test_loss = 0.0
@@ -628,20 +539,7 @@ def save_checkpoint(
     filename: str,
     logger: logging.Logger,
 ) -> Path:
-    """Save model checkpoint and return its path.
-
-    Args:
-        model: Model to save
-        optimizer: Optimizer state to save
-        epoch: Current epoch number
-        metrics: Metrics dictionary to include
-        checkpoint_dir: Directory to save checkpoint
-        filename: Checkpoint filename
-        logger: Logger instance
-
-    Returns:
-        Path to saved checkpoint
-    """
+    """Save model checkpoint and return its path."""
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     ckpt_path = checkpoint_dir / filename
 
@@ -658,18 +556,8 @@ def save_checkpoint(
     return ckpt_path
 
 
-# -----------------------------------------------------------------------------
-# MLflow helpers
-# -----------------------------------------------------------------------------
-
-
 def log_environment_to_mlflow(cfg: TrainingConfig, device: torch.device) -> None:
-    """Log useful run metadata as MLflow tags.
-
-    Args:
-        cfg: Training configuration
-        device: Compute device being used
-    """
+    """Log useful run metadata as MLflow tags."""
     mlflow.set_tags(
         {
             "host": socket.gethostname(),
@@ -685,17 +573,8 @@ def log_environment_to_mlflow(cfg: TrainingConfig, device: torch.device) -> None
     mlflow.log_param("config_json", json.dumps(asdict(cfg), indent=2))
 
 
-# -----------------------------------------------------------------------------
-# Argument parsing
-# -----------------------------------------------------------------------------
-
-
 def parse_args() -> TrainingConfig:
-    """Parse command line arguments and return training configuration.
-
-    Returns:
-        TrainingConfig instance populated from arguments
-    """
+    """Parse command line arguments and return training configuration."""
     parser = argparse.ArgumentParser(
         description="CIFAR-10 debug training with MLflow (A1-grade pipeline)",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -777,20 +656,8 @@ def parse_args() -> TrainingConfig:
     return cfg
 
 
-# -----------------------------------------------------------------------------
-# Main training entrypoint
-# -----------------------------------------------------------------------------
-
-
 def main() -> Dict[str, float]:
-    """Main training function with full MLflow integration.
-
-    Returns:
-        Dictionary containing training summary metrics
-
-    Raises:
-        Exception: Any error during training (with full traceback)
-    """
+    """Main training function with full MLflow integration."""
     # Directories
     repo_root = Path(__file__).parent.parent.resolve()
     logs_dir = repo_root / "logs"
@@ -798,6 +665,13 @@ def main() -> Dict[str, float]:
 
     logger = configure_logging(logs_dir)
     cfg = parse_args()
+
+    # Ensure repository root is on sys.path so "import src..." works
+    if str(repo_root) not in sys.path:
+        sys.path.insert(0, str(repo_root))
+
+    # Import standardized MLflow utilities lazily to avoid flake8 E402
+    from src.utils.mlflow_utils import build_experiment_and_run_name, init_mlflow
 
     # Resolve checkpoint directory
     cfg.checkpoint_dir = str(
@@ -952,7 +826,7 @@ def main() -> Dict[str, float]:
                 )
                 if epochs_without_improvement >= cfg.max_epochs_without_improvement:
                     logger.info(
-                        f"Early stopping triggered after "
+                        "Early stopping triggered after "
                         f"{epochs_without_improvement} epochs without improvement."
                     )
                     break
@@ -1021,7 +895,7 @@ def main() -> Dict[str, float]:
             json.dump(summary, f_sum, indent=2)
         mlflow.log_artifact(str(summary_path), artifact_path=cfg.results_artifact_dir)
 
-        logger.info("")  # Blank line for readability
+        logger.info("")
         logger.info("To view results in MLflow UI, run:")
         logger.info('  mlflow ui --backend-store-uri "file:./mlruns"')
 
@@ -1037,6 +911,5 @@ if __name__ == "__main__":
         main()
         sys.exit(0)
     except Exception as exc:
-        # Defensive: surfaces full traceback for debugging
         print(f"Training failed with error: {exc}", file=sys.stderr)
         raise

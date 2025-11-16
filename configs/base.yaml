@@ -1,0 +1,120 @@
+# Base Configuration for Tri-Objective Robust XAI Project
+# =======================================================
+# This file contains default settings shared across all experiments.
+# Specific values are overridden by dataset, model, and experiment configs.
+
+experiment:
+  project_name: "tri-objective-robust-xai-medimg"
+  name: "BASE_CONFIG"
+  description: "Base configuration - always override with experiment-specific YAML"
+  tags:
+    project: "triobj-robust-xai"
+    author: "Viraj Jain"
+  author: "Viraj Jain"   # extra field, allowed
+  notes: null            # extra field, allowed
+
+# Reproducibility settings
+# These map directly to ReproducibilityConfig in src/utils/config.py
+reproducibility:
+  seed: 42
+  deterministic_cudnn: true
+  benchmark_cudnn: false
+  enable_tf32: false
+  use_deterministic_algorithms: false
+  dataloader_seed_offset: 0   # added field, supported by schema
+
+# Dataset defaults (overridden by configs/datasets/*.yaml)
+dataset:
+  name: "PLACEHOLDER"
+  root: "data/raw"
+  batch_size: 64
+  num_workers: 4
+  pin_memory: true
+  train_subset: null      # null = use full dataset
+  val_subset: null
+  test_subset: null
+  train_split: 0.7
+  val_split: 0.15
+  augmentation_mode: "standard"  # Options: none, light, standard, heavy
+  use_class_weights: true
+
+# Model defaults (overridden by configs/models/*.yaml)
+model:
+  name: "PLACEHOLDER"
+  num_classes: 2
+  pretrained: false
+  dropout_rate: 0.5
+  checkpoint_path: null
+  freeze_backbone: false
+
+# Optimizer settings
+optimizer:
+  name: "adam"  # Options: sgd, adam, adamw, rmsprop
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  # SGD-specific
+  momentum: 0.9
+  nesterov: false
+  # Adam-specific
+  beta1: 0.9
+  beta2: 0.999
+  epsilon: 1e-8
+
+# Learning rate scheduler
+scheduler:
+  name: "cosine"  # Options: none, step, cosine, plateau, exponential, onecycle
+  warmup_epochs: 5
+  # StepLR
+  step_size: 30
+  gamma: 0.1
+  # CosineAnnealingLR
+  T_max: null  # Can be set to training.max_epochs in code if null
+  eta_min: 0.0
+  # ReduceLROnPlateau
+  patience: 10
+  factor: 0.1
+
+# Training procedure
+training:
+  max_epochs: 100
+  device: "cuda"
+  eval_every_n_epochs: 1
+  log_every_n_steps: 50
+  gradient_clip_val: 1.0
+  gradient_clip_algorithm: "norm"
+  early_stopping: true
+  early_stopping_patience: 15
+  early_stopping_min_delta: 0.0001
+  use_amp: false  # Automatic mixed precision
+  accumulate_grad_batches: 1
+  save_top_k: 3
+  checkpoint_metric: "val_loss"
+  checkpoint_mode: "min"
+
+# Loss configuration (tri-objective)
+loss:
+  # Loss weights
+  lambda_task: 1.0
+  lambda_robustness: 0.3
+  lambda_explanation: 0.1
+  # Task loss
+  task_loss_type: "cross_entropy"  # Options: cross_entropy, focal, bce
+  label_smoothing: 0.0
+  # Robustness loss (TRADES)
+  trades_beta: 6.0
+  # Explanation loss
+  explanation_ssim_weight: 0.7
+  explanation_tcav_weight: 0.3
+
+# Adversarial attack settings
+adversarial:
+  attack_type: "pgd"  # Options: fgsm, pgd, cw
+  epsilon: 0.03137       # 8/255
+  # PGD-specific
+  pgd_steps: 10
+  pgd_step_size: 0.00784 # 2/255
+  pgd_random_start: true
+  # C&W-specific
+  cw_confidence: 0.0
+  cw_learning_rate: 0.01
+  cw_max_iterations: 1000
