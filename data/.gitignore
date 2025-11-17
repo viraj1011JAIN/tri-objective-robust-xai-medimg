@@ -1,15 +1,14 @@
 # Ignore everything in data/ by default
 *
 
-# Always keep this file
+# Keep this ignore file
 !.gitignore
 
-# Keep governance metadata (checksums etc.)
-!governance/
-!governance/.gitkeep
-!governance/dataset_checksums.json
+# Keep governance directory and DVC tracking file
+!/governance/
+!/governance/dataset_checksums.json.dvc
 
-# Keep raw-data documentation (but not actual raw datasets)
-!raw/
-!raw/.gitkeep
-!raw/README.md
+# Keep raw-data documentation (but NOT the actual dataset blobs)
+!/raw/
+!/raw/README.md
+!/raw/.gitkeep
