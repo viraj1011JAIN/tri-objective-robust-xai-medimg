@@ -17,3 +17,6 @@ mlruns/
 
 # Jupyter checkpoints
 .ipynb_checkpoints/
+.pytest_cache/
+htmlcov/
+.mypy_cache/
