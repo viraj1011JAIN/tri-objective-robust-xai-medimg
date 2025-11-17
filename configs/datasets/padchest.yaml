@@ -1,0 +1,15 @@
+dataset:
+  name: "PadChest"
+  root: "${DATA_ROOT}/padchest"
+
+  batch_size: 16
+  num_workers: 4
+  pin_memory: true
+
+  train_subset: null
+  test_subset: null
+
+  image_subdir: "images"            # adjust to your PadChest layout
+  metadata_csv: "PadChest.csv"      # main annotations table
+  task: "multi_label_classification"
+  num_classes: 193                  # PadChest has many labels; can refine later

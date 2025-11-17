@@ -1,0 +1,15 @@
+dataset:
+  name: "ISIC-2018"
+  root: "${DATA_ROOT}/isic_2018"
+
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+  train_subset: null
+  test_subset: null
+
+  image_subdir: "images"          # adjust to your actual folder
+  metadata_csv: "train_metadata.csv"  # or the correct CSV name
+  task: "classification"
+  num_classes: 7                  # 7-way classification in ISIC 2018

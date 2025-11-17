@@ -1,0 +1,15 @@
+dataset:
+  name: "ISIC-2019"
+  root: "${DATA_ROOT}/isic_2019"
+
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+  train_subset: null
+  test_subset: null
+
+  image_subdir: "images"
+  metadata_csv: "train_metadata.csv"
+  task: "classification"
+  num_classes: 8                  # 8 diagnostic categories in ISIC 2019

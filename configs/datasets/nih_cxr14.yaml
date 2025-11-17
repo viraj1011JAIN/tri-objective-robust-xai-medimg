@@ -1,0 +1,15 @@
+dataset:
+  name: "NIH-ChestXray14"
+  root: "${DATA_ROOT}/nih_cxr"
+
+  batch_size: 16          # larger images → smaller batch
+  num_workers: 4
+  pin_memory: true
+
+  train_subset: null
+  test_subset: null
+
+  image_subdir: "images"              # e.g. "images" or "images_001" etc.
+  metadata_csv: "Data_Entry_2017.csv" # main label file from NIH
+  task: "multi_label_classification"
+  num_classes: 14

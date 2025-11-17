@@ -1,0 +1,15 @@
+dataset:
+  name: "ISIC-2020"
+  root: "${DATA_ROOT}/isic_2020"
+
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+  train_subset: null
+  test_subset: null
+
+  image_subdir: "train_images"
+  metadata_csv: "train.csv"       # Kaggle SIIM-ISIC 2020 style
+  task: "classification"
+  num_classes: 2                  # melanoma vs benign

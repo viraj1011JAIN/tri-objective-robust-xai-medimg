@@ -1,0 +1,18 @@
+dataset:
+  name: "Derm7pt"
+  root: "${DATA_ROOT}/derm7pt"
+
+  # Data loader settings
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+  # Optional subset sizes for debug runs (set to null for full)
+  train_subset: null
+  test_subset: null
+
+  # Extra fields are allowed by the schema (extra='allow')
+  image_subdir: "images"          # adjust if your layout is different
+  metadata_csv: "metadata.csv"    # relative to root; will be used in 2.2
+  task: "classification"
+  num_classes: 2                  # melanoma vs non-melanoma (can be refined later)
