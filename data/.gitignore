@@ -1,2 +1,15 @@
+# Ignore everything in data/ by default
 *
+
+# Always keep this file
 !.gitignore
+
+# Keep governance metadata (checksums etc.)
+!governance/
+!governance/.gitkeep
+!governance/dataset_checksums.json
+
+# Keep raw-data documentation (but not actual raw datasets)
+!raw/
+!raw/.gitkeep
+!raw/README.md
