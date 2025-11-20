@@ -1,0 +1,19 @@
+schema: '2.0'
+stages:
+  build_concept_bank:
+    cmd: "python -m scripts.data.build_concept_bank --datasets isic2018 isic2019 isic2020
+      derm7pt nih_cxr padchest --output data/concepts/concept_bank.json\n"
+    deps:
+    - path: scripts/data/build_concept_bank.py
+      hash: md5
+      md5: 0627f9f81a6281da8b23053a06474ef1
+      size: 4925
+    - path: scripts/data/preprocess_data.py
+      hash: md5
+      md5: a05711930d37a2c4111a06d80394d724
+      size: 18511
+    outs:
+    - path: data/concepts/concept_bank.json
+      hash: md5
+      md5: 73c32cbaf3c41f6bb2ad7141078942db
+      size: 2752

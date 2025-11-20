@@ -1,0 +1,223 @@
+stages:
+  # ======================================================================
+  # 1) PREPROCESSING STAGES (ALL DATASETS)
+  # ======================================================================
+
+  # ----------------------------------------------------------------------
+  # Dermatology: ISIC 2018
+  # ----------------------------------------------------------------------
+  preprocess_isic2018:
+    cmd: >
+      python -m scripts.data.preprocess_data
+      --dataset isic2018
+      --image-size 224
+      --normalize zero_one
+      --format hdf5
+      --output-dir data/processed/isic2018
+    deps:
+      - scripts/data/preprocess_data.py
+      - F:/data/isic_2018/metadata.csv
+    outs:
+      - data/processed/isic2018
+
+  # ----------------------------------------------------------------------
+  # Dermatology: ISIC 2019
+  # ----------------------------------------------------------------------
+  preprocess_isic2019:
+    cmd: >
+      python -m scripts.data.preprocess_data
+      --dataset isic2019
+      --image-size 224
+      --normalize zero_one
+      --format hdf5
+      --output-dir data/processed/isic2019
+    deps:
+      - scripts/data/preprocess_data.py
+      - F:/data/isic_2019/metadata.csv
+    outs:
+      - data/processed/isic2019
+
+  # ----------------------------------------------------------------------
+  # Dermatology: ISIC 2020
+  # ----------------------------------------------------------------------
+  preprocess_isic2020:
+    cmd: >
+      python -m scripts.data.preprocess_data
+      --dataset isic2020
+      --image-size 224
+      --normalize zero_one
+      --format hdf5
+      --output-dir data/processed/isic2020
+    deps:
+      - scripts/data/preprocess_data.py
+      - F:/data/isic_2020/metadata.csv
+    outs:
+      - data/processed/isic2020
+
+  # ----------------------------------------------------------------------
+  # Derm7pt (concept-grounded dermatoscopy)
+  # ----------------------------------------------------------------------
+  preprocess_derm7pt:
+    cmd: >
+      python -m scripts.data.preprocess_data
+      --dataset derm7pt
+      --image-size 224
+      --normalize zero_one
+      --format hdf5
+      --output-dir data/processed/derm7pt
+    deps:
+      - scripts/data/preprocess_data.py
+      - F:/data/derm7pt/metadata.csv
+    outs:
+      - data/processed/derm7pt
+
+  # ----------------------------------------------------------------------
+  # Chest X-Ray: NIH CXR
+  # ----------------------------------------------------------------------
+  preprocess_nih_cxr:
+    cmd: >
+      python -m scripts.data.preprocess_data
+      --dataset nih_cxr
+      --image-size 224
+      --normalize zero_one
+      --format hdf5
+      --output-dir data/processed/nih_cxr
+    deps:
+      - scripts/data/preprocess_data.py
+      - F:/data/nih_cxr/metadata.csv
+    outs:
+      - data/processed/nih_cxr
+
+  # ----------------------------------------------------------------------
+  # Chest X-Ray: PadChest
+  # ----------------------------------------------------------------------
+  preprocess_padchest:
+    cmd: >
+      python -m scripts.data.preprocess_data
+      --dataset padchest
+      --image-size 224
+      --normalize zero_one
+      --format hdf5
+      --output-dir data/processed/padchest
+    deps:
+      - scripts/data/preprocess_data.py
+      - F:/data/padchest/metadata.csv
+    outs:
+      - data/processed/padchest
+
+  # ======================================================================
+  # 2) CONCEPT BANK STAGES (PER DATASET)
+  # ======================================================================
+
+  # Each stage uses build_concept_bank.py with:
+  #   --dataset
+  #   --metadata-csv <raw metadata>
+  #   --output-path <per-dataset JSON>
+
+  build_concept_bank_isic2018:
+    cmd: >
+      python -m scripts.data.build_concept_bank
+      --dataset isic2018
+      --metadata-csv F:/data/isic_2018/metadata.csv
+      --output-path data/concepts/isic2018_concept_bank.json
+    deps:
+      - scripts/data/build_concept_bank.py
+      - F:/data/isic_2018/metadata.csv
+      - data/processed/isic2018
+    outs:
+      - data/concepts/isic2018_concept_bank.json
+
+  build_concept_bank_isic2019:
+    cmd: >
+      python -m scripts.data.build_concept_bank
+      --dataset isic2019
+      --metadata-csv F:/data/isic_2019/metadata.csv
+      --output-path data/concepts/isic2019_concept_bank.json
+    deps:
+      - scripts/data/build_concept_bank.py
+      - F:/data/isic_2019/metadata.csv
+      - data/processed/isic2019
+    outs:
+      - data/concepts/isic2019_concept_bank.json
+
+  build_concept_bank_isic2020:
+    cmd: >
+      python -m scripts.data.build_concept_bank
+      --dataset isic2020
+      --metadata-csv F:/data/isic_2020/metadata.csv
+      --output-path data/concepts/isic2020_concept_bank.json
+    deps:
+      - scripts/data/build_concept_bank.py
+      - F:/data/isic_2020/metadata.csv
+      - data/processed/isic2020
+    outs:
+      - data/concepts/isic2020_concept_bank.json
+
+  build_concept_bank_derm7pt:
+    cmd: >
+      python -m scripts.data.build_concept_bank
+      --dataset derm7pt
+      --metadata-csv F:/data/derm7pt/metadata.csv
+      --output-path data/concepts/derm7pt_concept_bank.json
+    deps:
+      - scripts/data/build_concept_bank.py
+      - F:/data/derm7pt/metadata.csv
+      - data/processed/derm7pt
+    outs:
+      - data/concepts/derm7pt_concept_bank.json
+
+  build_concept_bank_nih_cxr:
+    cmd: >
+      python -m scripts.data.build_concept_bank
+      --dataset nih_cxr
+      --metadata-csv F:/data/nih_cxr/metadata.csv
+      --output-path data/concepts/nih_cxr_concept_bank.json
+    deps:
+      - scripts/data/build_concept_bank.py
+      - F:/data/nih_cxr/metadata.csv
+      - data/processed/nih_cxr
+    outs:
+      - data/concepts/nih_cxr_concept_bank.json
+
+  build_concept_bank_padchest:
+    cmd: >
+      python -m scripts.data.build_concept_bank
+      --dataset padchest
+      --metadata-csv F:/data/padchest/metadata.csv
+      --output-path data/concepts/padchest_concept_bank.json
+    deps:
+      - scripts/data/build_concept_bank.py
+      - F:/data/padchest/metadata.csv
+      - data/processed/padchest
+    outs:
+      - data/concepts/padchest_concept_bank.json
+
+  # ======================================================================
+  # 3) META STAGES TO RUN "ALL AT ONCE"
+  # ======================================================================
+
+  # Run ALL preprocessing with a single command:
+  #   dvc repro preprocess
+  preprocess:
+    cmd: >
+      python -c "print('All preprocessing stages are up to date.')"
+    deps:
+      - data/processed/isic2018
+      - data/processed/isic2019
+      - data/processed/isic2020
+      - data/processed/derm7pt
+      - data/processed/nih_cxr
+      - data/processed/padchest
+
+  # Run ALL concept bank builds with a single command:
+  #   dvc repro build_concept_banks
+  build_concept_banks:
+    cmd: >
+      python -c "print('All concept bank stages are up to date.')"
+    deps:
+      - data/concepts/isic2018_concept_bank.json
+      - data/concepts/isic2019_concept_bank.json
+      - data/concepts/isic2020_concept_bank.json
+      - data/concepts/derm7pt_concept_bank.json
+      - data/concepts/nih_cxr_concept_bank.json
+      - data/concepts/padchest_concept_bank.json
