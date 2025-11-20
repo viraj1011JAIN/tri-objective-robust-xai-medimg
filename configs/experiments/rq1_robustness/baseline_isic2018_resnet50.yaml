@@ -1,0 +1,81 @@
+experiment:
+  name: rq1_baseline_isic2018_resnet50
+  output_dir: results/checkpoints/rq1_robustness/baseline_isic2018_resnet50
+
+# Minimal reproducibility block so that ExperimentConfig validates.
+# Internal fields will fall back to sensible defaults from the code.
+reproducibility: {}
+
+dataset:
+  # Logical dataset name
+  name: isic2018
+
+  # New required field in ExperimentConfig – use your real path
+  root: F:/data/isic_2018
+
+  # Backwards compatible with any older code that still uses "data_root"
+  data_root: F:/data/isic_2018
+
+  # ISIC 2018 has 7 diagnostic classes in the standard split
+  num_classes: 7
+
+  # Training input pipeline
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+  image_size: 224
+
+  # Optional debug limits (used if your code supports them)
+  max_train_batches_debug: 20
+  max_val_batches_debug: 5
+
+
+model:
+  # New required field in ExperimentConfig
+  name: resnet50
+
+  # Backwards compatible with any older code that still uses "architecture"
+  architecture: resnet50
+
+  num_classes: 7
+  pretrained: true
+
+training:
+  # New required field in ExperimentConfig
+  max_epochs: 60
+
+  # Backwards compatible with any code that still looks for "epochs"
+  epochs: 60
+
+  # Optimiser and regularisation
+  optimizer: adamw
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-4
+
+  # Trainer behaviour
+  grad_clip_norm: 1.0
+  grad_accum_steps: 1
+  mixed_precision: true
+
+  # Device and DataLoader options
+  device: cuda
+  num_workers: 4
+  pin_memory: true
+
+  # Early stopping
+  early_stop_patience: 10
+  early_stop_metric: val_auc
+  early_stop_mode: max
+
+  # Checkpointing
+  save_freq: 0                            # only best / latest
+  checkpoint_dir: results/checkpoints/rq1_robustness/baseline_isic2018_resnet50
+  keep_n_checkpoints: 3
+
+  # MLflow logging
+  use_mlflow: true
+  mlflow_experiment: RQ1_Baseline_ISIC2018_ResNet50
+  mlflow_tracking_uri: null              # use default local MLflow
+
+  # Logging frequency (in training steps)
+  log_freq: 10

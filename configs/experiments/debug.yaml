@@ -1,0 +1,81 @@
+experiment:
+  name: tri_objective_debug_cifar10
+  output_dir: results/checkpoints/tri_objective
+
+dataset:
+  name: CIFAR10
+  data_root: data/cifar10        # Relative to project root
+  num_classes: 10
+  batch_size: 64                 # Will be reduced in --debug mode
+  num_workers: 4
+  pin_memory: true
+  image_size: 32
+
+  # Debug subset sizes (used in --debug mode or if present)
+  max_train_batches_debug: 20
+  max_val_batches_debug: 5
+
+model:
+  architecture: resnet50
+  num_classes: 10                # Must match dataset.num_classes
+  pretrained: false              # True is fine too, but slower to download
+
+training:
+  # Base training settings (debug mode will override some of these)
+  epochs: 10                     # In --debug this becomes 2
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-4
+
+  grad_clip_norm: 1.0
+  grad_accum_steps: 1
+  mixed_precision: true
+
+  device: cuda                   # Falls back to cpu if CUDA not available
+  num_workers: 4
+  pin_memory: true
+
+  # Early stopping
+  early_stop_patience: 5
+  early_stop_metric: val_loss
+  early_stop_mode: min
+
+  # Checkpointing
+  save_freq: 0                   # Only best/latest by default
+  checkpoint_dir: results/checkpoints/tri_objective
+  keep_n_checkpoints: 3
+
+  # MLflow integration
+  use_mlflow: true               # In --debug this is forced to false
+  mlflow_experiment: Tri-Objective-XAI-CIFAR10-Debug
+  mlflow_tracking_uri: null      # Use default local MLflow unless overridden
+
+  # Logging
+  log_freq: 10
+
+loss:
+  # Tri-objective weights
+  lambda_rob: 0.3                # λ_rob (robustness weight)
+  lambda_expl: 0.1               # λ_expl (explanation-stability weight)
+
+  # TRADES / PGD hyperparameters
+  trades_beta: 6.0               # β for TRADES
+  epsilon: 0.0156862745          # 4/255 (L∞ radius)
+  pgd_steps: 10
+  pgd_alpha: 0.0039215686        # ε / 4
+
+  # Explanation loss controls (used inside TriObjectiveLoss / trainer)
+  expl_freq: 1                   # Compute explanation loss every batch
+  expl_subsample: 1.0            # Use all samples for explanation loss
+
+attacks:
+  # Evaluation-time PGD config (for later eval scripts)
+  pgd_eval:
+    epsilon: 0.0156862745
+    steps: 10
+    alpha: 0.0039215686
+
+# RUN (from project root):
+#   python scripts/training/train_tri_objective.py \
+#     --config configs/experiments/tri_objective/debug.yaml \
+#     --seed 42 \
+#     --debug
