@@ -49,3 +49,22 @@ coverage.xml
 
 # Local temp debug artifacts
 tmp_artifacts/
+
+# Large / derived artifacts
+checkpoints/
+results/data_validation/
+mlruns/
+
+# Large figures and notebooks with outputs
+notebooks/01_data_exploration.ipynb
+docs/figures/data/isic2018/augmentations/*.pdf
+docs/figures/data/isic2018/augmentations/*.png
+
+# Model weights
+*.pt
+*.pth
+*.ckpt
+
+# Large result files
+*.json.gz
+*_validation_report.json
