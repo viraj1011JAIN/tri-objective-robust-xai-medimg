@@ -16,8 +16,8 @@ dataset:
     - "VASC"  # Vascular lesion
 
   # Paths
-  data_dir: "data/raw/isic2018"
-  processed_dir: "data/processed/isic2018"
+  data_dir: "F:/data/isic_2018"
+  processed_dir: "F:/data/processed/isic_2018"
 
   # Data splits
   train_split: 0.7

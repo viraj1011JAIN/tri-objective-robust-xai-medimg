@@ -178,6 +178,7 @@ class Derm7ptDataset(BaseMedicalDataset):
             meta: Dict[str, Any] = {"split": self.split.value, "raw_label": label_name}
 
             # Add concept annotations if available
+            # Add concept annotations if available
             if self._concept_columns:
                 concepts = {}
                 for col in self._concept_columns:
@@ -187,8 +188,7 @@ class Derm7ptDataset(BaseMedicalDataset):
                         if pd.isna(val) or val == -1:
                             val = 0
                         concepts[col] = val
-                if concepts:
-                    meta["concepts"] = concepts
+                meta["concepts"] = concepts
 
             samples.append(Sample(image_path=image_path, label=y, meta=meta))
 
@@ -215,6 +215,6 @@ class Derm7ptDataset(BaseMedicalDataset):
         """
         stats = super().compute_class_statistics()
         stats["num_concepts"] = len(self.concept_names)
-        if len(self.concept_names) > 0:
+        if self.concept_names:
             stats["concept_names"] = self.concept_names
         return stats

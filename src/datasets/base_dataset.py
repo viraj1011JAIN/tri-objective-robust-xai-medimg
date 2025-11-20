@@ -325,8 +325,9 @@ class BaseMedicalDataset(Dataset):
             # Albumentations 2.x expects keyword arguments
             try:
                 out = self.transform(image=image)
-                if isinstance(out, dict) and "image" in out:
-                    image = out["image"]
+                # Handle Albumentations-style dict output
+                if isinstance(out, dict):
+                    image = out.get("image", out)
                 else:
                     image = out
             except (TypeError, KeyError):
