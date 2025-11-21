@@ -12,7 +12,7 @@ stages:
       --dataset isic2018
       --image-size 224
       --normalize zero_one
-      --format hdf5
+      --to-hdf5
       --output-dir data/processed/isic2018
     deps:
       - scripts/data/preprocess_data.py
@@ -29,7 +29,7 @@ stages:
       --dataset isic2019
       --image-size 224
       --normalize zero_one
-      --format hdf5
+      --to-hdf5
       --output-dir data/processed/isic2019
     deps:
       - scripts/data/preprocess_data.py
@@ -46,7 +46,7 @@ stages:
       --dataset isic2020
       --image-size 224
       --normalize zero_one
-      --format hdf5
+      --to-hdf5
       --output-dir data/processed/isic2020
     deps:
       - scripts/data/preprocess_data.py
@@ -63,7 +63,7 @@ stages:
       --dataset derm7pt
       --image-size 224
       --normalize zero_one
-      --format hdf5
+      --to-hdf5
       --output-dir data/processed/derm7pt
     deps:
       - scripts/data/preprocess_data.py
@@ -80,7 +80,7 @@ stages:
       --dataset nih_cxr
       --image-size 224
       --normalize zero_one
-      --format hdf5
+      --to-hdf5
       --output-dir data/processed/nih_cxr
     deps:
       - scripts/data/preprocess_data.py
@@ -97,7 +97,7 @@ stages:
       --dataset padchest
       --image-size 224
       --normalize zero_one
-      --format hdf5
+      --to-hdf5
       --output-dir data/processed/padchest
     deps:
       - scripts/data/preprocess_data.py

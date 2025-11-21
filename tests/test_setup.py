@@ -87,7 +87,7 @@ def test_core_project_imports() -> None:
         "src.eval",
         "src.losses",
         "src.models",
-        "src.train",
+        "src.training",
         "src.utils",
         "src.utils.config",
         "src.utils.reproducibility",

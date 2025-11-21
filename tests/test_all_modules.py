@@ -546,7 +546,13 @@ class TestChestXRayDataset:
         csv_path = root / "metadata.csv"
         if not csv_path.exists():
             pytest.skip("NIH metadata.csv not found")
-        ds = ChestXRayDataset(root=root, split="train", csv_path=csv_path)
+        ds = ChestXRayDataset(
+            root=root,
+            split="train",
+            csv_path=csv_path,
+            labels_column="Finding Labels",
+            image_path_column="image_path",
+        )
         assert len(ds) >= 0
 
     def test_multilabel_format(self) -> None:
@@ -554,7 +560,13 @@ class TestChestXRayDataset:
         csv_path = root / "metadata.csv"
         if not csv_path.exists():
             pytest.skip("NIH metadata.csv not found")
-        ds = ChestXRayDataset(root=root, split="train", csv_path=csv_path)
+        ds = ChestXRayDataset(
+            root=root,
+            split="train",
+            csv_path=csv_path,
+            labels_column="Finding Labels",
+            image_path_column="image_path",
+        )
         if len(ds) == 0:
             pytest.skip("Empty NIH dataset")
         _, label, _ = ds[0]

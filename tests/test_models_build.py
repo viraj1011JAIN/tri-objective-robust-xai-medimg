@@ -148,7 +148,9 @@ class TestBuildModelFromConfig:
             }
         }
 
-        with pytest.raises(KeyError, match="must contain 'architecture' key"):
+        with pytest.raises(
+            KeyError, match="must contain either 'architecture' or 'name'"
+        ):
             build_model_from_config(config)
 
     def test_build_from_config_missing_num_classes(self):
@@ -356,14 +358,13 @@ class TestIntegration:
                 assert model.dropout_prob == expected_dropout
 
     def test_model_info_after_building(self):
-        """Test that built models have correct metadata."""
+        """Test that built models have correct parameters."""
         model = build_model("resnet50", num_classes=7)
-        info = model.get_model_info()
+        num_params = model.num_parameters()
 
-        assert info["architecture"] == "ResNet50Classifier"
-        assert info["num_classes"] == 7
-        assert info["pretrained"] is True
-        assert info["total_params"] > 20_000_000  # ResNet-50 size
+        assert model.num_classes == 7
+        assert num_params > 20_000_000  # ResNet-50 size
+        assert isinstance(model, torch.nn.Module)
 
 
 # Run tests

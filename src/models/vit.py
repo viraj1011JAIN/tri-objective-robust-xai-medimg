@@ -181,7 +181,7 @@ class ViTB16Classifier(BaseModel):
 
         logger.info(
             "Initialized ViT-B/16: %s params, in_channels=%d, dropout=%.3f, pool=%s",
-            f"{self.get_num_parameters():,}",
+            f"{self.num_parameters():,}",
             self.in_channels,
             self.dropout_prob,
             self.global_pool_type,

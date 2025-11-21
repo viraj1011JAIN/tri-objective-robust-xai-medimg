@@ -199,7 +199,7 @@ class EfficientNetB0Classifier(BaseModel):
 
         logger.info(
             "Initialized EfficientNet-B0: %s params, in_channels=%d, dropout=%.3f",
-            f"{self.get_num_parameters():,}",
+            f"{self.num_parameters():,}",
             self.in_channels,
             self.dropout_prob,
         )

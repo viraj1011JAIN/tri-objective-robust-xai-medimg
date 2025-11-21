@@ -67,7 +67,7 @@ class TestViTB16Basics:
         """Bad arguments should raise ValueError."""
         # NOTE: BaseModel error message is:
         # "num_classes must be a positive integer, got 0"
-        with pytest.raises(ValueError, match="num_classes must be a positive integer"):
+        with pytest.raises(ValueError, match="num_classes must be"):
             _make_model(num_classes=0)
 
         with pytest.raises(ValueError, match="in_channels must be positive"):

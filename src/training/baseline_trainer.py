@@ -4,7 +4,8 @@ from __future__ import annotations
 Standard Baseline Trainer for Tri-Objective Robust XAI Medical Imaging.
 
 Implements standard supervised training with:
-- Cross-entropy or focal loss
+- TaskLoss (production-grade CE/BCE/Focal from Phase 3.2)
+- CalibrationLoss (temperature scaling + label smoothing)
 - Class-imbalance handling via class weights
 - Epoch-level accuracy metrics
 - Compatible with the generic BaseTrainer
@@ -22,11 +23,11 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
 
+from ..losses import TaskLoss, CalibrationLoss
 from .base_trainer import BaseTrainer, TrainingConfig, TrainingMetrics
 
 logger = logging.getLogger(__name__)
@@ -56,8 +57,12 @@ class BaselineTrainer(BaseTrainer):
         device: Optional[torch.device] = None,
         checkpoint_dir: Optional[Path] = None,
         class_weights: Optional[torch.Tensor] = None,
+        task_type: str = "multi_class",
         use_focal_loss: bool = False,
         focal_gamma: float = 2.0,
+        use_calibration: bool = False,
+        init_temperature: float = 1.5,
+        label_smoothing: float = 0.0,
     ) -> None:
         """
         Initialise the baseline trainer.
@@ -83,11 +88,19 @@ class BaselineTrainer(BaseTrainer):
         checkpoint_dir:
             Directory in which to store checkpoints.
         class_weights:
-            Optional per-class weights for cross-entropy / focal loss.
+            Optional per-class weights for TaskLoss.
+        task_type:
+            Task type: "multi_class" or "multi_label" (for CXR).
         use_focal_loss:
-            If True, use FocalLoss instead of standard cross-entropy.
+            If True, use FocalLoss (via TaskLoss).
         focal_gamma:
-            Gamma parameter for focal loss.
+            Gamma parameter for focal loss (default 2.0).
+        use_calibration:
+            If True, use CalibrationLoss (temperature + smoothing).
+        init_temperature:
+            Initial temperature for calibration (default 1.5).
+        label_smoothing:
+            Label smoothing factor (0.0 = no smoothing, 0.1 = 10%).
         """
         super().__init__(
             model=model,
@@ -101,21 +114,45 @@ class BaselineTrainer(BaseTrainer):
         )
 
         self.num_classes = int(num_classes)
+        self.task_type = task_type
         self.use_focal_loss = bool(use_focal_loss)
         self.focal_gamma = float(focal_gamma)
+        self.use_calibration = bool(use_calibration)
 
         # Ensure weights live on the correct device
         if class_weights is not None:
             class_weights = class_weights.to(self.device)
 
-        if self.use_focal_loss:
-            self.criterion: nn.Module = FocalLoss(
+        # Use production-grade loss functions from Phase 3.2
+        if self.use_calibration:
+            # CalibrationLoss: Temperature scaling + label smoothing
+            self.criterion: nn.Module = CalibrationLoss(
                 num_classes=self.num_classes,
-                gamma=self.focal_gamma,
-                weight=class_weights,
+                class_weights=class_weights,
+                use_label_smoothing=(label_smoothing > 0.0),
+                smoothing=label_smoothing,
+                init_temperature=init_temperature,
+                reduction="mean",
+            )
+            logger.info(
+                "Using CalibrationLoss (temp=%.2f, smoothing=%.2f)",
+                init_temperature,
+                label_smoothing,
             )
         else:
-            self.criterion = nn.CrossEntropyLoss(weight=class_weights)
+            # TaskLoss: Auto-selects CE/BCE/Focal based on task_type
+            self.criterion = TaskLoss(
+                num_classes=self.num_classes,
+                task_type=task_type,
+                class_weights=class_weights,
+                use_focal=use_focal_loss,
+                focal_gamma=focal_gamma,
+                reduction="mean",
+            )
+            loss_type = "FocalLoss" if use_focal_loss else "CE/BCE"
+            logger.info(
+                "Using TaskLoss (%s, task_type=%s)", loss_type, task_type
+            )
 
         self.criterion = self.criterion.to(self.device)
 
@@ -223,7 +260,9 @@ class BaselineTrainer(BaseTrainer):
             metrics.accuracy = (all_preds == all_targets).float().mean().item()
 
         logger.info(
-            "Epoch %d Train Accuracy: %.4f", self.current_epoch, metrics.accuracy
+            "Epoch %d Train Accuracy: %.4f",
+            self.current_epoch,
+            metrics.accuracy,
         )
         return metrics
 
@@ -239,105 +278,35 @@ class BaselineTrainer(BaseTrainer):
             all_targets = torch.cat(self.val_targets)
             metrics.accuracy = (all_preds == all_targets).float().mean().item()
 
-        logger.info("Epoch %d Val Accuracy: %.4f", self.current_epoch, metrics.accuracy)
+        logger.info(
+            "Epoch %d Val Accuracy: %.4f",
+            self.current_epoch,
+            metrics.accuracy,
+        )
         return metrics
 
-
-class FocalLoss(nn.Module):
-    """
-    Focal loss for multi-class classification.
-
-    Reference
-    ---------
-    Lin et al., "Focal Loss for Dense Object Detection", ICCV 2017.
-
-    FL(p_t) = -alpha_t * (1 - p_t)^gamma * log(p_t)
-    """
-
-    def __init__(
-        self,
-        num_classes: int,
-        gamma: float = 2.0,
-        alpha: Optional[float] = None,
-        weight: Optional[torch.Tensor] = None,
-        reduction: str = "mean",
-    ) -> None:
+    def get_temperature(self) -> Optional[float]:
         """
-        Parameters
-        ----------
-        num_classes:
-            Number of classes.
-        gamma:
-            Focusing parameter; larger values emphasise hard examples.
-        alpha:
-            Optional scalar balance parameter.
-        weight:
-            Optional per-class weight tensor.
-        reduction:
-            One of {"none", "mean", "sum"}.
-        """
-        super().__init__()
-        if gamma < 0:
-            raise ValueError("gamma must be non-negative")
-
-        if reduction not in {"none", "mean", "sum"}:
-            raise ValueError(
-                f"Invalid reduction '{reduction}'. "
-                "Expected one of {'none', 'mean', 'sum'}."
-            )
-
-        self.num_classes = int(num_classes)
-        self.gamma = float(gamma)
-        self.alpha = alpha
-        self.weight = weight
-        self.reduction = reduction
-
-    def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
-        """
-        Compute focal loss.
-
-        Parameters
-        ----------
-        logits:
-            Logits of shape (batch_size, num_classes).
-        targets:
-            Ground-truth class indices of shape (batch_size,).
+        Get current temperature from calibration loss.
 
         Returns
         -------
-        torch.Tensor
-            Scalar loss tensor.
+        float or None:
+            Current temperature value, or None if not using calibration.
         """
-        if logits.ndim != 2:
-            raise ValueError("logits must be 2D (batch_size, num_classes)")
-        if targets.ndim != 1:
-            raise ValueError("targets must be 1D (batch_size,)")
+        if hasattr(self.criterion, "get_temperature"):
+            return self.criterion.get_temperature()
+        return None
 
-        if logits.size(0) != targets.size(0):
-            raise ValueError("Batch size of logits and targets must match")
+    def get_loss_statistics(self) -> Dict[str, float]:
+        """
+        Get loss statistics from Phase 3.2 loss functions.
 
-        if logits.size(1) != self.num_classes:
-            raise ValueError(
-                "The second dimension of logits must equal num_classes "
-                f"({logits.size(1)} != {self.num_classes})"
-            )
-
-        # Compute standard cross-entropy loss per sample
-        ce_loss = F.cross_entropy(logits, targets, weight=self.weight, reduction="none")
-
-        # Compute probabilities of the true class
-        probs = F.softmax(logits, dim=1)
-        p_t = probs.gather(1, targets.view(-1, 1)).squeeze(1)
-
-        focal_weight = (1.0 - p_t).pow(self.gamma)
-
-        if self.alpha is not None:
-            focal_weight = self.alpha * focal_weight
-
-        loss = focal_weight * ce_loss
-
-        if self.reduction == "mean":
-            return loss.mean()
-        if self.reduction == "sum":
-            return loss.sum()
-        return loss
+        Returns
+        -------
+        dict:
+            Loss statistics (mean, min, max, num_calls).
+        """
+        if hasattr(self.criterion, "get_statistics"):
+            return self.criterion.get_statistics()
+        return {}
