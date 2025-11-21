@@ -10,7 +10,7 @@ Write-Host "===================================================================`
 
 foreach ($ds in $datasets) {
     Write-Host "Verifying $ds..." -ForegroundColor Yellow
-    
+
     $result = [PSCustomObject]@{
         Dataset = $ds
         DirectoryExists = $false
@@ -22,13 +22,13 @@ foreach ($ds in $datasets) {
         ProcessingTime = 0
         Status = "NOT_STARTED"
     }
-    
+
     # Check directory
     $dir = "data\processed\$ds"
     if (Test-Path $dir) {
         $result.DirectoryExists = $true
         Write-Host "  ✅ Directory exists" -ForegroundColor Green
-        
+
         # Check log
         $logPath = "$dir\preprocess_log.json"
         if (Test-Path $logPath) {
@@ -44,7 +44,7 @@ foreach ($ds in $datasets) {
         } else {
             Write-Host "  ❌ Log missing" -ForegroundColor Red
         }
-        
+
         # Check metadata
         $metadataPath = "$dir\metadata_processed.csv"
         if (Test-Path $metadataPath) {
@@ -53,7 +53,7 @@ foreach ($ds in $datasets) {
         } else {
             Write-Host "  ❌ Metadata CSV missing" -ForegroundColor Red
         }
-        
+
         # Check HDF5
         $hdf5Path = "$dir\dataset.h5"
         if (Test-Path $hdf5Path) {
@@ -63,7 +63,7 @@ foreach ($ds in $datasets) {
         } else {
             Write-Host "  ⚠️  HDF5 file not found" -ForegroundColor Yellow
         }
-        
+
         # Check DVC tracking
         if (Test-Path "$dir.dvc") {
             $result.DVCTracked = $true
@@ -71,7 +71,7 @@ foreach ($ds in $datasets) {
         } else {
             Write-Host "  ⚠️  Not DVC tracked yet" -ForegroundColor Yellow
         }
-        
+
         # Determine status
         if ($result.LogExists -and $result.MetadataExists) {
             $result.Status = "COMPLETE"
@@ -82,7 +82,7 @@ foreach ($ds in $datasets) {
         Write-Host "  ❌ Directory not found" -ForegroundColor Red
         $result.Status = "NOT_STARTED"
     }
-    
+
     $results += $result
     Write-Host ""
 }

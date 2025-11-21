@@ -39,7 +39,7 @@ import warnings
 from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -70,9 +70,12 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 # INPUT VALIDATION UTILITIES
 # =============================================================================
 
-def validate_path(path: Union[str, Path], must_exist: bool = True, path_type: str = "path") -> Path:
+
+def validate_path(
+    path: Union[str, Path], must_exist: bool = True, path_type: str = "path"
+) -> Path:
     """Validate and sanitize file/directory paths.
-    
+
     Parameters
     ----------
     path : str or Path
@@ -81,12 +84,12 @@ def validate_path(path: Union[str, Path], must_exist: bool = True, path_type: st
         Whether path must exist on filesystem
     path_type : str
         Description for error messages ("file", "directory", "path")
-        
+
     Returns
     -------
     Path
         Validated and resolved path
-        
+
     Raises
     ------
     ValueError
@@ -96,29 +99,29 @@ def validate_path(path: Union[str, Path], must_exist: bool = True, path_type: st
         validated_path = Path(path).resolve()
     except (ValueError, RuntimeError) as e:
         raise ValueError(f"Invalid {path_type} path '{path}': {e}") from e
-    
+
     if must_exist and not validated_path.exists():
         raise ValueError(
             f"{path_type.capitalize()} not found: {validated_path}\n"
             f"Please verify the path exists and is accessible."
         )
-    
+
     return validated_path
 
 
 def validate_split_name(split: str) -> str:
     """Validate split name against allowed values.
-    
+
     Parameters
     ----------
     split : str
         Split name to validate
-        
+
     Returns
     -------
     str
         Validated split name (lowercase)
-        
+
     Raises
     ------
     ValueError
@@ -126,56 +129,64 @@ def validate_split_name(split: str) -> str:
     """
     valid_splits = {"train", "val", "test", "validation"}
     split_lower = split.lower().strip()
-    
+
     # Handle common aliases
     if split_lower in {"valid", "validation"}:
         split_lower = "val"
-    
+
     if split_lower not in valid_splits:
         raise ValueError(
             f"Invalid split '{split}'. Must be one of: {sorted(valid_splits)}"
         )
-    
+
     return split_lower
 
 
 def validate_dataset_key(dataset_key: str) -> str:
     """Validate dataset identifier.
-    
+
     Parameters
     ----------
     dataset_key : str
         Dataset identifier to validate
-        
+
     Returns
     -------
     str
         Validated dataset key (lowercase)
-        
+
     Raises
     ------
     ValueError
         If dataset key is not recognized
     """
     valid_keys = {
-        "isic", "isic2018", "isic2019", "isic2020",
-        "derm7pt", "derm",
-        "chest_xray", "cxr", "nih_cxr", "padchest"
+        "isic",
+        "isic2018",
+        "isic2019",
+        "isic2020",
+        "derm7pt",
+        "derm",
+        "chest_xray",
+        "cxr",
+        "nih_cxr",
+        "padchest",
     }
     key_lower = dataset_key.lower().strip()
-    
+
     if key_lower not in valid_keys:
         raise ValueError(
             f"Unknown dataset '{dataset_key}'. Supported datasets: "
             f"isic2018/2019/2020, derm7pt, nih_cxr, padchest"
         )
-    
+
     return key_lower
 
 
 # =============================================================================
 # DATASET FACTORY
 # =============================================================================
+
 
 def build_dataset(
     dataset_key: str,

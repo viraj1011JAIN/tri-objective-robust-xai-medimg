@@ -27,7 +27,7 @@ from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from torch.utils.data import DataLoader
 
-from ..losses import TaskLoss, CalibrationLoss
+from ..losses import CalibrationLoss, TaskLoss
 from .base_trainer import BaseTrainer, TrainingConfig, TrainingMetrics
 
 logger = logging.getLogger(__name__)
@@ -150,9 +150,7 @@ class BaselineTrainer(BaseTrainer):
                 reduction="mean",
             )
             loss_type = "FocalLoss" if use_focal_loss else "CE/BCE"
-            logger.info(
-                "Using TaskLoss (%s, task_type=%s)", loss_type, task_type
-            )
+            logger.info("Using TaskLoss (%s, task_type=%s)", loss_type, task_type)
 
         self.criterion = self.criterion.to(self.device)
 

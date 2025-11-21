@@ -41,7 +41,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.data.datasets import ISIC2018Dataset, Derm7ptDataset
+from src.data.datasets import Derm7ptDataset, ISIC2018Dataset
 from src.models.build import build_classifier
 from src.training.baseline_trainer import BaselineTrainer, TrainingConfig
 from src.utils.config import load_config

@@ -35,7 +35,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.data.datasets import ISIC2018Dataset, Derm7ptDataset
+from src.data.datasets import Derm7ptDataset, ISIC2018Dataset
 from src.models.build import build_classifier
 from src.training.baseline_trainer import BaselineTrainer, TrainingConfig
 from src.utils.logging_utils import setup_logging
@@ -124,16 +124,25 @@ def load_dataset(
         raise ValueError(f"Unknown dataset: {dataset_name}")
 
     train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True,
-        num_workers=num_workers, pin_memory=True
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=num_workers,
+        pin_memory=True,
     )
     val_loader = DataLoader(
-        val_dataset, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True
+        val_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
     )
     test_loader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False,
-        num_workers=num_workers, pin_memory=True
+        test_dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        num_workers=num_workers,
+        pin_memory=True,
     )
 
     logger.info(
@@ -268,7 +277,9 @@ def main() -> None:
     # Test
     logger.info("Evaluating on test set...")
     test_metrics = trainer.validate(epoch=-1)
-    logger.info(f"Test: Loss={test_metrics['loss']:.4f}, Acc={test_metrics['accuracy']:.4f}")
+    logger.info(
+        f"Test: Loss={test_metrics['loss']:.4f}, Acc={test_metrics['accuracy']:.4f}"
+    )
     logger.info("=" * 80)
 
 

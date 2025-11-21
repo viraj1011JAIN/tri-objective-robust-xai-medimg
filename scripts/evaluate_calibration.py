@@ -33,15 +33,15 @@ import logging
 import sys
 from pathlib import Path
 
-import torch
-from torch.utils.data import DataLoader
-
 # Add project root to path
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from src.data.datasets import ISIC2018Dataset, Derm7ptDataset
+import torch
+from torch.utils.data import DataLoader
+
+from src.data.datasets import Derm7ptDataset, ISIC2018Dataset
 from src.evaluation.calibration import evaluate_calibration
 from src.models.build import build_classifier
 from src.utils.logging_utils import setup_logging

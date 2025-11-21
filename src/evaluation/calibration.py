@@ -254,9 +254,10 @@ def plot_reliability_diagram(
     )
 
     # Add bar chart showing sample distribution
+    bin_counts_sum = float(np.sum(bin_counts))
     ax.bar(
         bin_centers,
-        bin_counts / bin_counts.sum(),
+        bin_counts / bin_counts_sum,
         width=1.0 / num_bins,
         alpha=0.3,
         color="gray",
@@ -436,15 +437,15 @@ def evaluate_calibration(
     if output_dir:
         from pathlib import Path
 
-        output_dir = Path(output_dir)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
 
         # Reliability diagram
         fig1 = plot_reliability_diagram(
             predictions,
             labels,
             num_bins,
-            save_path=str(output_dir / "reliability_diagram.png"),
+            save_path=str(output_path / "reliability_diagram.png"),
         )
         plt.close(fig1)
 

@@ -3,15 +3,16 @@ Production-Level Dataset Analysis Script for Phase 2.1
 Analyzes all medical imaging datasets at F:/data
 """
 
+import json
 import os
 import sys
-from pathlib import Path
-from typing import Dict, List, Tuple, Any
-import pandas as pd
-import numpy as np
-from PIL import Image
 from collections import Counter
-import json
+from pathlib import Path
+from typing import Any, Dict, List
+
+import numpy as np
+import pandas as pd
+from PIL import Image
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -334,9 +335,11 @@ def analyze_derm7pt() -> Dict[str, Any]:
             }
         },
         "total_samples": len(images),
-        "unique_patients": int(meta_csv["case_num"].nunique())
-        if "case_num" in meta_csv.columns
-        else "Unknown",
+        "unique_patients": (
+            int(meta_csv["case_num"].nunique())
+            if "case_num" in meta_csv.columns
+            else "Unknown"
+        ),
         "image_types": ["dermoscopy", "clinical"],
         "class_balance": "Check diagnosis column",
         "data_format": {
@@ -363,9 +366,7 @@ def analyze_nih_cxr() -> Dict[str, Any]:
     data_entry_csv = pd.read_csv(dataset_path / "Data_Entry_2017.csv")
 
     # Count images
-    image_dirs = [
-        dataset_path / f"images_{str(i).zfill(3)}" for i in range(1, 13)
-    ]
+    image_dirs = [dataset_path / f"images_{str(i).zfill(3)}" for i in range(1, 13)]
     total_images = sum(len(list(d.glob("*.png"))) for d in image_dirs if d.exists())
 
     # Parse labels (pipe-separated multi-label)
@@ -385,8 +386,7 @@ def analyze_nih_cxr() -> Dict[str, Any]:
         "task": "Thoracic Disease Detection (14 classes, Multi-label)",
         "modality": "Chest X-ray (Grayscale)",
         "num_classes": 14,
-        "class_names": diseases
-        + ["No Finding"],  # 14 diseases + 1 no-finding class
+        "class_names": diseases + ["No Finding"],  # 14 diseases + 1 no-finding class
         "diseases": diseases,
         "task_type": "Multi-label Classification",
         "splits": {
@@ -458,9 +458,9 @@ def analyze_padchest() -> Dict[str, Any]:
             "images": "PNG",
             "labels": "CSV (complex multi-label with Spanish terms)",
         },
-        "metadata_files": ["metadata.csv", "train.csv", "val.csv"]
-        if metadata_path.exists()
-        else [],
+        "metadata_files": (
+            ["metadata.csv", "train.csv", "val.csv"] if metadata_path.exists() else []
+        ),
         "license": "Academic/Research Use",
         "source": "https://bimcv.cipf.es/bimcv-projects/padchest/",
         "notes": "Requires preprocessing for label translation",
@@ -489,9 +489,7 @@ def generate_summary_table(analyses: List[Dict[str, Any]]) -> pd.DataFrame:
     return pd.DataFrame(summary)
 
 
-def save_analysis_report(
-    analyses: List[Dict[str, Any]], output_path: Path
-) -> None:
+def save_analysis_report(analyses: List[Dict[str, Any]], output_path: Path) -> None:
     """Save comprehensive analysis report."""
     report = {
         "analysis_date": pd.Timestamp.now().isoformat(),
@@ -581,9 +579,7 @@ def main():
     print("[SUCCESS] PHASE 2.1 DATASET ANALYSIS COMPLETE")
     print("=" * 80)
     print(f"Total Datasets Analyzed: {len(analyses)}")
-    print(
-        f"Total Samples: {sum(a['total_samples'] for a in analyses):,}"
-    )
+    print(f"Total Samples: {sum(a['total_samples'] for a in analyses):,}")
     print(f"Report Location: {output_path}")
 
 
