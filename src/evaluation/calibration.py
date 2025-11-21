@@ -453,10 +453,10 @@ def evaluate_calibration(
         fig2 = plot_confidence_histogram(
             predictions,
             labels,
-            save_path=str(output_dir / "confidence_histogram.png"),
+            save_path=str(output_path / "confidence_histogram.png"),
         )
         plt.close(fig2)
 
-        logger.info(f"Plots saved to {output_dir}")
+        logger.info(f"Plots saved to {output_path}")
 
     return metrics
