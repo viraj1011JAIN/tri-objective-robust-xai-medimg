@@ -1,0 +1,7 @@
+frozen: true
+deps:
+- hash: md5
+  path: F:/data/padchest/PADCHEST_chest_x_ray_images_labels_160K_01.02.19.csv
+outs:
+- hash: md5
+  path: padchest_metadata.csv

@@ -1,0 +1,5 @@
+outs:
+- md5: 34c13e5ad04dff20d1205e17b3c999f4
+  size: 8218
+  hash: md5
+  path: registry.json
