@@ -1,0 +1,97 @@
+# Vision Transformer Base (ViT-B/16) Configuration
+# Transformer-based model with patch size 16
+
+model:
+  name: vit_base_patch16_224
+  architecture: vit_base_patch16_224
+  pretrained: true
+  num_classes: 7
+  
+  # ViT-specific settings
+  img_size: 224
+  patch_size: 16
+  embed_dim: 768
+  depth: 12
+  num_heads: 12
+  mlp_ratio: 4.0
+  
+  # Dropout
+  drop_rate: 0.1  # Attention dropout
+  attn_drop_rate: 0.0
+  drop_path_rate: 0.1  # Stochastic depth
+  
+  # Classifier
+  representation_size: null  # No intermediate layer
+  
+  # Positional embeddings
+  pos_embed_type: learned
+
+training:
+  optimizer:
+    type: adamw
+    lr: 0.0001
+    weight_decay: 0.05  # Higher for ViT
+    betas: [0.9, 0.999]
+    
+  scheduler:
+    type: cosine
+    T_max: 100
+    eta_min: 0.000001
+    warmup_epochs: 10  # ViT benefits from warmup
+    
+  loss:
+    type: cross_entropy
+    label_smoothing: 0.1
+    
+  batch_size: 32
+  num_epochs: 100
+  gradient_clip: 1.0
+  use_amp: true
+
+augmentation:
+  train:
+    - RandomResizedCrop:
+        size: 224
+        scale: [0.8, 1.0]
+        interpolation: bicubic  # Better for ViT
+    - RandomHorizontalFlip:
+        p: 0.5
+    - RandAugment:  # Strong augmentation for ViT
+        num_ops: 2
+        magnitude: 9
+    - Normalize:
+        mean: [0.5, 0.5, 0.5]  # ViT normalization
+        std: [0.5, 0.5, 0.5]
+        
+  val:
+    - Resize:
+        size: 256
+        interpolation: bicubic
+    - CenterCrop:
+        size: 224
+    - Normalize:
+        mean: [0.5, 0.5, 0.5]
+        std: [0.5, 0.5, 0.5]
+
+capacity:
+  parameters: 86567656  # ~86.6M parameters
+  flops: 17581972224  # ~17.6 GFLOPs
+  num_patches: 196  # 14x14 patches
+
+tasks:
+  dermoscopy:
+    num_classes: 7
+    batch_size: 32
+    image_size: 224
+    
+  chest_xray:
+    num_classes: 14
+    batch_size: 16
+    image_size: 224
+    loss:
+      type: bce_with_logits
+      
+  retinopathy:
+    num_classes: 5
+    batch_size: 32
+    image_size: 224

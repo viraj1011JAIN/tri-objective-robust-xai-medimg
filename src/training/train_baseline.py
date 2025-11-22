@@ -87,7 +87,12 @@ def create_dataloaders(
         num_samples = 256
         num_classes = 7
         channels = 3
-    elif name in {"nih_chestxray14", "chest_x_ray", "chestxray14"}:
+    elif name in {
+        "nih_chestxray14",
+        "chest_x_ray",
+        "chest_xray",
+        "chestxray14",
+    }:
         num_samples = 512
         num_classes = 14
         channels = 1
@@ -242,11 +247,11 @@ def main(args):
         # Trainer
         # ------------------------------------------------------------------
         trainer_cfg = TrainingConfig(
-            max_epochs=cfg.training.max_epochs,
-            eval_every_n_epochs=cfg.training.eval_every_n_epochs,
-            log_every_n_steps=cfg.training.log_every_n_steps,
-            early_stopping_patience=cfg.training.early_stopping_patience,
-            gradient_clip_val=cfg.training.gradient_clip_val,
+            max_epochs=cfg["training"]["max_epochs"],
+            eval_every_n_epochs=cfg["training"].get("eval_every_n_epochs", 1),
+            log_every_n_steps=cfg["training"].get("log_every_n_steps", 10),
+            early_stopping_patience=cfg["training"]["early_stopping_patience"],
+            gradient_clip_val=cfg["training"].get("gradient_clip_val", 1.0),
             checkpoint_dir=str(checkpoint_dir),
         )
 

@@ -437,7 +437,8 @@ class ResNet50Classifier(BaseModel):
             Mapping from layer name to (channels, height, width).
         """
         height, width = input_resolution
-        device = self.device
+        # Get device from one of the model's parameters
+        device = next(self.parameters()).device
 
         with torch.no_grad():
             dummy = torch.zeros(

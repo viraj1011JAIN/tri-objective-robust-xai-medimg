@@ -1,0 +1,30 @@
+# FGSM Default Configuration
+# Fast Gradient Sign Method for L∞ adversarial attacks
+
+attack:
+  type: "fgsm"
+  name: "FGSM"
+  description: "Single-step gradient-based attack"
+
+# Perturbation parameters
+epsilon: 0.03137  # 8/255 for dermoscopy
+clip_min: 0.0
+clip_max: 1.0
+
+# Attack parameters
+targeted: false
+
+# Computation
+device: "cuda"  # or "cpu"
+batch_size: 32
+verbose: false
+random_seed: null
+
+# Medical imaging recommendations:
+# Dermoscopy (RGB): epsilon in [2/255, 4/255, 8/255]
+# Chest X-ray (grayscale): epsilon in [2/255, 4/255]
+#
+# Examples:
+#   epsilon: 0.00784  # 2/255 (subtle)
+#   epsilon: 0.01569  # 4/255 (moderate)
+#   epsilon: 0.03137  # 8/255 (strong)

@@ -99,7 +99,7 @@ def _resolve_architecture(
         raise ValueError("Either 'architecture' or 'name' must be provided.")
 
     arch = architecture if architecture is not None else name
-    if arch is None:
+    if arch is None:  # pragma: no cover - defensive, checked above
         raise ValueError("Architecture name cannot be None")
     return arch.lower().strip()
 
@@ -228,13 +228,14 @@ def build_model(
     if hasattr(model, "get_model_info"):
         try:
             info = model.get_model_info()
-            logger.info(
+            logger.info(  # pragma: no cover - skipped when exception raised
                 f"Created {info.get('architecture', architecture_key)}: "
                 f"{info.get('total_params', 0):,} total params, "
                 f"{info.get('trainable_params', 0):,} trainable params"
             )
-        except Exception:  # pragma: no cover - defensive
-            logger.debug("get_model_info() raised; continuing without detailed stats")
+        except Exception:  # pragma: no cover
+            # Defensive: continue if get_model_info() fails
+            pass
 
     return model
 

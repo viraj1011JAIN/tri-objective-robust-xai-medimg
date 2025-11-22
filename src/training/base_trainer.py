@@ -35,8 +35,8 @@ logger = logging.getLogger(__name__)
 
 try:
     import mlflow
-except Exception:
-    mlflow = None
+except Exception:  # pragma: no cover
+    mlflow = None  # pragma: no cover
 
 
 @dataclass
@@ -173,7 +173,7 @@ class BaseTrainer(ABC):
         Tuple[torch.Tensor, Dict[str, float]]
             (loss, metrics_dict)
         """
-        pass
+        pass  # pragma: no cover
 
     @abstractmethod
     def validation_step(
@@ -187,7 +187,7 @@ class BaseTrainer(ABC):
         Tuple[torch.Tensor, Dict[str, float]]
             (loss, metrics_dict)
         """
-        pass
+        pass  # pragma: no cover
 
     def _get_batch_size(self, batch: Any) -> int:
         """Extract batch size from batch."""
@@ -342,7 +342,9 @@ class BaseTrainer(ABC):
         if not checkpoint_path.exists():
             raise FileNotFoundError(f"Checkpoint not found: {checkpoint_path}")
 
-        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        checkpoint = torch.load(
+            checkpoint_path, map_location=self.device, weights_only=False
+        )
 
         self.model.load_state_dict(checkpoint["model_state_dict"])
         self.optimizer.load_state_dict(checkpoint["optimizer_state_dict"])

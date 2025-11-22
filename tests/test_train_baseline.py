@@ -92,6 +92,9 @@ class DummyExperimentCfg:
             weight_decay=1e-6,
             device="cpu",
             early_stopping_patience=3,
+            eval_every_n_epochs=1,
+            log_every_n_steps=10,
+            gradient_clip_val=1.0,
         )
 
 
@@ -118,6 +121,65 @@ def base_args(temp_dirs):
         results_dir=str(temp_dirs["results_dir"]),
         log_dir=str(temp_dirs["log_dir"]),
     )
+
+
+# ---------------------------------------------------------------------------
+# Import tests
+# ---------------------------------------------------------------------------
+
+
+class TestImports:
+    def test_mlflow_import_available(self):
+        """Test that MLflow import is handled correctly."""
+        # MLflow should be imported successfully in the module
+        from src.training import train_baseline
+
+        assert train_baseline.mlflow is not None
+
+    def test_mlflow_import_exception_handler(self):
+        """Test the except ImportError block for mlflow."""
+        import builtins
+        import importlib
+        import sys
+
+        # Save original states
+        original_import = builtins.__import__
+        original_mlflow = sys.modules.get("mlflow")
+        original_tb = sys.modules.get("src.training.train_baseline")
+
+        def mock_import(name, *args, **kwargs):
+            if name == "mlflow":
+                raise ImportError("Mocked mlflow import failure")
+            return original_import(name, *args, **kwargs)
+
+        try:
+            # Clean up existing imports
+            for key in list(sys.modules.keys()):
+                if "src.training.train_baseline" in key:
+                    del sys.modules[key]
+            if "mlflow" in sys.modules:
+                del sys.modules["mlflow"]
+
+            # Mock import to raise error
+            builtins.__import__ = mock_import
+
+            # Import should trigger except block
+            import src.training.train_baseline as tb
+
+            # MLflow should be None after ImportError
+            assert tb.mlflow is None
+
+        finally:
+            # Restore everything
+            builtins.__import__ = original_import
+            if original_mlflow:
+                sys.modules["mlflow"] = original_mlflow
+            if original_tb:
+                sys.modules["src.training.train_baseline"] = original_tb
+
+            # Reload with real mlflow
+            if "src.training.train_baseline" in sys.modules:
+                importlib.reload(sys.modules["src.training.train_baseline"])
 
 
 # ---------------------------------------------------------------------------
@@ -148,7 +210,9 @@ class TestSetupLogging:
             logger = logging.getLogger("another_test_logger")
             logger.info("Hello from logging test")
 
-        assert any("Hello from logging test" in r.message for r in caplog.records)
+        assert any(
+            "Hello from logging test" in r.message for r in caplog.records
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -177,16 +241,22 @@ class TestCreateDataloaders:
         assert len(train_loader.dataset) == int(512 * 0.8)
         assert len(val_loader.dataset) == int(512 * 0.2)
 
-    @pytest.mark.skip(reason="chest_xray alias not configured in Phase 1")
     def test_chest_xray_alias(self):
-        _, _, num_classes = create_dataloaders(batch_size=8, dataset="chest_xray")
+        """Test chest_xray alias maps to NIH ChestX-ray14."""
+        _, _, num_classes = create_dataloaders(
+            batch_size=8, dataset="chest_xray"
+        )
         assert num_classes == 14
 
     def test_case_insensitive_names(self):
-        _, _, num_classes = create_dataloaders(batch_size=8, dataset="ISIC2018")
+        _, _, num_classes = create_dataloaders(
+            batch_size=8, dataset="ISIC2018"
+        )
         assert num_classes == 7
 
-        _, _, num_classes = create_dataloaders(batch_size=8, dataset="NIH_ChestXray14")
+        _, _, num_classes = create_dataloaders(
+            batch_size=8, dataset="NIH_ChestXray14"
+        )
         assert num_classes == 14
 
     def test_unknown_dataset_raises(self):
@@ -209,7 +279,6 @@ class TestCreateDataloaders:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.skip(reason="Main function config not implemented in Phase 1")
 class TestMain:
     @patch("src.training.train_baseline.BaselineTrainer")
     @patch("src.training.train_baseline.build_model")
@@ -348,7 +417,9 @@ class TestMain:
 
         main(base_args)
 
-        metric_names_true = [c.args[0] for c in mock_mlflow.log_metric.call_args_list]
+        metric_names_true = [
+            c.args[0] for c in mock_mlflow.log_metric.call_args_list
+        ]
         assert "best_val_loss" in metric_names_true
         assert "best_epoch" in metric_names_true
         assert "final_val_loss" in metric_names_true
@@ -361,7 +432,9 @@ class TestMain:
 
         main(base_args)
 
-        metric_names_false = [c.args[0] for c in mock_mlflow.log_metric.call_args_list]
+        metric_names_false = [
+            c.args[0] for c in mock_mlflow.log_metric.call_args_list
+        ]
         assert "best_val_loss" in metric_names_false
         assert "best_epoch" in metric_names_false
         assert "final_val_loss" not in metric_names_false
@@ -390,3 +463,231 @@ class TestMain:
         main(base_args)
 
         mock_mlflow.start_run.assert_called_once_with(run_name="seed_99")
+
+
+# ---------------------------------------------------------------------------
+# _cfg_from_experiment_object tests
+# ---------------------------------------------------------------------------
+
+
+class TestCfgFromExperimentObject:
+    def test_converts_pydantic_config_to_dict(self):
+        """Test that _cfg_from_experiment_object converts config correctly."""
+        from src.training.train_baseline import _cfg_from_experiment_object
+
+        cfg_obj = DummyExperimentCfg(dataset_name="isic2018", num_classes=7)
+        result = _cfg_from_experiment_object(cfg_obj, device_fallback="cuda")
+
+        assert "experiment" in result
+        assert "model" in result
+        assert "dataset" in result
+        assert "training" in result
+
+        assert result["experiment"]["name"] == "test_experiment"
+        assert result["model"]["name"] == "resnet18"
+        assert result["model"]["num_classes"] == 7
+        assert result["dataset"]["name"] == "isic2018"
+        assert result["training"]["device"] == "cpu"  # From config
+
+    def test_uses_device_fallback_when_not_in_config(self):
+        """Test that device_fallback is used when device not in training."""
+        from src.training.train_baseline import _cfg_from_experiment_object
+
+        # Create config without device in training
+        cfg_obj = DummyExperimentCfg()
+        # Remove device from training config
+        cfg_obj.training = DummySubCfg(
+            max_epochs=2,
+            learning_rate=1e-4,
+            weight_decay=1e-6,
+            early_stopping_patience=3,
+            # No device key
+        )
+
+        result = _cfg_from_experiment_object(cfg_obj, device_fallback="cuda")
+
+        # Should use fallback
+        assert result["training"]["device"] == "cuda"
+
+    def test_preserves_all_config_fields(self):
+        """Test that all fields from config are preserved."""
+        from src.training.train_baseline import _cfg_from_experiment_object
+
+        cfg_obj = DummyExperimentCfg()
+        result = _cfg_from_experiment_object(cfg_obj, device_fallback="cpu")
+
+        # Check all fields are preserved
+        assert result["model"]["pretrained"] is False
+        assert result["training"]["max_epochs"] == 2
+        assert result["training"]["learning_rate"] == 1e-4
+        assert result["training"]["weight_decay"] == 1e-6
+        assert result["training"]["early_stopping_patience"] == 3
+
+
+# ---------------------------------------------------------------------------
+# Additional edge case tests
+# ---------------------------------------------------------------------------
+
+
+class TestCreateDataloadersEdgeCases:
+    def test_isic_alias_variants(self):
+        """Test all ISIC alias variants."""
+        for alias in ["isic", "isic_2018", "ISIC", "ISIC_2018"]:
+            _, _, num_classes = create_dataloaders(batch_size=8, dataset=alias)
+            assert num_classes == 7
+
+    def test_nih_alias_variants(self):
+        """Test all NIH ChestX-ray alias variants."""
+        for alias in [
+            "nih_chestxray14",
+            "chest_x_ray",
+            "chestxray14",
+            "NIH_CHESTXRAY14",
+        ]:
+            _, _, num_classes = create_dataloaders(batch_size=8, dataset=alias)
+            assert num_classes == 14
+
+    def test_dataloader_deterministic_split(self):
+        """Test that dataloaders have deterministic splits."""
+        train_loader, val_loader, _ = create_dataloaders(
+            batch_size=16, dataset="isic2018"
+        )
+
+        # Verify consistent split sizes
+        assert len(train_loader.dataset) == 204
+        assert len(val_loader.dataset) == 51
+
+
+class TestMainIntegration:
+    @patch("src.training.train_baseline.BaselineTrainer")
+    @patch("src.training.train_baseline.build_model")
+    @patch("src.training.train_baseline.mlflow")
+    @patch("src.training.train_baseline.load_experiment_config")
+    @patch("src.training.train_baseline.set_global_seed")
+    def test_main_creates_checkpoint_directory_with_seed(
+        self,
+        mock_set_global_seed,
+        mock_load_experiment_config,
+        mock_mlflow,
+        mock_build_model,
+        mock_trainer_cls,
+        base_args,
+        temp_dirs,
+    ):
+        """Test that checkpoint directory is created with seed suffix."""
+        base_args.config = "config.yaml"
+        base_args.seed = 123
+
+        mock_load_experiment_config.return_value = DummyExperimentCfg()
+        mock_build_model.return_value = DummyModel(num_classes=7)
+        mock_trainer_cls.return_value = DummyTrainer()
+
+        mock_mlflow.start_run.return_value.__enter__.return_value = None
+        mock_mlflow.start_run.return_value.__exit__.return_value = None
+
+        main(base_args)
+
+        # Check checkpoint directory was created with seed
+        checkpoint_dir = Path(temp_dirs["checkpoint_dir"]) / "seed_123"
+        assert checkpoint_dir.exists()
+
+    @patch("src.training.train_baseline.BaselineTrainer")
+    @patch("src.training.train_baseline.build_model")
+    @patch("src.training.train_baseline.mlflow")
+    @patch("src.training.train_baseline.set_global_seed")
+    def test_main_logs_all_hyperparameters(
+        self,
+        mock_set_global_seed,
+        mock_mlflow,
+        mock_build_model,
+        mock_trainer_cls,
+        base_args,
+    ):
+        """Test that all hyperparameters are logged to MLflow."""
+        mock_build_model.return_value = DummyModel(num_classes=7)
+        mock_trainer_cls.return_value = DummyTrainer()
+
+        mock_mlflow.start_run.return_value.__enter__.return_value = None
+        mock_mlflow.start_run.return_value.__exit__.return_value = None
+
+        main(base_args)
+
+        # Check that log_params was called with correct params
+        params_call = mock_mlflow.log_params.call_args
+        params = params_call[0][0]
+
+        assert params["seed"] == 42
+        assert params["model"] == "resnet50"
+        assert params["dataset"] == "isic2018"
+        assert params["lr"] == 1e-3
+        assert params["weight_decay"] == 1e-5
+        assert params["max_epochs"] == 10
+
+    @patch("src.training.train_baseline.BaselineTrainer")
+    @patch("src.training.train_baseline.build_model")
+    @patch("src.training.train_baseline.mlflow")
+    @patch("src.training.train_baseline.set_global_seed")
+    def test_main_saves_results_json_with_correct_name(
+        self,
+        mock_set_global_seed,
+        mock_mlflow,
+        mock_build_model,
+        mock_trainer_cls,
+        base_args,
+        temp_dirs,
+    ):
+        """Test that results JSON is saved with correct filename."""
+        base_args.seed = 999
+
+        mock_build_model.return_value = DummyModel(num_classes=7)
+        mock_trainer_cls.return_value = DummyTrainer()
+
+        mock_mlflow.start_run.return_value.__enter__.return_value = None
+        mock_mlflow.start_run.return_value.__exit__.return_value = None
+
+        main(base_args)
+
+        # Check filename format: {model}_{dataset}_seed{seed}.json
+        results_file = (
+            Path(temp_dirs["results_dir"]) / "resnet50_isic2018_seed999.json"
+        )
+        assert results_file.exists()
+
+        with results_file.open() as f:
+            results = json.load(f)
+
+        assert results["seed"] == 999
+        assert results["model"] == "resnet50"
+        assert results["dataset"] == "isic2018"
+
+    @patch("src.training.train_baseline.BaselineTrainer")
+    @patch("src.training.train_baseline.build_model")
+    @patch("src.training.train_baseline.mlflow")
+    @patch("src.training.train_baseline.load_experiment_config")
+    @patch("src.training.train_baseline.set_global_seed")
+    def test_main_with_config_device_override(
+        self,
+        mock_set_global_seed,
+        mock_load_experiment_config,
+        mock_mlflow,
+        mock_build_model,
+        mock_trainer_cls,
+        base_args,
+    ):
+        """Test device from args.device is used as fallback."""
+        base_args.config = "config.yaml"
+        base_args.device = "cuda"
+
+        # Config has device="cpu" in training
+        mock_load_experiment_config.return_value = DummyExperimentCfg()
+        mock_build_model.return_value = DummyModel(num_classes=7)
+        mock_trainer_cls.return_value = DummyTrainer()
+
+        mock_mlflow.start_run.return_value.__enter__.return_value = None
+        mock_mlflow.start_run.return_value.__exit__.return_value = None
+
+        main(base_args)
+
+        # Trainer should be called with device from config
+        trainer_call = mock_trainer_cls.call_args
+        assert trainer_call[1]["device"].type == "cpu"  # From config, not args
