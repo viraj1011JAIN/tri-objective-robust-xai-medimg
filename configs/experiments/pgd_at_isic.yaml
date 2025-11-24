@@ -1,0 +1,251 @@
+# =============================================================================
+# Phase 5.2: PGD Adversarial Training Configuration
+# =============================================================================
+#
+# Production configuration for RQ1 robustness evaluation.
+#
+# Training Strategy:
+# - Training PGD: ε=8/255, 7 steps, step_size=ε/4
+# - Evaluation PGD: ε=8/255, 10 steps, step_size=ε/4
+# - Pure adversarial training (no clean examples)
+# - Standard cross-entropy loss on adversarial examples
+#
+# Expected Results:
+# - Clean Accuracy: 72-78% (slight drop vs baseline)
+# - Robust Accuracy (PGD-10): 45-55%
+# - Cross-site performance: Critical for RQ1
+#
+# Hypothesis (RQ1):
+#   PGD-AT alone does NOT improve cross-site generalization
+#   (requires XAI regularization - tested in Phase 5.3)
+#
+# Author: Viraj Pankaj Jain
+# Date: November 24, 2025
+# Version: 5.2.0
+# =============================================================================
+
+# Experiment Metadata
+experiment:
+  name: "pgd_at_isic2018"
+  version: "5.2.0"
+  description: "PGD Adversarial Training for RQ1 robustness baseline"
+  phase: "5.2"
+  research_question: "RQ1"
+  tags:
+    method: "pgd_at"
+    dataset: "isic2018"
+    phase: "5.2"
+    rq: "rq1"
+
+# Model Configuration
+model:
+  architecture: "resnet50"
+  num_classes: 7
+  pretrained: true
+  in_channels: 3
+  dropout: 0.0
+
+# Dataset Configuration
+dataset:
+  name: "isic2018"
+  root: "data/processed/isic2018"
+  csv_path: "data/processed/isic2018/metadata_processed.csv"
+  image_size: 224
+  num_classes: 7
+
+  # Data augmentation (strong for robustness)
+  augmentation:
+    random_resized_crop:
+      scale: [0.8, 1.0]
+      ratio: [0.9, 1.1]
+    random_horizontal_flip: 0.5
+    random_vertical_flip: 0.3
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    random_rotation: 20
+    random_affine:
+      degrees: 15
+      translate: [0.1, 0.1]
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+  # Cross-site evaluation datasets
+  test_datasets:
+    isic2018_test:
+      name: "isic2018"
+      root: "data/processed/isic2018"
+      csv_path: "data/processed/isic2018/metadata_processed.csv"
+      split: "test"
+    isic2019:
+      name: "isic2019"
+      root: "data/processed/isic2019"
+      csv_path: "data/processed/isic2019/metadata_processed.csv"
+      split: "test"
+    isic2020:
+      name: "isic2020"
+      root: "data/processed/isic2020"
+      csv_path: "data/processed/isic2020/metadata_processed.csv"
+      split: "test"
+    derm7pt:
+      name: "derm7pt"
+      root: "data/processed/derm7pt"
+      csv_path: "data/processed/derm7pt/metadata_processed.csv"
+      split: "test"
+
+# Adversarial Training Configuration
+adversarial_training:
+  # Loss Configuration
+  loss_type: "at"  # Standard adversarial training
+  beta: 0.0  # Not used for pure AT
+
+  # Training Attack (PGD-7)
+  attack:
+    type: "pgd"
+    epsilon: 0.03137  # 8/255 (standard for medical imaging)
+    num_steps: 7  # Faster training (7 steps)
+    step_size: 0.00784  # epsilon/4 (standard)
+    random_start: true
+    norm: "Linf"
+    targeted: false
+    clip_min: 0.0
+    clip_max: 1.0
+
+  # Training Strategy
+  mix_clean: 0.0  # Pure adversarial (100% adversarial examples)
+  alternate_batches: false  # All batches adversarial
+
+  # Optimization
+  gradient_clip: 1.0  # Gradient clipping for stability
+  use_amp: true  # Mixed precision for speed
+  loss_clip: 10.0  # Clip loss to prevent instability
+
+  # Evaluation Attack (PGD-10)
+  evaluation:
+    attack_steps: 10  # Stronger evaluation (10 steps)
+    attack_epsilon: 0.03137  # Same epsilon as training
+    attack_step_size: 0.00784  # epsilon/4
+    random_start: true
+    track_clean_acc: true
+    log_frequency: 5
+
+# Training Configuration
+training:
+  num_epochs: 50
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+  # Optimizer (Adam for medical imaging)
+  optimizer:
+    type: "adam"
+    learning_rate: 1.0e-4
+    weight_decay: 1.0e-4
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+
+  # Learning Rate Scheduler
+  scheduler:
+    type: "reduce_lr_on_plateau"
+    mode: "max"  # Monitor robust accuracy
+    factor: 0.5
+    patience: 5
+    min_lr: 1.0e-7
+    verbose: true
+
+  # Early Stopping (optional)
+  early_stopping:
+    enabled: true
+    patience: 15
+    monitor: "robust_acc"  # Stop based on robust accuracy
+    mode: "max"
+
+  # Checkpointing
+  save_freq: 5  # Save every 5 epochs
+  save_best: true  # Save best model based on robust accuracy
+  save_last: true  # Always save last checkpoint
+
+  # Logging
+  log_interval: 10  # Log every 10 batches
+  log_to_mlflow: true
+  log_to_tensorboard: true
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic_cudnn: true
+  benchmark_cudnn: false  # Disable for reproducibility
+  enable_tf32: false
+  use_deterministic_algorithms: true
+  dataloader_seed_offset: 0
+
+# Evaluation Configuration
+evaluation:
+  # Multiple attack types for comprehensive evaluation
+  attacks:
+    - name: "pgd_10"
+      type: "pgd"
+      epsilon: 0.03137
+      num_steps: 10
+      step_size: 0.00784
+    - name: "pgd_20"
+      type: "pgd"
+      epsilon: 0.03137
+      num_steps: 20
+      step_size: 0.00784
+    - name: "pgd_40"
+      type: "pgd"
+      epsilon: 0.03137
+      num_steps: 40
+      step_size: 0.00392  # Smaller step size for stronger attack
+    - name: "fgsm"
+      type: "fgsm"
+      epsilon: 0.03137
+    - name: "autoattack"
+      type: "autoattack"
+      epsilon: 0.03137
+      version: "standard"
+
+  # Metrics to compute
+  metrics:
+    - "accuracy"
+    - "balanced_accuracy"
+    - "f1_macro"
+    - "auroc"
+    - "precision"
+    - "recall"
+    - "confusion_matrix"
+
+  # Statistical testing
+  statistical_tests:
+    - "t_test"  # t-test vs baseline
+    - "cohens_d"  # Effect size
+    - "confidence_interval"  # 95% CI
+
+# Output Configuration
+output:
+  base_dir: "results/pgd_at"
+  checkpoints_dir: "checkpoints"
+  logs_dir: "logs"
+  metrics_dir: "metrics/rq1_robustness"
+  figures_dir: "figures"
+
+  # Save detailed results
+  save_predictions: true
+  save_adversarial_examples: false  # Too large
+  save_attention_maps: false  # Not needed for PGD-AT baseline
+
+# MLflow Configuration
+mlflow:
+  experiment_name: "Phase5.2-PGD-AT"
+  tracking_uri: "mlruns"
+  tags:
+    phase: "5.2"
+    method: "pgd_at"
+    research_question: "rq1"
+    dataset: "isic2018"
+  log_model: true
+  log_artifacts: true
