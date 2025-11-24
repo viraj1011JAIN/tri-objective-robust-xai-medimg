@@ -142,7 +142,7 @@ def _resolve_data_root(env_var: str, default_subdir: str) -> Path:
             return p
 
     candidate_paths = [
-        Path("F:/data") / default_subdir,
+        Path("/content/drive/MyDrive/data") / default_subdir,
         Path("C:/Users/Dissertation/data") / default_subdir,
         Path("C:/Users/Viraj Jain/data") / default_subdir,
         Path.home() / "data" / default_subdir,
@@ -153,8 +153,8 @@ def _resolve_data_root(env_var: str, default_subdir: str) -> Path:
         if candidate.exists():
             return candidate
 
-    # Use D:/data as primary location
-    d_data_path = Path("D:/data") / default_subdir
+    # Use/content/drive/MyDrive/data as primary location
+    d_data_path = Path("/content/drive/MyDrive/data") / default_subdir
     if d_data_path.exists():
         return d_data_path
 

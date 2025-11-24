@@ -36,7 +36,7 @@ python scripts/evaluation/evaluate_baseline.py `
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "⚠️  Evaluation failed for ISIC 2018" -ForegroundColor Red
-    Write-Host "⚠️  This is expected if dataset is not accessible (F:/data)" -ForegroundColor Yellow
+    Write-Host "⚠️  This is expected if dataset is not accessible (/content/drive/MyDrive/data)" -ForegroundColor Yellow
 }
 
 # 2. Evaluate on ISIC 2019 (Cross-Site)

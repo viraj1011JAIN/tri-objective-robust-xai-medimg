@@ -18,7 +18,7 @@ Example (CLI)
 
     python -m src.data.ready_check \\
         --dataset isic2020 \\
-        --root F:/data/isic_2020 \\
+        --root/content/drive/MyDrive/data/isic_2020 \\
         --output-json results/data_ready/isic2020_ready.json \\
         --fail-on-error
 
@@ -28,7 +28,7 @@ Example (Python)
     from pathlib import Path
     from src.data.ready_check import run_ready_check
 
-    report = run_ready_check("isic2020", Path("F:/data/isic_2020"))
+    report = run_ready_check("isic2020", Path("/content/drive/MyDrive/data/isic_2020"))
     print(report.status, report.num_missing_files)
 """
 

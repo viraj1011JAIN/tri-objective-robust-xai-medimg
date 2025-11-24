@@ -116,7 +116,7 @@ def test_data_path():
 
     import os
 
-    data_root = Path(os.environ.get("DATA_ROOT", "F:/data"))
+    data_root = Path(os.environ.get("DATA_ROOT", "/content/drive/MyDrive/data"))
 
     if data_root.exists():
         print(f"✓ Data root exists: {data_root}")
@@ -242,7 +242,7 @@ def main():
         if not results["Project Imports"]:
             print("  - Ensure you're in the project root directory")
         if not results["Data Directory"]:
-            print("  - Set DATA_ROOT: $env:DATA_ROOT='F:\\data'")
+            print("  - Set DATA_ROOT: $env:DATA_ROOT='/content/drive/MyDrive/data'")
         return 1
 
 

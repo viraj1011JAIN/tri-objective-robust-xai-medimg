@@ -6,9 +6,9 @@
 ## Current Status ✅
 
 Your repository validation shows:
-- ✅ **All 6 medical datasets found** in `F:\data`
+- ✅ **All 6 medical datasets found** in `/content/drive/MyDrive/data`
 - ✅ **Configuration files validated** (8 dataset configs, 2 model configs)
-- ✅ **Environment variable set**: `DATA_ROOT=F:\data`
+- ✅ **Environment variable set**: `DATA_ROOT=/content/drive/MyDrive/data`
 - ✅ **Python 3.13 detected**
 
 The torch import errors are **expected** when running outside a virtual environment.
@@ -89,7 +89,7 @@ INFO: ✓ Training imports successful
 INFO: ✓ Utils imports successful
 
 [2/4] Checking dataset paths...
-INFO: ✓ Data root exists: F:\data
+INFO: ✓ Data root exists: /content/drive/MyDrive/data
 INFO: Found datasets:
 INFO:   ✓ isic_2018 (ISIC 2018 dermoscopy dataset)
 INFO:   ✓ isic_2019 (ISIC 2019 dermoscopy dataset)
@@ -104,7 +104,7 @@ INFO: ✓ Found 8 dataset configs
 INFO: ✓ Found 2 model configs
 
 [4/4] Checking environment setup...
-INFO: ✓ DATA_ROOT environment variable set: F:\data
+INFO: ✓ DATA_ROOT environment variable set: /content/drive/MyDrive/data
 INFO: ✓ Python version: 3.13
 
 ✓ All validation checks passed!
@@ -160,22 +160,22 @@ python -c "from src.utils.config import load_experiment_config; print('✓ Confi
 
 ## Dataset Validation Details
 
-Your datasets in `F:\data`:
+Your datasets in `/content/drive/MyDrive/data`:
 
 | Dataset | Path | Status |
 |---------|------|--------|
-| ISIC 2018 | `F:\data\isic_2018` | ✅ Found |
-| ISIC 2019 | `F:\data\isic_2019` | ✅ Found |
-| ISIC 2020 | `F:\data\isic_2020` | ✅ Found |
-| Derm7pt | `F:\data\derm7pt` | ✅ Found |
-| NIH CXR | `F:\data\nih_cxr` | ✅ Found |
-| PadChest | `F:\data\padchest` | ✅ Found |
+| ISIC 2018 | `/content/drive/MyDrive/data\isic_2018` | ✅ Found |
+| ISIC 2019 | `/content/drive/MyDrive/data\isic_2019` | ✅ Found |
+| ISIC 2020 | `/content/drive/MyDrive/data\isic_2020` | ✅ Found |
+| Derm7pt | `/content/drive/MyDrive/data\derm7pt` | ✅ Found |
+| NIH CXR | `/content/drive/MyDrive/data\nih_cxr` | ✅ Found |
+| PadChest | `/content/drive/MyDrive/data\padchest` | ✅ Found |
 
 ### Dataset Structure Requirements
 
 Each dataset should have:
 ```
-F:\data\{dataset_name}\
+/content/drive/MyDrive/data\{dataset_name}\
 ├── metadata.csv           # Required: Image paths, labels, splits
 ├── images/                # Required: Image files
 │   ├── image001.jpg
@@ -187,15 +187,15 @@ F:\data\{dataset_name}\
 ### Check Dataset Metadata
 ```powershell
 # Check if metadata files exist
-Test-Path F:\data\isic_2018\metadata.csv
-Test-Path F:\data\isic_2019\metadata.csv
-Test-Path F:\data\isic_2020\metadata.csv
-Test-Path F:\data\derm7pt\metadata.csv
-Test-Path F:\data\nih_cxr\metadata.csv
-Test-Path F:\data\padchest\metadata.csv
+Test-Path /content/drive/MyDrive/data\isic_2018\metadata.csv
+Test-Path /content/drive/MyDrive/data\isic_2019\metadata.csv
+Test-Path /content/drive/MyDrive/data\isic_2020\metadata.csv
+Test-Path /content/drive/MyDrive/data\derm7pt\metadata.csv
+Test-Path /content/drive/MyDrive/data\nih_cxr\metadata.csv
+Test-Path /content/drive/MyDrive/data\padchest\metadata.csv
 
 # Count images in a dataset
-(Get-ChildItem F:\data\isic_2018\images -File).Count
+(Get-ChildItem /content/drive/MyDrive/data\isic_2018\images -File).Count
 ```
 
 ---
@@ -240,7 +240,7 @@ python -c "import sys; sys.path.insert(0, '.'); from src.datasets.isic import IS
 ### Required
 ```powershell
 # Data root (already set)
-$env:DATA_ROOT = "F:\data"
+$env:DATA_ROOT = "/content/drive/MyDrive/data"
 ```
 
 ### Optional
@@ -258,7 +258,7 @@ $env:PYTHONPATH = "C:\Users\Dissertation\tri-objective-robust-xai-medimg"
 ### Make Permanent (Windows)
 ```powershell
 # Set permanently for user
-[System.Environment]::SetEnvironmentVariable('DATA_ROOT', 'F:\data', 'User')
+[System.Environment]::SetEnvironmentVariable('DATA_ROOT', '/content/drive/MyDrive/data', 'User')
 ```
 
 ---
@@ -297,7 +297,7 @@ $env:PYTHONPATH = "C:\Users\Dissertation\tri-objective-robust-xai-medimg"
 - Corrected class names: `ResNet50Classifier`, `EfficientNetB0Classifier`, `ViTB16Classifier`
 
 ✅ **Dataset paths validated**
-- All 6 datasets found in `F:\data`
+- All 6 datasets found in `/content/drive/MyDrive/data`
 - CIFAR-10 removed from expected datasets (debug only, can auto-download)
 
 ✅ **Configuration files validated**
@@ -305,7 +305,7 @@ $env:PYTHONPATH = "C:\Users\Dissertation\tri-objective-robust-xai-medimg"
 - `${DATA_ROOT}` environment variable expansion working
 
 ✅ **Validation script updated**
-- Dynamically scans `F:\data` for datasets
+- Dynamically scans `/content/drive/MyDrive/data` for datasets
 - Better error messages
 - Correct model class names
 

@@ -260,7 +260,7 @@ def main():
         return True
 
     # Try to link/copy from external source
-    external_source = Path("F:/data/isic_2018")
+    external_source = Path("/content/drive/MyDrive/data/isic_2018")
 
     if not external_source.exists():
         logger.error(f"External dataset path not found: {external_source}")

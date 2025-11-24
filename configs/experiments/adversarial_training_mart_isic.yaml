@@ -35,8 +35,8 @@ model:
 # Dataset Configuration
 dataset:
   name: "isic2018"
-  root: "data/processed/isic2018"
-  csv_path: "data/processed/isic2018/metadata_processed.csv"
+  root: "/content/drive/MyDrive/data/processed/isic2018"
+  csv_path: "/content/drive/MyDrive/data/processed/isic2018/metadata_processed.csv"
   image_size: 224
 
   augmentation:

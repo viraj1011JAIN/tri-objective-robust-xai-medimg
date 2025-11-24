@@ -67,18 +67,18 @@ def check_imports() -> Tuple[bool, List[str]]:
 def check_dataset_paths() -> Tuple[bool, List[str]]:
     """Check if dataset directories exist and are accessible."""
     issues = []
-    data_root = Path("F:/data")
+    data_root = Path("/content/drive/MyDrive/data")
 
     if not data_root.exists():
         issues.append(
             f"Data root directory does not exist: {data_root}\n"
-            "  Please ensure F:/data exists and contains your datasets"
+            "  Please ensure/content/drive/MyDrive/data exists and contains your datasets"
         )
         return False, issues
 
     logger.info(f"✓ Data root exists: {data_root}")
 
-    # Check expected dataset directories (based on actual F:/data contents)
+    # Check expected dataset directories (based on actual/content/drive/MyDrive/data contents)
     expected_datasets = {
         "isic_2018": "ISIC 2018 dermoscopy dataset",
         "isic_2019": "ISIC 2019 dermoscopy dataset",
@@ -180,7 +180,7 @@ def check_environment() -> Tuple[bool, List[str]]:
         logger.info(f"✓ DATA_ROOT environment variable set: {data_root_env}")
     else:
         logger.warning(
-            "⚠ DATA_ROOT environment variable not set (using F:/data as default)"
+            "⚠ DATA_ROOT environment variable not set (using/content/drive/MyDrive/data as default)"
         )
 
     # Check Python version

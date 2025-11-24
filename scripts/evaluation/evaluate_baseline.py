@@ -77,22 +77,22 @@ logger = logging.getLogger(__name__)
 # Dataset configurations
 DATASET_CONFIGS = {
     "isic2018": {
-        "root": "F:/data/isic_2018",
+        "root": "/content/drive/MyDrive/data/isic_2018",
         "num_classes": 7,
         "class_names": ["MEL", "NV", "BCC", "AKIEC", "BKL", "DF", "VASC"],
     },
     "isic2019": {
-        "root": "F:/data/isic_2019",
+        "root": "/content/drive/MyDrive/data/isic_2019",
         "num_classes": 8,
         "class_names": ["MEL", "NV", "BCC", "AK", "BKL", "DF", "VASC", "SCC"],
     },
     "isic2020": {
-        "root": "F:/data/isic_2020",
+        "root": "/content/drive/MyDrive/data/isic_2020",
         "num_classes": 2,
         "class_names": ["benign", "malignant"],
     },
     "derm7pt": {
-        "root": "F:/data/derm7pt",
+        "root": "/content/drive/MyDrive/data/derm7pt",
         "num_classes": 2,
         "class_names": ["benign", "malignant"],
     },
@@ -567,7 +567,7 @@ def main(args: argparse.Namespace) -> None:
             f"Dataset should be at: {config['root']}"
         )
         logger.error(
-            "⚠️  Note: Dataset is on external HDD (F:/data) which is not accessible."
+            "⚠️  Note: Dataset is on external HDD (/content/drive/MyDrive/data) which is not accessible."
         )
         logger.error(
             "This evaluation will run when the dataset becomes available."

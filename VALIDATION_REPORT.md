@@ -9,7 +9,7 @@
 
 ## Executive Summary
 
-The repository has been validated and all **critical issues have been fixed**. The codebase is well-structured, properly organized, and ready for development. Dataset paths are correctly configured to use `F:\data` as the data root.
+The repository has been validated and all **critical issues have been fixed**. The codebase is well-structured, properly organized, and ready for development. Dataset paths are correctly configured to use `/content/drive/MyDrive/data` as the data root.
 
 ---
 
@@ -32,26 +32,26 @@ tri-objective-robust-xai-medimg/
 │   └── experiments/      # Experiment configs
 ├── scripts/              # Training and data processing scripts
 ├── tests/                # Comprehensive test suite
-└── data/ -> F:/data      # External data directory
+└── data/ ->/content/drive/MyDrive/data      # External data directory
 ```
 
 ### 2. **Dataset Paths** ✅
-All dataset configurations now correctly reference `F:\data`:
+All dataset configurations now correctly reference `/content/drive/MyDrive/data`:
 
 | Dataset | Path | Status |
 |---------|------|--------|
-| ISIC 2018 | `F:/data/isic_2018` | ✅ Exists |
-| ISIC 2019 | `F:/data/isic_2019` | ✅ Exists |
-| ISIC 2020 | `F:/data/isic_2020` | ✅ Exists |
-| Derm7pt | `F:/data/derm7pt` | ✅ Exists |
-| NIH ChestX-ray14 | `F:/data/nih_cxr` | ✅ Exists |
-| PadChest | `F:/data/padchest` | ✅ Exists |
-| CIFAR-10 | `F:/data/cifar10` | ⚠️ Missing (debug only) |
+| ISIC 2018 | `/content/drive/MyDrive/data/isic_2018` | ✅ Exists |
+| ISIC 2019 | `/content/drive/MyDrive/data/isic_2019` | ✅ Exists |
+| ISIC 2020 | `/content/drive/MyDrive/data/isic_2020` | ✅ Exists |
+| Derm7pt | `/content/drive/MyDrive/data/derm7pt` | ✅ Exists |
+| NIH ChestX-ray14 | `/content/drive/MyDrive/data/nih_cxr` | ✅ Exists |
+| PadChest | `/content/drive/MyDrive/data/padchest` | ✅ Exists |
+| CIFAR-10 | `/content/drive/MyDrive/data/cifar10` | ⚠️ Missing (debug only) |
 
-**Environment Variable:** `DATA_ROOT=F:\data` ✅
+**Environment Variable:** `DATA_ROOT=/content/drive/MyDrive/data` ✅
 
 ### 3. **Configuration Files** ✅
-- ✅ `configs/base.yaml` - Default root updated to `F:/data`
+- ✅ `configs/base.yaml` - Default root updated to `/content/drive/MyDrive/data`
 - ✅ All dataset configs use `${DATA_ROOT}` variable expansion
 - ✅ Proper YAML structure with validation
 - ✅ Pydantic schema validation in place
@@ -93,7 +93,7 @@ All imports are now correctly structured and validated.
    - Added missing utility imports: `load_experiment_config`, `set_global_seed`
 
 2. **Dataset Path Updates**
-   - Updated `configs/base.yaml`: `data/raw` → `F:/data`
+   - Updated `configs/base.yaml`: `data/raw` → `/content/drive/MyDrive/data`
    - Updated `configs/datasets/cifar10_debug.yaml`
    - Updated `configs/datasets/isic2018.yaml`
    - Updated `scripts/data/create_dummy_data.py`
@@ -114,7 +114,7 @@ All dataset configs use environment variable expansion:
 ```yaml
 dataset:
   name: "ISIC-2018"
-  root: "${DATA_ROOT}/isic_2018"  # Expands to F:/data/isic_2018
+  root: "${DATA_ROOT}/isic_2018"  # Expands to/content/drive/MyDrive/data/isic_2018
 ```
 
 ### Loading Configurations in Code
@@ -130,7 +130,7 @@ cfg = load_experiment_config(
 )
 
 # Access values
-dataset_root = cfg.dataset.root  # Will be F:/data/isic_2018
+dataset_root = cfg.dataset.root  # Will be/content/drive/MyDrive/data/isic_2018
 batch_size = cfg.dataset.batch_size
 ```
 
@@ -158,7 +158,7 @@ batch_size = cfg.dataset.batch_size
 ### Before Training
 1. **Ensure Dataset Metadata Exists**
    - Each dataset directory should have a `metadata.csv` file
-   - Example: `F:/data/isic_2018/metadata.csv`
+   - Example: `/content/drive/MyDrive/data/isic_2018/metadata.csv`
    - If missing, use data preparation scripts in `scripts/data/`
 
 2. **Run Tests**
@@ -176,9 +176,9 @@ batch_size = cfg.dataset.batch_size
 ## 📝 Important Notes
 
 ### Dataset Structure Expected
-Each dataset under `F:/data/` should follow this structure:
+Each dataset under `/content/drive/MyDrive/data/` should follow this structure:
 ```
-F:/data/
+/content/drive/MyDrive/data/
 └── isic_2018/
     ├── metadata.csv          # Required: Contains image paths and labels
     ├── images/               # Required: Contains image files
@@ -196,7 +196,7 @@ Configs are merged in this order (later overrides earlier):
 Optional but recommended:
 ```powershell
 # Set in PowerShell (current session)
-$env:DATA_ROOT = "F:/data"
+$env:DATA_ROOT = "/content/drive/MyDrive/data"
 $env:MLFLOW_TRACKING_URI = "./mlruns"
 
 # Or permanently via System Properties
@@ -209,12 +209,12 @@ $env:MLFLOW_TRACKING_URI = "./mlruns"
 | Category | Status | Notes |
 |----------|--------|-------|
 | Project Structure | ✅ PASS | Well-organized, modular design |
-| Dataset Paths | ✅ PASS | All paths point to F:/data |
+| Dataset Paths | ✅ PASS | All paths point to/content/drive/MyDrive/data |
 | Configurations | ✅ PASS | Valid YAML, proper schema |
 | Import Structure | ✅ PASS | All imports fixed and validated |
 | Code Quality | ✅ PASS | Critical issues fixed |
 | Dependencies | ⚠️ NEEDS ENV | Install after activating environment |
-| Data Availability | ✅ PASS | 6/7 datasets found in F:/data |
+| Data Availability | ✅ PASS | 6/7 datasets found in/content/drive/MyDrive/data |
 
 ---
 
@@ -238,7 +238,7 @@ This will check:
 
 If you encounter issues:
 1. Check that `DATA_ROOT` environment variable is set: `$env:DATA_ROOT`
-2. Verify dataset directories exist: `ls F:/data`
+2. Verify dataset directories exist: `ls/content/drive/MyDrive/data`
 3. Ensure Python environment is activated
 4. Run validation script for detailed diagnostics
 

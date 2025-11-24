@@ -301,12 +301,12 @@ def check_datasets() -> Tuple[bool, List[str]]:
     """Validate dataset accessibility."""
     issues = []
     datasets = {
-        "ISIC 2018": Path("F:/data/isic_2018"),
-        "ISIC 2019": Path("F:/data/isic_2019"),
-        "ISIC 2020": Path("F:/data/isic_2020"),
-        "Derm7pt": Path("F:/data/derm7pt"),
-        "NIH CXR": Path("F:/data/nih_cxr"),
-        "PadChest": Path("F:/data/padchest"),
+        "ISIC 2018": Path("/content/drive/MyDrive/data/isic_2018"),
+        "ISIC 2019": Path("/content/drive/MyDrive/data/isic_2019"),
+        "ISIC 2020": Path("/content/drive/MyDrive/data/isic_2020"),
+        "Derm7pt": Path("/content/drive/MyDrive/data/derm7pt"),
+        "NIH CXR": Path("/content/drive/MyDrive/data/nih_cxr"),
+        "PadChest": Path("/content/drive/MyDrive/data/padchest"),
     }
 
     for name, path in datasets.items():

@@ -10,7 +10,7 @@ from PIL import Image
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
-DATA_DIR = Path("F:/data/isic_2018")
+DATA_DIR = Path("/content/drive/MyDrive/data/isic_2018")
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # Create dummy images

@@ -1,7 +1,7 @@
 # ==============================================================================
 # Dataset Preparation and Verification Script
 # ==============================================================================
-# Purpose: Verify and prepare all datasets from Samsung SSD T7 (D:/data)
+# Purpose: Verify and prepare all datasets from Samsung SSD T7 (/content/drive/MyDrive/data)
 # Author: Viraj Pankaj Jain
 # Date: November 23, 2025
 # ==============================================================================
@@ -9,7 +9,7 @@
 Write-Host ""
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host "   Dataset Preparation & Verification" -ForegroundColor Cyan
-Write-Host "   Samsung SSD T7: D:/data" -ForegroundColor Cyan
+Write-Host "   Samsung SSD T7:/content/drive/MyDrive/data" -ForegroundColor Cyan
 Write-Host "============================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -17,7 +17,7 @@ Write-Host ""
 $datasets = @(
     @{
         Name = "ISIC 2018"
-        Path = "D:/data/isic_2018"
+        Path = "/content/drive/MyDrive/data/isic_2018"
         MetadataFile = "metadata.csv"
         ImageFolder = "ISIC2018_Task3_Training_Input"
         GroundTruthFile = "ISIC2018_Task3_Training_GroundTruth.csv"
@@ -26,7 +26,7 @@ $datasets = @(
     },
     @{
         Name = "ISIC 2019"
-        Path = "D:/data/isic_2019"
+        Path = "/content/drive/MyDrive/data/isic_2019"
         MetadataFile = "metadata.csv"
         ImageFolder = "ISIC_2019_Training_Input"
         GroundTruthFile = "ISIC_2019_Training_GroundTruth.csv"
@@ -35,7 +35,7 @@ $datasets = @(
     },
     @{
         Name = "ISIC 2020"
-        Path = "D:/data/isic_2020"
+        Path = "/content/drive/MyDrive/data/isic_2020"
         MetadataFile = "metadata.csv"
         ImageFolder = "train"
         GroundTruthFile = "train.csv"
@@ -44,7 +44,7 @@ $datasets = @(
     },
     @{
         Name = "Derm7pt"
-        Path = "D:/data/derm7pt"
+        Path = "/content/drive/MyDrive/data/derm7pt"
         MetadataFile = "metadata.csv"
         ImageFolder = "images"
         GroundTruthFile = "meta/meta.csv"
@@ -53,7 +53,7 @@ $datasets = @(
     },
     @{
         Name = "NIH Chest X-Ray"
-        Path = "D:/data/nih_cxr"
+        Path = "/content/drive/MyDrive/data/nih_cxr"
         MetadataFile = "Data_Entry_2017.csv"
         ImageFolder = "images"
         GroundTruthFile = "Data_Entry_2017.csv"
@@ -62,7 +62,7 @@ $datasets = @(
     },
     @{
         Name = "PadChest"
-        Path = "D:/data/padchest"
+        Path = "/content/drive/MyDrive/data/padchest"
         MetadataFile = "PADCHEST_chest_x_ray_images_labels_160K_01.02.19.csv"
         ImageFolder = "images"
         GroundTruthFile = "PADCHEST_chest_x_ray_images_labels_160K_01.02.19.csv"

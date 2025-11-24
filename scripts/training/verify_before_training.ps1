@@ -68,7 +68,7 @@ from pathlib import Path
 import torch
 
 # Test dataset loading
-data_root = Path('data/processed/isic2018')
+data_root = Path('/content/drive/MyDrive/data/processed/isic2018')
 csv_path = data_root / 'metadata_processed.csv'
 
 if not data_root.exists():

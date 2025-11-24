@@ -1,0 +1,68 @@
+﻿[
+    {
+        "Dataset":  "isic2018",
+        "DirectoryExists":  false,
+        "LogExists":  false,
+        "MetadataExists":  false,
+        "HDF5Exists":  false,
+        "DVCTracked":  false,
+        "TotalSamples":  0,
+        "ProcessingTime":  0,
+        "Status":  "NOT_STARTED"
+    },
+    {
+        "Dataset":  "isic2019",
+        "DirectoryExists":  false,
+        "LogExists":  false,
+        "MetadataExists":  false,
+        "HDF5Exists":  false,
+        "DVCTracked":  false,
+        "TotalSamples":  0,
+        "ProcessingTime":  0,
+        "Status":  "NOT_STARTED"
+    },
+    {
+        "Dataset":  "isic2020",
+        "DirectoryExists":  false,
+        "LogExists":  false,
+        "MetadataExists":  false,
+        "HDF5Exists":  false,
+        "DVCTracked":  false,
+        "TotalSamples":  0,
+        "ProcessingTime":  0,
+        "Status":  "NOT_STARTED"
+    },
+    {
+        "Dataset":  "derm7pt",
+        "DirectoryExists":  false,
+        "LogExists":  false,
+        "MetadataExists":  false,
+        "HDF5Exists":  false,
+        "DVCTracked":  false,
+        "TotalSamples":  0,
+        "ProcessingTime":  0,
+        "Status":  "NOT_STARTED"
+    },
+    {
+        "Dataset":  "nih_cxr",
+        "DirectoryExists":  false,
+        "LogExists":  false,
+        "MetadataExists":  false,
+        "HDF5Exists":  false,
+        "DVCTracked":  false,
+        "TotalSamples":  0,
+        "ProcessingTime":  0,
+        "Status":  "NOT_STARTED"
+    },
+    {
+        "Dataset":  "padchest",
+        "DirectoryExists":  false,
+        "LogExists":  false,
+        "MetadataExists":  false,
+        "HDF5Exists":  false,
+        "DVCTracked":  false,
+        "TotalSamples":  0,
+        "ProcessingTime":  0,
+        "Status":  "NOT_STARTED"
+    }
+]

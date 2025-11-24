@@ -1,0 +1,73 @@
+# Baseline Training Configuration
+# Standard supervised training without adversarial examples or tri-objective optimization
+
+experiment:
+  name: "baseline_training"
+  seed: 42
+  description: "Baseline supervised training for Phase 3 validation"
+  tags:
+    - "baseline"
+    - "supervised"
+    - "phase3"
+
+model:
+  name: "resnet50"
+  num_classes: 7
+  pretrained: true
+  freeze_backbone: false
+
+dataset:
+  name: "isic2018"
+  root: "/content/drive/MyDrive/data/processed/isic2018"
+  csv_path: "/content/drive/MyDrive/data/processed/isic2018/metadata_processed.csv"
+  image_column: "image_path"
+  label_column: "diagnostic"
+  split_column: "split"
+  num_classes: 7
+  image_size: 224
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+training:
+  num_epochs: 50
+  early_stopping_patience: 10
+  checkpoint_frequency: 5
+
+  optimizer:
+    name: "adam"
+    lr: 0.001
+    weight_decay: 0.0001
+
+  scheduler:
+    name: "cosine"
+    T_max: 50
+    eta_min: 0.00001
+
+  loss:
+    name: "cross_entropy"
+    label_smoothing: 0.1
+
+  mixed_precision: true
+  gradient_clip_norm: 1.0
+
+validation:
+  batch_size: 64
+  num_workers: 4
+  metrics:
+    - "accuracy"
+    - "balanced_accuracy"
+    - "f1_macro"
+    - "auroc"
+
+logging:
+  use_mlflow: true
+  mlflow_tracking_uri: "mlruns"
+  log_frequency: 10
+  save_best_only: true
+
+checkpoint:
+  save_dir: "checkpoints/baseline"
+  monitor: "val_accuracy"
+  mode: "max"
+  save_top_k: 3

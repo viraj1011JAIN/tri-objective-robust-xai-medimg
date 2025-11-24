@@ -1,0 +1,502 @@
+{
+  "analysis_date": "2025-11-21T02:31:11.457128",
+  "data_root": "F:\\data",
+  "datasets": [
+    {
+      "dataset_name": "ISIC 2018 (HAM10000)",
+      "task": "Skin Lesion Classification (7 classes)",
+      "modality": "Dermoscopy (RGB)",
+      "num_classes": 7,
+      "class_names": {
+        "MEL": "Melanoma",
+        "NV": "Melanocytic Nevus",
+        "BCC": "Basal Cell Carcinoma",
+        "AKIEC": "Actinic Keratosis / Intraepithelial Carcinoma",
+        "BKL": "Benign Keratosis",
+        "DF": "Dermatofibroma",
+        "VASC": "Vascular Lesion"
+      },
+      "task_type": "Multi-class Classification",
+      "splits": {
+        "train": {
+          "num_samples": 10015,
+          "num_csv_entries": 10015,
+          "class_distribution": {
+            "MEL": 1113,
+            "NV": 6705,
+            "BCC": 514,
+            "AKIEC": 327,
+            "BKL": 1099,
+            "DF": 115,
+            "VASC": 142
+          },
+          "class_percentages": {
+            "MEL": "11.11%",
+            "NV": "66.95%",
+            "BCC": "5.13%",
+            "AKIEC": "3.27%",
+            "BKL": "10.97%",
+            "DF": "1.15%",
+            "VASC": "1.42%"
+          },
+          "image_statistics": {
+            "width": {
+              "min": 600,
+              "max": 600,
+              "mean": 600.0,
+              "std": 0.0
+            },
+            "height": {
+              "min": 450,
+              "max": 450,
+              "mean": 450.0,
+              "std": 0.0
+            },
+            "channels": {
+              "3": 200
+            },
+            "file_size_kb": {
+              "min": 125.0859375,
+              "max": 375.4599609375,
+              "mean": 269.2581005859375,
+              "std": 48.038974674984935
+            },
+            "samples_analyzed": 200
+          }
+        },
+        "validation": {
+          "num_samples": 193,
+          "num_csv_entries": 193,
+          "class_distribution": {
+            "MEL": 21,
+            "NV": 123,
+            "BCC": 15,
+            "AKIEC": 8,
+            "BKL": 22,
+            "DF": 1,
+            "VASC": 3
+          },
+          "class_percentages": {
+            "MEL": "10.88%",
+            "NV": "63.73%",
+            "BCC": "7.77%",
+            "AKIEC": "4.15%",
+            "BKL": "11.40%",
+            "DF": "0.52%",
+            "VASC": "1.55%"
+          },
+          "image_statistics": {
+            "width": {
+              "min": 600,
+              "max": 600,
+              "mean": 600.0,
+              "std": 0.0
+            },
+            "height": {
+              "min": 450,
+              "max": 450,
+              "mean": 450.0,
+              "std": 0.0
+            },
+            "channels": {
+              "3": 100
+            },
+            "file_size_kb": {
+              "min": 109.3935546875,
+              "max": 347.6416015625,
+              "mean": 267.5797265625,
+              "std": 39.563818674277705
+            },
+            "samples_analyzed": 100
+          }
+        }
+      },
+      "total_samples": 10208,
+      "class_balance": "Highly imbalanced (NV dominant: 67%)",
+      "data_format": {
+        "images": "JPEG",
+        "labels": "CSV (one-hot encoded)"
+      },
+      "image_naming": "ISIC_XXXXXXX.jpg",
+      "metadata_files": [
+        "ISIC2018_Task3_Training_GroundTruth.csv",
+        "ISIC2018_Task3_Validation_GroundTruth.csv"
+      ],
+      "license": "CC0 1.0 Universal (Public Domain)",
+      "source": "https://challenge.isic-archive.com/data/#2018"
+    },
+    {
+      "dataset_name": "ISIC 2019",
+      "task": "Skin Lesion Classification (8 classes)",
+      "modality": "Dermoscopy (RGB)",
+      "num_classes": 8,
+      "class_names": {
+        "MEL": "Melanoma",
+        "NV": "Melanocytic Nevus",
+        "BCC": "Basal Cell Carcinoma",
+        "AK": "Actinic Keratosis",
+        "BKL": "Benign Keratosis",
+        "DF": "Dermatofibroma",
+        "VASC": "Vascular Lesion",
+        "SCC": "Squamous Cell Carcinoma"
+      },
+      "task_type": "Multi-class Classification",
+      "splits": {
+        "train": {
+          "num_samples": 0,
+          "num_csv_entries": 22797,
+          "class_distribution": {
+            "0": 18727,
+            "1": 4070
+          },
+          "image_statistics": {
+            "width": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "height": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "channels": {},
+            "file_size_kb": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "samples_analyzed": 0
+          }
+        }
+      },
+      "total_samples": 0,
+      "class_balance": "Imbalanced (NV dominant)",
+      "data_format": {
+        "images": "JPEG",
+        "labels": "CSV (integer labels)"
+      },
+      "image_naming": "ISIC_XXXXXXXX.jpg",
+      "metadata_files": [
+        "train.csv",
+        "metadata.csv"
+      ],
+      "license": "CC0 1.0 Universal (Public Domain)",
+      "source": "https://challenge.isic-archive.com/data/#2019"
+    },
+    {
+      "dataset_name": "ISIC 2020",
+      "task": "Melanoma Detection (Binary Classification)",
+      "modality": "Dermoscopy (RGB)",
+      "num_classes": 2,
+      "class_names": {
+        "0": "Benign",
+        "1": "Malignant (Melanoma)"
+      },
+      "task_type": "Binary Classification",
+      "splits": {
+        "train": {
+          "num_samples": 0,
+          "num_csv_entries": 29813,
+          "class_distribution": {
+            "0": 29287,
+            "1": 526
+          },
+          "class_percentages": {
+            "0": "98.24%",
+            "1": "1.76%"
+          },
+          "image_statistics": {
+            "width": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "height": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "channels": {},
+            "file_size_kb": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "samples_analyzed": 0
+          }
+        }
+      },
+      "total_samples": 0,
+      "class_balance": "Highly imbalanced (~98% benign, ~2% malignant)",
+      "data_format": {
+        "images": "JPEG",
+        "labels": "CSV (binary 0/1)"
+      },
+      "image_naming": "ISIC_XXXXXXXX.jpg",
+      "metadata_files": [
+        "train.csv",
+        "train-metadata.csv"
+      ],
+      "license": "CC0 1.0 Universal (Public Domain)",
+      "source": "https://challenge.isic-archive.com/data/#2020"
+    },
+    {
+      "dataset_name": "Derm7pt",
+      "task": "Melanoma Detection with 7-Point Checklist",
+      "modality": "Dermoscopy (RGB) + Clinical (RGB)",
+      "num_classes": 2,
+      "class_names": {
+        "benign": "Benign",
+        "malignant": "Malignant (Melanoma)"
+      },
+      "task_type": "Binary Classification + Attribute Prediction",
+      "seven_point_criteria": [
+        "pigment_network",
+        "streaks",
+        "pigmentation",
+        "regression_structures",
+        "dots_and_globules",
+        "blue_whitish_veil",
+        "vascular_structures"
+      ],
+      "splits": {
+        "total": {
+          "num_samples": 2013,
+          "num_csv_entries": 1011,
+          "diagnosis_distribution": {
+            "clark nevus": 399,
+            "melanoma (less than 0.76 mm)": 102,
+            "reed or spitz nevus": 79,
+            "melanoma (in situ)": 64,
+            "melanoma (0.76 to 1.5 mm)": 53,
+            "seborrheic keratosis": 45,
+            "basal cell carcinoma": 42,
+            "dermal nevus": 33,
+            "vascular lesion": 29,
+            "blue nevus": 28,
+            "melanoma (more than 1.5 mm)": 28,
+            "lentigo": 24,
+            "dermatofibroma": 20,
+            "congenital nevus": 17,
+            "melanosis": 16,
+            "combined nevus": 13,
+            "miscellaneous": 8,
+            "recurrent nevus": 6,
+            "melanoma metastasis": 4,
+            "melanoma": 1
+          },
+          "image_statistics": {
+            "width": {
+              "min": 768,
+              "max": 768,
+              "mean": 768.0,
+              "std": 0.0
+            },
+            "height": {
+              "min": 512,
+              "max": 512,
+              "mean": 512.0,
+              "std": 0.0
+            },
+            "channels": {
+              "3": 200
+            },
+            "file_size_kb": {
+              "min": 32.5087890625,
+              "max": 142.734375,
+              "mean": 81.6767333984375,
+              "std": 17.673459663458157
+            },
+            "samples_analyzed": 200
+          }
+        }
+      },
+      "total_samples": 2013,
+      "unique_patients": 1011,
+      "image_types": [
+        "dermoscopy",
+        "clinical"
+      ],
+      "class_balance": "Check diagnosis column",
+      "data_format": {
+        "images": "JPEG (multiple per case)",
+        "labels": "CSV (diagnosis + 7-point checklist attributes)"
+      },
+      "metadata_files": [
+        "meta.csv",
+        "train_indexes.csv",
+        "valid_indexes.csv"
+      ],
+      "license": "Academic Use",
+      "source": "http://derm.cs.sfu.ca/Welcome.html"
+    },
+    {
+      "dataset_name": "NIH ChestX-ray14",
+      "task": "Thoracic Disease Detection (14 classes, Multi-label)",
+      "modality": "Chest X-ray (Grayscale)",
+      "num_classes": 14,
+      "class_names": [
+        "Atelectasis",
+        "Cardiomegaly",
+        "Consolidation",
+        "Edema",
+        "Effusion",
+        "Emphysema",
+        "Fibrosis",
+        "Hernia",
+        "Infiltration",
+        "Mass",
+        "Nodule",
+        "Pleural_Thickening",
+        "Pneumonia",
+        "Pneumothorax",
+        "No Finding"
+      ],
+      "diseases": [
+        "Atelectasis",
+        "Cardiomegaly",
+        "Consolidation",
+        "Edema",
+        "Effusion",
+        "Emphysema",
+        "Fibrosis",
+        "Hernia",
+        "Infiltration",
+        "Mass",
+        "Nodule",
+        "Pleural_Thickening",
+        "Pneumonia",
+        "Pneumothorax"
+      ],
+      "task_type": "Multi-label Classification",
+      "splits": {
+        "total": {
+          "num_samples": 0,
+          "num_csv_entries": 112120,
+          "label_distribution": {
+            "Cardiomegaly": 2776,
+            "Emphysema": 2516,
+            "Effusion": 13317,
+            "No Finding": 60361,
+            "Hernia": 227,
+            "Infiltration": 19894,
+            "Mass": 5782,
+            "Nodule": 6331,
+            "Atelectasis": 11559,
+            "Pneumothorax": 5302,
+            "Pleural_Thickening": 3385,
+            "Pneumonia": 1431,
+            "Fibrosis": 1686,
+            "Edema": 2303,
+            "Consolidation": 4667
+          },
+          "image_statistics": {
+            "width": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "height": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "channels": {},
+            "file_size_kb": {
+              "min": 0,
+              "max": 0,
+              "mean": 0,
+              "std": 0
+            },
+            "samples_analyzed": 0
+          }
+        }
+      },
+      "total_samples": 0,
+      "unique_patients": 30805,
+      "class_balance": "Highly imbalanced ('No Finding' dominant)",
+      "data_format": {
+        "images": "PNG (1024x1024 originally)",
+        "labels": "CSV (pipe-separated multi-label strings)"
+      },
+      "image_naming": "XXXXXXXX_XXX.png",
+      "metadata_files": [
+        "Data_Entry_2017.csv",
+        "BBox_List_2017.csv"
+      ],
+      "image_directories": 12,
+      "bbox_available": true,
+      "license": "CC0 1.0 Universal (Public Domain)",
+      "source": "https://nihcc.app.box.com/v/ChestXray-NIHCC"
+    },
+    {
+      "dataset_name": "PadChest",
+      "task": "Thoracic Disease Detection (Multi-label, Spanish labels)",
+      "modality": "Chest X-ray (Grayscale)",
+      "num_classes": "174+ radiological findings",
+      "task_type": "Multi-label Classification",
+      "splits": {
+        "total": {
+          "num_samples": 24,
+          "num_csv_entries": 24,
+          "image_statistics": {
+            "width": {
+              "min": 1116,
+              "max": 4280,
+              "mean": 2316.75,
+              "std": 849.1465936456437
+            },
+            "height": {
+              "min": 1608,
+              "max": 3520,
+              "mean": 2275.0416666666665,
+              "std": 603.7788281017221
+            },
+            "channels": {
+              "1": 24
+            },
+            "file_size_kb": {
+              "min": 2427.259765625,
+              "max": 21813.2998046875,
+              "mean": 7124.343098958333,
+              "std": 5780.329481733417
+            },
+            "samples_analyzed": 24
+          }
+        }
+      },
+      "total_samples": 24,
+      "language": "Spanish (labels in Spanish)",
+      "data_format": {
+        "images": "PNG",
+        "labels": "CSV (complex multi-label with Spanish terms)"
+      },
+      "metadata_files": [
+        "metadata.csv",
+        "train.csv",
+        "val.csv"
+      ],
+      "license": "Academic/Research Use",
+      "source": "https://bimcv.cipf.es/bimcv-projects/padchest/",
+      "notes": "Requires preprocessing for label translation"
+    }
+  ],
+  "summary_statistics": {
+    "total_datasets": 6,
+    "total_samples": 12245,
+    "modalities": [
+      "Dermoscopy (RGB)",
+      "Chest X-ray (Grayscale)",
+      "Dermoscopy (RGB) + Clinical (RGB)"
+    ]
+  }
+}

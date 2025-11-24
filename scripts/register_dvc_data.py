@@ -1,6 +1,6 @@
 """
 Production-Level DVC Data Registry for External Datasets
-Tracks datasets at F:/data without moving/copying them.
+Tracks datasets at/content/drive/MyDrive/data without moving/copying them.
 """
 
 import hashlib
@@ -104,14 +104,14 @@ def register_dataset(
         "metadata_files": metadata_files,
         "registered_at": datetime.now().isoformat(),
         "location": "external",
-        "storage": "F:/data (fixed location - do not move)",
+        "storage": "/content/drive/MyDrive/data (fixed location - do not move)",
     }
 
 
 def main():
-    """Generate DVC data registry for all datasets at F:/data."""
+    """Generate DVC data registry for all datasets at/content/drive/MyDrive/data."""
 
-    DATA_ROOT = Path("F:/data")
+    DATA_ROOT = Path("/content/drive/MyDrive/data")
 
     if not DATA_ROOT.exists():
         print(f"ERROR: Data root not found: {DATA_ROOT}")
@@ -119,7 +119,7 @@ def main():
 
     print("=" * 80)
     print("DVC DATA REGISTRY GENERATION")
-    print("Tracking datasets at F:/data (external, fixed location)")
+    print("Tracking datasets at/content/drive/MyDrive/data (external, fixed location)")
     print("=" * 80)
 
     datasets = []
@@ -228,12 +228,12 @@ def main():
 
     # Generate registry
     note_text = (
-        "Datasets are stored at F:/data and should NOT be moved "
+        "Datasets are stored at/content/drive/MyDrive/data and should NOT be moved "
         "or copied. All DVC operations reference this external location."
     )
     registry = {
         "version": "1.0.0",
-        "description": "DVC Data Registry for External Datasets at F:/data",
+        "description": "DVC Data Registry for External Datasets at/content/drive/MyDrive/data",
         "data_root": str(DATA_ROOT),
         "storage_policy": "external-fixed-location",
         "note": note_text,
@@ -259,8 +259,8 @@ def main():
     print("\n" + "=" * 80)
     print("DVC DATA REGISTRY COMPLETE")
     print("=" * 80)
-    print("\nAll datasets at F:/data are now documented.")
-    print("Use dvc.yaml dependencies to reference: F:/data/<dataset>/metadata.csv")
+    print("\nAll datasets at/content/drive/MyDrive/data are now documented.")
+    print("Use dvc.yaml dependencies to reference:/content/drive/MyDrive/data/<dataset>/metadata.csv")
     print("DVC remote 'fstore' (F:/triobj_dvc_remote) configured for backups.")
 
 

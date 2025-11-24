@@ -1,21 +1,10 @@
 """
 Baseline EfficientNet Training for Transferability Study - Phase 4.4
-=====================================================================
-
-PROFESSOR-REVIEWED AND APPROVED VERSION
-All critical bugs fixed, production-ready code.
+=====================================================================.
 
 Train EfficientNet-B0 as a secondary baseline architecture to study
 adversarial transferability across different model families.
 
-CRITICAL FIXES IMPLEMENTED:
----------------------------
-1. ✅ Model API Verification: Verified build_model() exists and works
-2. ✅ Model Verification: Post-load forward pass test with dummy input
-3. ✅ Comprehensive Error Handling: Try-catch blocks for all critical sections
-4. ✅ Mixed Precision Training: AMP for 2x speed improvement
-5. ✅ Gradient Clipping: Prevents gradient instability
-6. ✅ Emergency Checkpointing: Saves state on crashes/interrupts
 
 Transferability Study Motivation:
 ----------------------------------
@@ -121,7 +110,8 @@ def verify_model_correctness(
 
         if actual_shape != expected_shape:
             raise AssertionError(
-                f"Wrong output shape: expected {expected_shape}, " f"got {actual_shape}"
+                f"Wrong output shape: expected {expected_shape}, "
+                f"got {actual_shape}"
             )
 
         # Check output is valid logits
@@ -133,10 +123,8 @@ def verify_model_correctness(
 
         logger.info("  ✅ Model verification passed")
         logger.info(f"     Output shape: {actual_shape}")
-        logger.info(
-            f"     Output range: [{dummy_output.min():.3f}, "
-            f"{dummy_output.max():.3f}]"
-        )
+        logger.info(f"     Output range: [{dummy_output.min():.3f}, "
+                   f"{dummy_output.max():.3f}]")
 
     except Exception as e:
         logger.error(f"  ❌ Model verification failed: {e}")
@@ -202,7 +190,10 @@ def train_epoch(
 
                 # Gradient clipping (prevents instability)
                 scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(),
+                    max_norm=1.0
+                )
 
                 # Optimizer step with scaler
                 scaler.step(optimizer)
@@ -215,7 +206,10 @@ def train_epoch(
                 loss.backward()
 
                 # Gradient clipping
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(
+                    model.parameters(),
+                    max_norm=1.0
+                )
 
                 optimizer.step()
 
@@ -227,12 +221,10 @@ def train_epoch(
 
             # Update progress bar
             if batch_idx % 10 == 0:
-                pbar.set_postfix(
-                    {
-                        "loss": f"{running_loss / (batch_idx + 1):.4f}",
-                        "acc": f"{100.0 * correct / total:.2f}%",
-                    }
-                )
+                pbar.set_postfix({
+                    "loss": f"{running_loss / (batch_idx + 1):.4f}",
+                    "acc": f"{100.0 * correct / total:.2f}%",
+                })
 
         except Exception as e:
             logger.error(f"Error in training batch {batch_idx}: {e}")
@@ -294,12 +286,10 @@ def validate(
                 correct += predicted.eq(labels).sum().item()
 
                 # Update progress bar
-                pbar.set_postfix(
-                    {
-                        "loss": f"{running_loss / (batch_idx + 1):.4f}",
-                        "acc": f"{100.0 * correct / total:.2f}%",
-                    }
-                )
+                pbar.set_postfix({
+                    "loss": f"{running_loss / (batch_idx + 1):.4f}",
+                    "acc": f"{100.0 * correct / total:.2f}%",
+                })
 
             except Exception as e:
                 logger.error(f"Error in validation batch {batch_idx}: {e}")
@@ -458,7 +448,9 @@ def train_efficientnet_baseline(
             # Import check already done at top of file
 
             model = build_model(
-                "efficientnet_b0", num_classes=num_classes, pretrained=True
+                "efficientnet_b0",
+                num_classes=num_classes,
+                pretrained=True
             )
             model.to(device)
 
@@ -539,8 +531,8 @@ def train_efficientnet_baseline(
                 )
 
                 # Save best model
-                if val_metrics["accuracy"] > best_val_acc:
-                    best_val_acc = val_metrics["accuracy"]
+                if val_metrics['accuracy'] > best_val_acc:
+                    best_val_acc = val_metrics['accuracy']
                     best_epoch = epoch
 
                     checkpoint = {
@@ -556,7 +548,8 @@ def train_efficientnet_baseline(
 
                     torch.save(checkpoint, output_dir / "best.pt")
                     logger.info(
-                        f"   ✅ New best model saved " f"(Val Acc: {best_val_acc:.2f}%)"
+                        f"   ✅ New best model saved "
+                        f"(Val Acc: {best_val_acc:.2f}%)"
                     )
 
                 # Save last checkpoint
@@ -584,9 +577,8 @@ def train_efficientnet_baseline(
         logger.info("\n" + "=" * 80)
         logger.info("TRAINING COMPLETE")
         logger.info("=" * 80)
-        logger.info(
-            f"Best Validation Accuracy: {best_val_acc:.2f}% " f"(Epoch {best_epoch})"
-        )
+        logger.info(f"Best Validation Accuracy: {best_val_acc:.2f}% "
+                   f"(Epoch {best_epoch})")
         logger.info(f"Model saved to: {output_dir / 'best.pt'}")
         logger.info("=" * 80)
 
@@ -616,7 +608,7 @@ def main():
     parser.add_argument(
         "--data-root",
         type=Path,
-        default=PROJECT_ROOT / "data" / "processed" / "isic2018",
+        default=Path("/content/drive/MyDrive/data/processed/isic2018"),
         help="Root directory for ISIC dataset",
     )
     parser.add_argument(

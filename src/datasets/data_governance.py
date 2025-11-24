@@ -28,7 +28,7 @@ gov.log_data_access(
 gov.log_provenance(
     stage="preprocess_isic2020",
     dataset_name="isic2020",
-    input_paths=["F:/data/isic_2020/metadata.csv"],
+    input_paths=["/content/drive/MyDrive/data/isic_2020/metadata.csv"],
     output_paths=["data/processed/isic2020/isic2020_train.h5"],
     params={"image_size": 224, "normalize": "zero_one"},
 )

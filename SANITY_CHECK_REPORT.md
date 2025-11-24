@@ -90,12 +90,12 @@
 
 ### Datasets
 - ✅ **All 6 Datasets Accessible:**
-  - ✅ `F:\data\isic_2018` - 12,851 files
-  - ✅ `F:\data\isic_2019` - 25,336 files
-  - ✅ `F:\data\isic_2020` - 33,135 files
-  - ✅ `F:\data\derm7pt` - 2,024 files
-  - ✅ `F:\data\nih_cxr` - 112,130 files
-  - ✅ `F:\data\padchest` - 54 files
+  - ✅ `/content/drive/MyDrive/data\isic_2018` - 12,851 files
+  - ✅ `/content/drive/MyDrive/data\isic_2019` - 25,336 files
+  - ✅ `/content/drive/MyDrive/data\isic_2020` - 33,135 files
+  - ✅ `/content/drive/MyDrive/data\derm7pt` - 2,024 files
+  - ✅ `/content/drive/MyDrive/data\nih_cxr` - 112,130 files
+  - ✅ `/content/drive/MyDrive/data\padchest` - 54 files
 - ✅ **Total Data Files:** 185,530 files ready for processing
 
 ---

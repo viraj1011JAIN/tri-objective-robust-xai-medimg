@@ -20,7 +20,7 @@ model:
 
 dataset:
   name: "isic2018"
-  root: "data/processed/isic2018"  # REQUIRED: Root directory for dataset
+  root: "/content/drive/MyDrive/data/processed/isic2018"  # REQUIRED: Root directory for dataset
   batch_size: 32  # Adjusted for 4GB GPU (RTX 3050)
   num_workers: 0  # Disabled to avoid Windows multiprocessing issues
   image_size: 224

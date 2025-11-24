@@ -1,6 +1,6 @@
 """
 Production-Level Dataset Analysis Script for Phase 2.1
-Analyzes all medical imaging datasets at F:/data
+Analyzes all medical imaging datasets at/content/drive/MyDrive/data
 """
 
 import json
@@ -17,7 +17,7 @@ from PIL import Image
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-DATA_ROOT = Path("F:/data")
+DATA_ROOT = Path("/content/drive/MyDrive/data")
 
 
 def analyze_image_statistics(

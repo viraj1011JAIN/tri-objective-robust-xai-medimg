@@ -10,8 +10,8 @@ Write-Host "Phase 3.6: Baseline Training - Chest X-Ray" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 # Check if datasets are accessible
-if (-not (Test-Path "F:/data/NIH_ChestXray14")) {
-    Write-Host "⚠️  ERROR: Dataset not found at F:/data/NIH_ChestXray14" -ForegroundColor Red
+if (-not (Test-Path "/content/drive/MyDrive/data/NIH_ChestXray14")) {
+    Write-Host "⚠️  ERROR: Dataset not found at/content/drive/MyDrive/data/NIH_ChestXray14" -ForegroundColor Red
     Write-Host "⚠️  Please ensure the external HDD is connected and accessible" -ForegroundColor Red
     Write-Host "`nSkipping training (will run when dataset is available)..." -ForegroundColor Yellow
     exit 0

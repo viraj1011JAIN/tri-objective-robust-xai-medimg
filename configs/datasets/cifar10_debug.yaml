@@ -4,7 +4,7 @@
 
 dataset:
   name: "cifar10"
-  root: "F:/data/cifar10"
+  root: "/content/drive/MyDrive/data/cifar10"
 
   batch_size: 128
   num_workers: 4

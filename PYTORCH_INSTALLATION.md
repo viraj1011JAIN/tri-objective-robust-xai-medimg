@@ -40,7 +40,7 @@ Successfully installed PyTorch with CUDA support on your system!
    - Config utilities working
 
 5. **Data Directory** ✅
-   - Data root: F:\data
+   - Data root: /content/drive/MyDrive/data
    - Found 6 datasets: isic_2018, isic_2019, isic_2020, derm7pt, nih_cxr, padchest
 
 6. **Configuration Files** ✅

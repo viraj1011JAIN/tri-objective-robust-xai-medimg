@@ -6,7 +6,7 @@ This script is intentionally simple and robust. It is designed to be used
 in the data pipeline (e.g., via DVC) *after* preprocessing has produced a
 metadata CSV such as:
 
-    - F:/data/isic_2020/metadata.csv
+    -/content/drive/MyDrive/data/isic_2020/metadata.csv
     - data/processed/isic2020/metadata_processed.csv
 
 Expected columns in the CSV:

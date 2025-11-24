@@ -11,10 +11,10 @@ dataset:
   name: isic2018
 
   # New required field in ExperimentConfig – use your real path
-  root: F:/data/isic_2018
+  root:/content/drive/MyDrive/data/isic_2018
 
   # Backwards compatible with any older code that still uses "data_root"
-  data_root: F:/data/isic_2018
+  data_root:/content/drive/MyDrive/data/isic_2018
 
   # ISIC 2018 has 7 diagnostic classes in the standard split
   num_classes: 7

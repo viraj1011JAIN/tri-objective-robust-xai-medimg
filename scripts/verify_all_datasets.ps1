@@ -1,31 +1,31 @@
-# Final Dataset Verification - Samsung SSD T7 (D:/data)
+# Final Dataset Verification - Samsung SSD T7 (/content/drive/MyDrive/data)
 # All 6 medical imaging datasets confirmed
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "  FINAL Dataset Verification" -ForegroundColor Cyan
-Write-Host "  Samsung SSD T7: D:/data" -ForegroundColor Cyan
+Write-Host "  Samsung SSD T7:/content/drive/MyDrive/data" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 # ISIC 2018
 Write-Host "[1/6] ISIC 2018..." -ForegroundColor Yellow
-$isic2018 = (Get-ChildItem "D:/data/isic_2018/ISIC2018_Task3_Training_Input" -File).Count
+$isic2018 = (Get-ChildItem "/content/drive/MyDrive/data/isic_2018/ISIC2018_Task3_Training_Input" -File).Count
 Write-Host "      Images: $isic2018" -ForegroundColor Green
 
 # ISIC 2019
 Write-Host "[2/6] ISIC 2019..." -ForegroundColor Yellow
-$isic2019 = (Get-ChildItem "D:/data/isic_2019/train-image" -File -Recurse).Count
+$isic2019 = (Get-ChildItem "/content/drive/MyDrive/data/isic_2019/train-image" -File -Recurse).Count
 Write-Host "      Images: $isic2019" -ForegroundColor Green
 
 # ISIC 2020
 Write-Host "[3/6] ISIC 2020..." -ForegroundColor Yellow
-$isic2020 = (Get-ChildItem "D:/data/isic_2020/train-image" -File -Recurse).Count
+$isic2020 = (Get-ChildItem "/content/drive/MyDrive/data/isic_2020/train-image" -File -Recurse).Count
 Write-Host "      Images: $isic2020" -ForegroundColor Green
 
 # Derm7pt
 Write-Host "[4/6] Derm7pt..." -ForegroundColor Yellow
-$derm7pt = (Get-ChildItem "D:/data/derm7pt/images" -File -Recurse).Count
+$derm7pt = (Get-ChildItem "/content/drive/MyDrive/data/derm7pt/images" -File -Recurse).Count
 Write-Host "      Images: $derm7pt" -ForegroundColor Green
 
 # NIH CXR (12 folders)
@@ -33,7 +33,7 @@ Write-Host "[5/6] NIH Chest X-Ray (12 folders)..." -ForegroundColor Yellow
 $nihTotal = 0
 1..12 | ForEach-Object {
     $folder = "images_{0:D3}" -f $_
-    $path = "D:/data/nih_cxr/$folder/images"
+    $path = "/content/drive/MyDrive/data/nih_cxr/$folder/images"
     if (Test-Path $path) {
         $count = (Get-ChildItem $path -File -Filter *.png).Count
         $nihTotal += $count
@@ -43,7 +43,7 @@ Write-Host "      Images: $nihTotal (across 12 folders)" -ForegroundColor Green
 
 # PadChest
 Write-Host "[6/6] PadChest..." -ForegroundColor Yellow
-$padchest = (Get-ChildItem "D:/data/padchest/images" -File).Count
+$padchest = (Get-ChildItem "/content/drive/MyDrive/data/padchest/images" -File).Count
 Write-Host "      Images: $padchest" -ForegroundColor Green
 
 # Total

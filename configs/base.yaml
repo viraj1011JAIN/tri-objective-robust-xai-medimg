@@ -26,7 +26,7 @@ reproducibility:
 # Dataset defaults (overridden by configs/datasets/*.yaml)
 dataset:
   name: "PLACEHOLDER"
-  root: "D:/data"
+  root: "/content/drive/MyDrive/data"
   batch_size: 64
   num_workers: 4
   pin_memory: true

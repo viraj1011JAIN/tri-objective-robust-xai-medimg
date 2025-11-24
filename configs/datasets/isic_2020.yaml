@@ -9,7 +9,7 @@ dataset:
   train_subset: null
   test_subset: null
 
-  image_subdir: "train-image"  # Verified actual folder name on D:/data
+  image_subdir: "train-image"  # Verified actual folder name
   metadata_csv: "train.csv"       # Kaggle SIIM-ISIC 2020 style
   task: "classification"
   num_classes: 2                  # melanoma vs benign

@@ -1,7 +1,7 @@
 frozen: true
 deps:
 - hash: md5
-  path: F:/data/derm7pt/meta/meta.csv
+  path:/content/drive/MyDrive/data/derm7pt/meta/meta.csv
 outs:
 - hash: md5
   path: derm7pt_metadata.csv

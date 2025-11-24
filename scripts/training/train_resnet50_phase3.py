@@ -68,7 +68,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--data-root",
         type=str,
-        default="F:/data",
+        default="/content/drive/MyDrive/data",
         help="Root directory for datasets",
     )
     parser.add_argument(

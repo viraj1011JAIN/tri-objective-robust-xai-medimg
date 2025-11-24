@@ -26,7 +26,7 @@ Typical usage
 Direct:
     python -m scripts.data.preprocess_data \
         --dataset isic2020 \
-        --root F:/data/isic_2020 \
+        --root/content/drive/MyDrive/data/isic_2020 \
         --output-dir data/processed/isic2020 \
         --image-size 224 \
         --to-hdf5
@@ -195,7 +195,7 @@ def resolve_dataset_root(
     Resolve dataset root using, in order of priority:
     1) Explicit CLI --root (override_root)
     2) Environment variable (e.g. ISIC2018_ROOT)
-    3) Common fallback paths (F:/data, C:/Users/.../data, ./data)
+    3) Common fallback paths (/content/drive/MyDrive/data, C:/Users/.../data, ./data)
     """
     if override_root is not None:
         root = Path(override_root).expanduser().resolve()
@@ -219,9 +219,9 @@ def resolve_dataset_root(
         )
 
     candidates = [
-        Path("D:/data") / cfg.default_subdir,  # Samsung SSD T7 (primary)
-        Path("F:/data") / cfg.default_subdir,  # Legacy external drive
-        Path("F:/Data") / cfg.default_subdir,
+        Path("/content/drive/MyDrive/data") / cfg.default_subdir,  # Samsung SSD T7 (primary)
+        Path("/content/drive/MyDrive/data") / cfg.default_subdir,  # Legacy external drive
+        Path("/content/drive/MyDrive/data") / cfg.default_subdir,
         Path("C:/Users/Dissertation/data") / cfg.default_subdir,
         Path("C:/Users/Viraj Jain/data") / cfg.default_subdir,
         Path.home() / "data" / cfg.default_subdir,

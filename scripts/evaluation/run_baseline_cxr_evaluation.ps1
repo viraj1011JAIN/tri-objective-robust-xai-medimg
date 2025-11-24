@@ -37,7 +37,7 @@ python scripts/evaluation/evaluate_baseline_cxr.py `
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "⚠️  Evaluation failed for NIH ChestX-ray14" -ForegroundColor Red
-    Write-Host "⚠️  This is expected if dataset is not accessible (F:/data)" -ForegroundColor Yellow
+    Write-Host "⚠️  This is expected if dataset is not accessible (/content/drive/MyDrive/data)" -ForegroundColor Yellow
 }
 
 # 2. Evaluate on PadChest (Cross-Site)
@@ -55,7 +55,7 @@ python scripts/evaluation/evaluate_baseline_cxr.py `
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "⚠️  Evaluation failed for PadChest" -ForegroundColor Red
-    Write-Host "⚠️  This is expected if dataset is not accessible (F:/data)" -ForegroundColor Yellow
+    Write-Host "⚠️  This is expected if dataset is not accessible (/content/drive/MyDrive/data)" -ForegroundColor Yellow
 }
 
 # 3. Aggregate Results and Compute Cross-Site AUROC Drop

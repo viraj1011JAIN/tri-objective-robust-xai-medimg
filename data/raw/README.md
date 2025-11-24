@@ -5,7 +5,7 @@ To keep the repository lightweight, raw medical imaging datasets are stored
 
 On the development machine:
 
-- `DATA_ROOT = F:\data`
+- `DATA_ROOT = /content/drive/MyDrive/data`
 
 with the following subdirectories:
 

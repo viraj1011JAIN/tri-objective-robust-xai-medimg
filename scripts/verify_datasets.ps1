@@ -1,20 +1,20 @@
-# Dataset Verification Script for Samsung SSD T7 (D:/data)
+# Dataset Verification Script for Samsung SSD T7 (/content/drive/MyDrive/data)
 # Author: Viraj Pankaj Jain
 # Purpose: Verify all medical imaging datasets are properly downloaded
 
 Write-Host ""
 Write-Host "========================================" -ForegroundColor Cyan
-Write-Host "  Dataset Verification - D:/data" -ForegroundColor Cyan
+Write-Host "  Dataset Verification -/content/drive/MyDrive/data" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
 $datasets = @(
-    @{Name="ISIC 2018"; Path="D:/data/isic_2018"; Metadata="metadata.csv"; Images="ISIC2018_Task3_Training_Input"},
-    @{Name="ISIC 2019"; Path="D:/data/isic_2019"; Metadata="metadata.csv"; Images="train-image"},
-    @{Name="ISIC 2020"; Path="D:/data/isic_2020"; Metadata="metadata.csv"; Images="train-image"},
-    @{Name="Derm7pt"; Path="D:/data/derm7pt"; Metadata="metadata.csv"; Images="images"},
-    @{Name="NIH CXR"; Path="D:/data/nih_cxr"; Metadata="Data_Entry_2017.csv"; Images="images_001"},
-    @{Name="PadChest"; Path="D:/data/padchest"; Metadata="metadata.csv"; Images="images"}
+    @{Name="ISIC 2018"; Path="/content/drive/MyDrive/data/isic_2018"; Metadata="metadata.csv"; Images="ISIC2018_Task3_Training_Input"},
+    @{Name="ISIC 2019"; Path="/content/drive/MyDrive/data/isic_2019"; Metadata="metadata.csv"; Images="train-image"},
+    @{Name="ISIC 2020"; Path="/content/drive/MyDrive/data/isic_2020"; Metadata="metadata.csv"; Images="train-image"},
+    @{Name="Derm7pt"; Path="/content/drive/MyDrive/data/derm7pt"; Metadata="metadata.csv"; Images="images"},
+    @{Name="NIH CXR"; Path="/content/drive/MyDrive/data/nih_cxr"; Metadata="Data_Entry_2017.csv"; Images="images_001"},
+    @{Name="PadChest"; Path="/content/drive/MyDrive/data/padchest"; Metadata="metadata.csv"; Images="images"}
 )
 
 $allPassed = $true

@@ -21,7 +21,7 @@ stages:
     cmd: "python -m scripts.data.preprocess_data --dataset isic2019 --image-size 224
       --normalize zero_one --to-hdf5 --output-dir data/processed/isic2019\n"
     deps:
-    - path: F:/data/isic_2019/metadata.csv
+    - path:/content/drive/MyDrive/data/isic_2019/metadata.csv
       hash: md5
       md5: 8244c01dd29cb7daceb0adc89ccfba08
       size: 1243042
@@ -39,7 +39,7 @@ stages:
     cmd: "python -m scripts.data.preprocess_data --dataset isic2018 --image-size 224
       --normalize zero_one --to-hdf5 --output-dir data/processed/isic2018\n"
     deps:
-    - path: F:/data/isic_2018/metadata.csv
+    - path:/content/drive/MyDrive/data/isic_2018/metadata.csv
       hash: md5
       md5: 3c63f9df4bde6f5130fef6add216db67
       size: 817632
@@ -55,9 +55,9 @@ stages:
       nfiles: 11723
   build_concept_bank_isic2018:
     cmd: "python -m scripts.data.build_concept_bank --dataset isic2018 --metadata-csv
-      F:/data/isic_2018/metadata.csv --output-path data/concepts/isic2018_concept_bank.json\n"
+     /content/drive/MyDrive/data/isic_2018/metadata.csv --output-path data/concepts/isic2018_concept_bank.json\n"
     deps:
-    - path: F:/data/isic_2018/metadata.csv
+    - path:/content/drive/MyDrive/data/isic_2018/metadata.csv
       hash: md5
       md5: 3c63f9df4bde6f5130fef6add216db67
       size: 817632
@@ -77,9 +77,9 @@ stages:
       size: 295472
   build_concept_bank_isic2019:
     cmd: "python -m scripts.data.build_concept_bank --dataset isic2019 --metadata-csv
-      F:/data/isic_2019/metadata.csv --output-path data/concepts/isic2019_concept_bank.json\n"
+     /content/drive/MyDrive/data/isic_2019/metadata.csv --output-path data/concepts/isic2019_concept_bank.json\n"
     deps:
-    - path: F:/data/isic_2019/metadata.csv
+    - path:/content/drive/MyDrive/data/isic_2019/metadata.csv
       hash: md5
       md5: 8244c01dd29cb7daceb0adc89ccfba08
       size: 1243042
@@ -101,7 +101,7 @@ stages:
     cmd: "python -m scripts.data.preprocess_data --dataset isic2020 --image-size 224
       --normalize zero_one --to-hdf5 --output-dir data/processed/isic2020\n"
     deps:
-    - path: F:/data/isic_2020/metadata.csv
+    - path:/content/drive/MyDrive/data/isic_2020/metadata.csv
       hash: md5
       md5: fd5a4df0bf6457e9590e8cc517da0fa8
       size: 1757596
@@ -117,9 +117,9 @@ stages:
       nfiles: 29816
   build_concept_bank_isic2020:
     cmd: "python -m scripts.data.build_concept_bank --dataset isic2020 --metadata-csv
-      F:/data/isic_2020/metadata.csv --output-path data/concepts/isic2020_concept_bank.json\n"
+     /content/drive/MyDrive/data/isic_2020/metadata.csv --output-path data/concepts/isic2020_concept_bank.json\n"
     deps:
-    - path: F:/data/isic_2020/metadata.csv
+    - path:/content/drive/MyDrive/data/isic_2020/metadata.csv
       hash: md5
       md5: fd5a4df0bf6457e9590e8cc517da0fa8
       size: 1757596
@@ -141,7 +141,7 @@ stages:
     cmd: "python -m scripts.data.preprocess_data --dataset derm7pt --image-size 224
       --normalize zero_one --to-hdf5 --output-dir data/processed/derm7pt\n"
     deps:
-    - path: F:/data/derm7pt/metadata.csv
+    - path:/content/drive/MyDrive/data/derm7pt/metadata.csv
       hash: md5
       md5: 102f5bf664fe89d9cadf2ea0807abf4e
       size: 112117
@@ -157,9 +157,9 @@ stages:
       nfiles: 912
   build_concept_bank_derm7pt:
     cmd: "python -m scripts.data.build_concept_bank --dataset derm7pt --metadata-csv
-      F:/data/derm7pt/metadata.csv --output-path data/concepts/derm7pt_concept_bank.json\n"
+     /content/drive/MyDrive/data/derm7pt/metadata.csv --output-path data/concepts/derm7pt_concept_bank.json\n"
     deps:
-    - path: F:/data/derm7pt/metadata.csv
+    - path:/content/drive/MyDrive/data/derm7pt/metadata.csv
       hash: md5
       md5: 102f5bf664fe89d9cadf2ea0807abf4e
       size: 112117

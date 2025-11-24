@@ -20,7 +20,7 @@ This script:
 
 Typical CLI usage (from repo root):
 
-    python -m scripts.data.build_padchest_metadata --root F:/data/padchest
+    python -m scripts.data.build_padchest_metadata --root/content/drive/MyDrive/data/padchest
 
 You can also call `build_padchest_metadata(...)` directly from a notebook.
 

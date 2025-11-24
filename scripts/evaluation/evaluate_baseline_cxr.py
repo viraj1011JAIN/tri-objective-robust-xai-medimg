@@ -60,8 +60,8 @@ from src.models.build import build_model
 # Dataset configurations for NIH ChestX-ray14 and PadChest
 DATASET_CONFIGS = {
     "nih_chestxray14": {
-        "data_root": "F:/data/NIH_ChestXray14",
-        "csv_path": "F:/data/NIH_ChestXray14/metadata.csv",
+        "data_root": "/content/drive/MyDrive/data/NIH_ChestXray14",
+        "csv_path": "/content/drive/MyDrive/data/NIH_ChestXray14/metadata.csv",
         "num_classes": 14,
         "class_names": [
             "Atelectasis",
@@ -83,8 +83,8 @@ DATASET_CONFIGS = {
         "task_type": "multi_label",
     },
     "padchest": {
-        "data_root": "F:/data/PadChest",
-        "csv_path": "F:/data/PadChest/metadata.csv",
+        "data_root": "/content/drive/MyDrive/data/PadChest",
+        "csv_path": "/content/drive/MyDrive/data/PadChest/metadata.csv",
         "num_classes": 14,
         "class_names": [
             "Atelectasis",
@@ -173,7 +173,7 @@ def create_dataloader(
         raise FileNotFoundError(
             f"Dataset not found: {data_root}\n"
             f"Please ensure the dataset is available at this location.\n"
-            f"This is expected if the external HDD (F:/data) is not connected."
+            f"This is expected if the external HDD (/content/drive/MyDrive/data) is not connected."
         )
 
     # Get evaluation transforms (no augmentation)

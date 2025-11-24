@@ -54,7 +54,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--dataset", type=str, default="isic2018", choices=["isic2018", "derm7pt"]
     )
-    parser.add_argument("--data-root", type=str, default="F:/data")
+    parser.add_argument("--data-root", type=str, default="/content/drive/MyDrive/data")
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--num-workers", type=int, default=4)
 

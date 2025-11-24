@@ -50,8 +50,8 @@ class TestPGDATConfiguration:
             "model": {"architecture": "resnet50", "num_classes": 7, "pretrained": True},
             "dataset": {
                 "name": "isic2018",
-                "root": "data/processed/isic2018",
-                "csv_path": "data/processed/isic2018/metadata.csv",
+                "root": "/content/drive/MyDrive/data/processed/isic2018",
+                "csv_path": "/content/drive/MyDrive/data/processed/isic2018/metadata.csv",
                 "image_size": 224,
             },
             "training": {

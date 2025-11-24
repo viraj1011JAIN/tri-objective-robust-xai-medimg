@@ -48,8 +48,8 @@ model:
 # Dataset Configuration
 dataset:
   name: "isic2018"
-  root: "data/processed/isic2018"
-  csv_path: "data/processed/isic2018/metadata_processed.csv"
+  root: "/content/drive/MyDrive/data/processed/isic2018"
+  csv_path: "/content/drive/MyDrive/data/processed/isic2018/metadata_processed.csv"
   image_size: 224
   num_classes: 7
 
@@ -77,23 +77,23 @@ dataset:
   test_datasets:
     isic2018_test:
       name: "isic2018"
-      root: "data/processed/isic2018"
-      csv_path: "data/processed/isic2018/metadata_processed.csv"
+      root: "/content/drive/MyDrive/data/processed/isic2018"
+      csv_path: "/content/drive/MyDrive/data/processed/isic2018/metadata_processed.csv"
       split: "test"
     isic2019:
       name: "isic2019"
-      root: "data/processed/isic2019"
-      csv_path: "data/processed/isic2019/metadata_processed.csv"
+      root: "/content/drive/MyDrive/data/processed/isic2019"
+      csv_path: "/content/drive/MyDrive/data/processed/isic2019/metadata_processed.csv"
       split: "test"
     isic2020:
       name: "isic2020"
-      root: "data/processed/isic2020"
-      csv_path: "data/processed/isic2020/metadata_processed.csv"
+      root: "/content/drive/MyDrive/data/processed/isic2020"
+      csv_path: "/content/drive/MyDrive/data/processed/isic2020/metadata_processed.csv"
       split: "test"
     derm7pt:
       name: "derm7pt"
-      root: "data/processed/derm7pt"
-      csv_path: "data/processed/derm7pt/metadata_processed.csv"
+      root: "/content/drive/MyDrive/data/processed/derm7pt"
+      csv_path: "/content/drive/MyDrive/data/processed/derm7pt/metadata_processed.csv"
       split: "test"
 
 # Adversarial Training Configuration

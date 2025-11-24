@@ -30,12 +30,12 @@ Usage
 -----
 From shell:
 
-    python -m scripts.data.build_derm7pt_metadata --root F:/data/derm7pt
+    python -m scripts.data.build_derm7pt_metadata --root/content/drive/MyDrive/data/derm7pt
 
 From notebook:
 
     from scripts.data.build_derm7pt_metadata import build_derm7pt_metadata
-    df = build_derm7pt_metadata(root="F:/data/derm7pt")
+    df = build_derm7pt_metadata(root="/content/drive/MyDrive/data/derm7pt")
 
 This script is designed to be robust to different Derm7pt CSV variants, including
 the Kaggle-style one with columns:

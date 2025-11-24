@@ -1,0 +1,43 @@
+# ISIC Dataset Configuration (Generic)
+# Links to isic2018.yaml for backward compatibility
+
+dataset:
+  name: "ISIC2018"
+  root: "/content/drive/MyDrive/data/processed/isic2018"
+  csv_path: "/content/drive/MyDrive/data/processed/isic2018/metadata_processed.csv"
+  image_column: "image_path"
+  label_column: "diagnostic"
+  split_column: "split"
+  num_classes: 7
+
+  # Image preprocessing
+  image_size: 224
+  normalize_mean: [0.485, 0.456, 0.406]
+  normalize_std: [0.229, 0.224, 0.225]
+
+  # Data loading
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+
+  # Class information
+  class_names:
+    - "MEL"    # Melanoma
+    - "NV"     # Melanocytic nevus
+    - "BCC"    # Basal cell carcinoma
+    - "AKIEC"  # Actinic keratosis / Intraepithelial carcinoma
+    - "BKL"    # Benign keratosis
+    - "DF"     # Dermatofibroma
+    - "VASC"   # Vascular lesion
+
+  # Data augmentation
+  augmentation:
+    train:
+      - "horizontal_flip"
+      - "vertical_flip"
+      - "rotation"
+      - "color_jitter"
+      - "random_crop"
+    test: []
+
+# For detailed configuration, refer to isic2018.yaml
