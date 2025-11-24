@@ -316,15 +316,11 @@ def compute_all_metrics(
     )
 
     # 2. Per-class metrics
-    per_class_metrics = compute_per_class_metrics(
-        predictions, labels, class_names
-    )
+    per_class_metrics = compute_per_class_metrics(predictions, labels, class_names)
 
     # 3. Confusion matrix
     cm = compute_confusion_matrix(predictions, labels)
-    cm_normalized = compute_confusion_matrix(
-        predictions, labels, normalize="true"
-    )
+    cm_normalized = compute_confusion_matrix(predictions, labels, normalize="true")
 
     # 4. Calibration metrics
     logger.info("Computing calibration metrics...")
@@ -397,21 +393,29 @@ def save_results(
     # Classification metrics
     for key, value in metrics["classification"].items():
         if not key.startswith("auroc_"):  # Skip per-class AUROC for summary
-            summary_rows.append({
-                "metric": key,
-                "value": value,
-                "ci_lower": metrics["bootstrap_ci"].get(f"{key}_ci", (np.nan, np.nan))[0],
-                "ci_upper": metrics["bootstrap_ci"].get(f"{key}_ci", (np.nan, np.nan))[1],
-            })
+            summary_rows.append(
+                {
+                    "metric": key,
+                    "value": value,
+                    "ci_lower": metrics["bootstrap_ci"].get(
+                        f"{key}_ci", (np.nan, np.nan)
+                    )[0],
+                    "ci_upper": metrics["bootstrap_ci"].get(
+                        f"{key}_ci", (np.nan, np.nan)
+                    )[1],
+                }
+            )
 
     # Calibration metrics
     for key, value in metrics["calibration"].items():
-        summary_rows.append({
-            "metric": key,
-            "value": value,
-            "ci_lower": np.nan,
-            "ci_upper": np.nan,
-        })
+        summary_rows.append(
+            {
+                "metric": key,
+                "value": value,
+                "ci_lower": np.nan,
+                "ci_upper": np.nan,
+            }
+        )
 
     df_summary = pd.DataFrame(summary_rows)
     df_summary.to_csv(csv_path, index=False)
@@ -487,7 +491,10 @@ def generate_plots(
         plt.close(fig)
 
     # 3. Calibration plots (reliability diagram)
-    from src.evaluation.calibration import plot_reliability_diagram, plot_confidence_histogram
+    from src.evaluation.calibration import (
+        plot_confidence_histogram,
+        plot_reliability_diagram,
+    )
 
     fig = plot_reliability_diagram(
         predictions,
@@ -563,15 +570,11 @@ def main(args: argparse.Namespace) -> None:
         )
     except FileNotFoundError as e:
         logger.error(f"Dataset not found: {e}")
-        logger.error(
-            f"Dataset should be at: {config['root']}"
-        )
+        logger.error(f"Dataset should be at: {config['root']}")
         logger.error(
             "⚠️  Note: Dataset is on external HDD (/content/drive/MyDrive/data) which is not accessible."
         )
-        logger.error(
-            "This evaluation will run when the dataset becomes available."
-        )
+        logger.error("This evaluation will run when the dataset becomes available.")
         return
 
     # Evaluate
@@ -630,7 +633,9 @@ def main(args: argparse.Namespace) -> None:
     for key, value in metrics["classification"].items():
         if not key.startswith("auroc_"):
             ci = metrics["bootstrap_ci"].get(f"{key}_ci", (np.nan, np.nan))
-            logger.info(f"  {key:20s}: {value:.4f} (95% CI: [{ci[0]:.4f}, {ci[1]:.4f}])")
+            logger.info(
+                f"  {key:20s}: {value:.4f} (95% CI: [{ci[0]:.4f}, {ci[1]:.4f}])"
+            )
     logger.info("-" * 80)
     logger.info("Calibration Metrics:")
     for key, value in metrics["calibration"].items():

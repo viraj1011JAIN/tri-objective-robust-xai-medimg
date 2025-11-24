@@ -13,8 +13,8 @@ dataset:
   name: nih_chestxray14
 
   # Dataset paths
-  root:/content/drive/MyDrive/data/NIH_ChestXray14
-  data_root:/content/drive/MyDrive/data/NIH_ChestXray14
+  root: /content/drive/MyDrive/data/NIH_ChestXray14
+  data_root: /content/drive/MyDrive/data/NIH_ChestXray14
 
   # NIH ChestX-ray14 has 14 disease labels (multi-label task)
   num_classes: 14

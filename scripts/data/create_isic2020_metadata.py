@@ -43,7 +43,9 @@ def create_isic2020_metadata():
                 print(f"   JPG: {jpg_count}, PNG: {png_count}")
                 image_dirs.append(item)
     if not image_dirs:
-        raise RuntimeError("No image directories found under /content/drive/MyDrive/data\\isic_2020")
+        raise RuntimeError(
+            "No image directories found under /content/drive/MyDrive/data\\isic_2020"
+        )
 
     # --- STEP 3: identify id/target cols ------------------------------------
     print("\n🏷️ STEP 3: Identifying label format")

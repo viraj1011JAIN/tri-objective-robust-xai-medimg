@@ -98,7 +98,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # =============================================================================
 
 class StructuredFormatter(logging.Formatter):
-    \"\"\"Custom formatter with structured output and context for production logs.\"\"\"
+    """Custom formatter with structured output and context for production logs."""
 
     def format(self, record: logging.LogRecord) -> str:
         # Add context information if available

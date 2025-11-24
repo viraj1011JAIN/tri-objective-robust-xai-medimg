@@ -157,7 +157,9 @@ def test_real_datasets():
         # Check if ISIC 2018 is available
         isic_root = Path("/content/drive/MyDrive/data/isic2018")
         if not isic_root.exists():
-            print("⚠ ISIC 2018 not found at/content/drive/MyDrive/data/isic2018, skipping test")
+            print(
+                "⚠ ISIC 2018 not found at/content/drive/MyDrive/data/isic2018, skipping test"
+            )
             return True
 
         # Create transforms and dataset
@@ -288,7 +290,9 @@ def test_training_loop():
         # Check if ISIC 2018 is available
         isic_root = Path("/content/drive/MyDrive/data/isic2018")
         if not isic_root.exists():
-            print("⚠ ISIC 2018 not found at/content/drive/MyDrive/data/isic2018, skipping test")
+            print(
+                "⚠ ISIC 2018 not found at/content/drive/MyDrive/data/isic2018, skipping test"
+            )
             return True
 
         # Setup

@@ -23,6 +23,9 @@ from __future__ import annotations
 
 import argparse
 import json
+
+# Import dataset and model builders
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -32,9 +35,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-
-# Import dataset and model builders
-import sys
 
 sys.path.append(str(Path(__file__).parent.parent.parent))
 
@@ -281,9 +281,7 @@ def compute_all_metrics(
     print("\nComputing metrics...")
 
     # 1. Multi-label classification metrics
-    metrics = compute_multilabel_metrics(
-        y_true, y_pred, y_prob, class_names, threshold
-    )
+    metrics = compute_multilabel_metrics(y_true, y_pred, y_prob, class_names, threshold)
 
     # 2. Multi-label calibration metrics
     calibration_metrics = compute_multilabel_calibration_metrics(
@@ -341,9 +339,7 @@ def compute_all_metrics(
     return metrics
 
 
-def save_results(
-    metrics: Dict[str, Any], output_dir: Path, dataset_name: str
-) -> None:
+def save_results(metrics: Dict[str, Any], output_dir: Path, dataset_name: str) -> None:
     """Save evaluation results to JSON and CSV files."""
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -577,15 +573,21 @@ def main():
     print(f"Dataset: {args.dataset}")
     print(f"Split: {args.split}")
     print(f"Samples: {y_true.shape[0]}")
-    print(f"\nMacro AUROC: {metrics['auroc_macro']:.4f} "
-          f"[{metrics.get('auroc_macro_ci_lower', 0):.4f}, "
-          f"{metrics.get('auroc_macro_ci_upper', 1):.4f}]")
-    print(f"Micro AUROC: {metrics['auroc_micro']:.4f} "
-          f"[{metrics.get('auroc_micro_ci_lower', 0):.4f}, "
-          f"{metrics.get('auroc_micro_ci_upper', 1):.4f}]")
-    print(f"Hamming Loss: {metrics['hamming_loss']:.4f} "
-          f"[{metrics.get('hamming_loss_ci_lower', 0):.4f}, "
-          f"{metrics.get('hamming_loss_ci_upper', 1):.4f}]")
+    print(
+        f"\nMacro AUROC: {metrics['auroc_macro']:.4f} "
+        f"[{metrics.get('auroc_macro_ci_lower', 0):.4f}, "
+        f"{metrics.get('auroc_macro_ci_upper', 1):.4f}]"
+    )
+    print(
+        f"Micro AUROC: {metrics['auroc_micro']:.4f} "
+        f"[{metrics.get('auroc_micro_ci_lower', 0):.4f}, "
+        f"{metrics.get('auroc_micro_ci_upper', 1):.4f}]"
+    )
+    print(
+        f"Hamming Loss: {metrics['hamming_loss']:.4f} "
+        f"[{metrics.get('hamming_loss_ci_lower', 0):.4f}, "
+        f"{metrics.get('hamming_loss_ci_upper', 1):.4f}]"
+    )
     print(f"Subset Accuracy: {metrics['subset_accuracy']:.4f}")
     print(f"ECE (macro): {metrics['ece_macro']:.4f}")
     print(f"MCE (macro): {metrics['mce_macro']:.4f}")

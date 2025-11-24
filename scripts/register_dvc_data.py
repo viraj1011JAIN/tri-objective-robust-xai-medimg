@@ -260,7 +260,9 @@ def main():
     print("DVC DATA REGISTRY COMPLETE")
     print("=" * 80)
     print("\nAll datasets at/content/drive/MyDrive/data are now documented.")
-    print("Use dvc.yaml dependencies to reference:/content/drive/MyDrive/data/<dataset>/metadata.csv")
+    print(
+        "Use dvc.yaml dependencies to reference:/content/drive/MyDrive/data/<dataset>/metadata.csv"
+    )
     print("DVC remote 'fstore' (F:/triobj_dvc_remote) configured for backups.")
 
 

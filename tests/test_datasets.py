@@ -162,7 +162,8 @@ def _resolve_data_root(env_var: str, default_subdir: str) -> Path:
             return p
 
     candidate_paths = [
-        Path("/content/drive/MyDrive/data") / default_subdir,  # Samsung SSD T7 (primary)
+        Path("/content/drive/MyDrive/data")
+        / default_subdir,  # Samsung SSD T7 (primary)
         Path("/content/drive/MyDrive/data") / default_subdir,
         Path("C:/Users/Viraj Jain/data") / default_subdir,
         Path.home() / "data" / default_subdir,

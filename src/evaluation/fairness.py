@@ -6,8 +6,9 @@ equalized odds, and disparate impact across sensitive attributes
 (e.g., age, sex, skin_tone).
 """
 
-import numpy as np
 from typing import Dict, List, Optional, Tuple
+
+import numpy as np
 from sklearn.metrics import confusion_matrix
 
 
@@ -24,9 +25,7 @@ class FairnessMetrics:
         self.sensitive_attrs = sensitive_attrs
 
     def demographic_parity(
-        self,
-        y_pred: np.ndarray,
-        sensitive_groups: Dict[str, np.ndarray]
+        self, y_pred: np.ndarray, sensitive_groups: Dict[str, np.ndarray]
     ) -> Dict[str, float]:
         """
         Calculate demographic parity: P(Y_pred=1 | A=a) should be equal across groups.
@@ -61,7 +60,7 @@ class FairnessMetrics:
         self,
         y_true: np.ndarray,
         y_pred: np.ndarray,
-        sensitive_groups: Dict[str, np.ndarray]
+        sensitive_groups: Dict[str, np.ndarray],
     ) -> Dict[str, float]:
         """
         Calculate equalized odds: TPR and FPR should be equal across groups.
@@ -108,9 +107,7 @@ class FairnessMetrics:
         return results
 
     def disparate_impact(
-        self,
-        y_pred: np.ndarray,
-        sensitive_groups: Dict[str, np.ndarray]
+        self, y_pred: np.ndarray, sensitive_groups: Dict[str, np.ndarray]
     ) -> Dict[str, float]:
         """
         Calculate disparate impact ratio: min(P(Y=1|A=a)) / max(P(Y=1|A=a)).
@@ -135,7 +132,11 @@ class FairnessMetrics:
                 positive_rates.append(positive_rate)
 
             # Calculate ratio
-            di_ratio = min(positive_rates) / max(positive_rates) if max(positive_rates) > 0 else 0
+            di_ratio = (
+                min(positive_rates) / max(positive_rates)
+                if max(positive_rates) > 0
+                else 0
+            )
             results[f"{attr_name}_di_ratio"] = di_ratio
             results[f"{attr_name}_passes_80_rule"] = di_ratio >= 0.8
 
@@ -145,7 +146,7 @@ class FairnessMetrics:
         self,
         y_true: np.ndarray,
         y_pred: np.ndarray,
-        sensitive_groups: Dict[str, np.ndarray]
+        sensitive_groups: Dict[str, np.ndarray],
     ) -> Dict[str, float]:
         """
         Calculate all fairness metrics.
@@ -180,7 +181,7 @@ def calculate_subgroup_metrics(
     y_pred: np.ndarray,
     y_prob: np.ndarray,
     groups: Dict[str, np.ndarray],
-    metric_fn: callable
+    metric_fn: callable,
 ) -> Dict[str, Dict[str, float]]:
     """
     Calculate a given metric for each subgroup.

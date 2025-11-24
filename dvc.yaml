@@ -16,7 +16,7 @@ stages:
       --output-dir data/processed/isic2018
     deps:
       - scripts/data/preprocess_data.py
-      -/content/drive/MyDrive/data/isic_2018/metadata.csv
+      - /content/drive/MyDrive/data/isic_2018/metadata.csv
     outs:
       - data/processed/isic2018
 
