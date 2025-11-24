@@ -9,7 +9,7 @@ dataset:
   train_subset: null
   test_subset: null
 
-  image_subdir: "images"          # adjust to your actual folder
+  image_subdir: "ISIC2018_Task3_Training_Input"  # Verified: 10,015 images
   metadata_csv: "train_metadata.csv"  # or the correct CSV name
   task: "classification"
   num_classes: 7                  # 7-way classification in ISIC 2018

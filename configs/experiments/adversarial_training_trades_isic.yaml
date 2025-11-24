@@ -1,0 +1,208 @@
+# =============================================================================
+# Adversarial Training Configuration - TRADES (Dermoscopy/ISIC 2018)
+# =============================================================================
+#
+# TRADES (TRadeoff-inspired Adversarial DEfense via Surrogate-loss minimization)
+# Configuration for dermoscopy classification (ISIC 2018, 7 classes)
+#
+# Key Properties:
+# - Balanced robustness-accuracy tradeoff (β=1.0)
+# - Standard dermoscopy perturbation budget (ε=8/255)
+# - Fast training with 10-step PGD
+# - Thorough evaluation with 40-step PGD
+#
+# Expected Results:
+# - Clean Accuracy: 75-82% (slight drop from baseline)
+# - Robust Accuracy (PGD-40): 45-55%
+# - Training Time: ~3-4x slower than standard training
+#
+# Reference:
+#   Zhang et al. (2019): "Theoretically Principled Trade-off between
+#   Robustness and Accuracy", ICML 2019
+#
+# Author: Viraj Pankaj Jain
+# Date: November 24, 2025
+# Version: 5.1.0
+# =============================================================================
+
+# Model Configuration
+model:
+  architecture: "resnet50"  # or "efficientnet_b0"
+  num_classes: 7
+  pretrained: true
+  in_channels: 3
+
+# Dataset Configuration
+dataset:
+  name: "isic2018"
+  root: "data/processed/isic2018"
+  csv_path: "data/processed/isic2018/metadata_processed.csv"
+  image_size: 224
+
+  # Data augmentation (same as baseline for fair comparison)
+  augmentation:
+    random_resized_crop: true
+    random_horizontal_flip: true
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    random_rotation: 15
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# Adversarial Training Configuration
+adversarial_training:
+  # Loss Configuration
+  loss_type: "trades"  # "trades" | "mart" | "at"
+  beta: 1.0  # Robustness-accuracy tradeoff (higher = more robust)
+
+  # Attack Configuration (for training-time adversarial examples)
+  attack:
+    type: "pgd"
+    epsilon: 0.03137  # 8/255 for dermoscopy
+    num_steps: 10  # Fast training (10-20 typical)
+    step_size: 0.00784  # epsilon/4 (auto-computed if null)
+    random_start: true
+    norm: "Linf"
+    targeted: false
+
+  # Training Strategy
+  mix_clean: 0.0  # Pure adversarial training (0.0 = adv only, 0.5 = mixed)
+  alternate_batches: false  # Alternate clean/adv batches (vs. pure adv)
+
+  # Optimization
+  gradient_clip: 1.0  # Max gradient norm
+  use_amp: true  # Automatic mixed precision (faster training)
+
+  # Evaluation Configuration
+  evaluation:
+    attack_steps: 40  # More thorough evaluation (20-100 typical)
+    attack_epsilon: 0.03137  # Same as training (8/255)
+    track_clean_acc: true  # Track clean accuracy during training
+    log_frequency: 10  # Log every N batches
+
+# Training Configuration
+training:
+  num_epochs: 50  # May need more epochs than standard training
+  batch_size: 32  # Reduce if OOM (adversarial training uses 2x memory)
+
+  # Optimizer
+  optimizer:
+    type: "adam"
+    learning_rate: 1.0e-4
+    weight_decay: 1.0e-4
+    betas: [0.9, 0.999]
+
+  # Learning Rate Scheduler
+  scheduler:
+    type: "reduce_lr_on_plateau"
+    mode: "max"  # Monitor validation accuracy
+    factor: 0.5
+    patience: 5
+    min_lr: 1.0e-6
+    verbose: true
+
+  # Early Stopping
+  early_stopping:
+    patience: 10
+    monitor: "robust_acc"  # Stop based on robust accuracy
+    mode: "max"
+    min_delta: 0.001
+
+# Checkpointing
+checkpointing:
+  save_dir: "checkpoints/adversarial_training/trades_resnet50"
+  save_best: true  # Save best robust accuracy model
+  save_last: true  # Save last epoch model
+  save_frequency: 5  # Save checkpoint every N epochs
+
+  # What to save in checkpoint
+  include:
+    - model_state_dict
+    - optimizer_state_dict
+    - scheduler_state_dict
+    - epoch
+    - best_robust_acc
+    - best_clean_acc
+    - config
+
+# Logging
+logging:
+  # MLflow tracking
+  mlflow:
+    enabled: true
+    experiment_name: "adversarial_training_isic"
+    run_name: "trades_resnet50_beta1.0"
+    tracking_uri: "file:./mlruns"
+
+  # Weights & Biases (optional)
+  wandb:
+    enabled: false
+    project: "tri-objective-robust-xai"
+    entity: null
+
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_dir: "logs/adversarial_training/trades_resnet50"
+
+  # Console logging
+  console:
+    level: "INFO"
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true  # Slower but reproducible
+  benchmark: false  # Set true for speed (non-deterministic)
+
+# Validation
+validation:
+  frequency: 1  # Validate every N epochs
+  batch_size: 64  # Can use larger batch for validation
+  num_workers: 4
+
+  # Robust validation settings
+  robust_validation:
+    enabled: true
+    attack_steps: 40
+    attack_epsilon: 0.03137  # 8/255
+
+# Hardware
+hardware:
+  device: "cuda"  # "cuda" | "cpu"
+  num_workers: 4
+  pin_memory: true
+
+  # Multi-GPU (if available)
+  distributed:
+    enabled: false
+    backend: "nccl"
+    world_size: 1
+
+# Clinical Validation (for dissertation)
+clinical_validation:
+  # Test on real-world perturbations
+  sensor_noise:
+    enabled: true
+    types: ["gaussian", "shot", "jpeg"]
+
+  # Cross-dataset generalization
+  cross_dataset:
+    enabled: false
+    datasets: ["ph2", "ham10000"]
+
+  # Fairness evaluation
+  fairness:
+    enabled: true
+    protected_attributes: ["age", "sex", "anatom_site_general"]
+
+# Ablation Studies
+ablation:
+  beta_values: [0.0, 0.5, 1.0, 2.0, 6.0]  # TRADES beta sweep
+  epsilon_values: [0.00784, 0.01569, 0.03137]  # 2/255, 4/255, 8/255
+  num_steps_values: [1, 10, 20, 40]  # Attack strength sweep

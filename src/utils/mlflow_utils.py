@@ -139,3 +139,15 @@ def build_experiment_and_run_name(
         run_name_parts.append(extra_tag)
     run_name = "__".join(run_name_parts)
     return experiment_name, run_name
+
+
+# Backwards compatibility aliases for tests
+setup_mlflow = init_mlflow
+
+
+__all__ = [
+    "init_mlflow",
+    "build_experiment_and_run_name",
+    # Aliases
+    "setup_mlflow",
+]

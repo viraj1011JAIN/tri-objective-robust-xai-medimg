@@ -186,7 +186,7 @@ class BaselineTrainer(BaseTrainer):
         metrics:
             Dictionary with per-batch metrics (currently accuracy only).
         """
-        images, labels = batch
+        images, labels, _ = batch
         images = images.to(self.device, non_blocking=True)
         labels = labels.to(self.device, non_blocking=True)
 
@@ -225,7 +225,7 @@ class BaselineTrainer(BaseTrainer):
         metrics:
             Dictionary with per-batch metrics (currently accuracy only).
         """
-        images, labels = batch
+        images, labels, _ = batch
         images = images.to(self.device, non_blocking=True)
         labels = labels.to(self.device, non_blocking=True)
 

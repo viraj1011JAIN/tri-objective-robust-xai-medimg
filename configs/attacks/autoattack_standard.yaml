@@ -1,0 +1,42 @@
+# AutoAttack Configuration
+# Ensemble of diverse attacks for robust evaluation
+
+attack:
+  type: "autoattack"
+  name: "AutoAttack"
+  description: "Ensemble attack for reliable robustness evaluation"
+
+# Perturbation parameters
+epsilon: 0.03137  # 8/255 for Linf
+clip_min: 0.0
+clip_max: 1.0
+
+# AutoAttack-specific parameters
+norm: "Linf"  # "Linf" or "L2"
+version: "standard"  # "standard" or "custom"
+attacks_to_run: null  # If null, uses default based on norm
+num_classes: 10
+
+# Attack parameters
+targeted: false  # AutoAttack is untargeted by design
+
+# Computation
+device: "cuda"
+batch_size: 32
+verbose: true  # Recommended to see progress
+random_seed: null
+
+# Medical imaging recommendations:
+# Dermoscopy (10 classes):
+#   epsilon: 0.03137  # 8/255
+#   norm: "Linf"
+#   num_classes: 10
+#
+# Chest X-ray (binary):
+#   epsilon: 0.01569  # 4/255
+#   norm: "Linf"
+#   num_classes: 2
+#
+# L2 norm attacks:
+#   epsilon: 0.5  # L2 epsilon
+#   norm: "L2"

@@ -41,6 +41,16 @@ from __future__ import annotations
 
 from .base_loss import BaseLoss
 from .calibration_loss import CalibrationLoss, LabelSmoothingLoss, TemperatureScaling
+
+# Phase 5.1: Robust losses for adversarial training
+from .robust_loss import (
+    AdversarialTrainingLoss,
+    MARTLoss,
+    TRADESLoss,
+    adversarial_training_loss,
+    mart_loss,
+    trades_loss,
+)
 from .task_loss import (
     CalibratedCrossEntropyLoss,
     FocalLoss,
@@ -60,7 +70,14 @@ __all__ = [
     "TemperatureScaling",
     "LabelSmoothingLoss",
     "CalibrationLoss",
+    # Robust Losses (Phase 5.1)
+    "TRADESLoss",
+    "MARTLoss",
+    "AdversarialTrainingLoss",
+    "trades_loss",
+    "mart_loss",
+    "adversarial_training_loss",
 ]
 
 # Simple semantic version for the loss subsystem; useful in logs / reports.
-__version__: str = "1.0.0"
+__version__: str = "1.1.0"  # Updated for Phase 5.1

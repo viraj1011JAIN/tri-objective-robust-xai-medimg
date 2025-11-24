@@ -162,6 +162,7 @@ def _resolve_data_root(env_var: str, default_subdir: str) -> Path:
             return p
 
     candidate_paths = [
+        Path("D:/data") / default_subdir,  # Samsung SSD T7 (primary)
         Path("F:/data") / default_subdir,
         Path("C:/Users/Viraj Jain/data") / default_subdir,
         Path.home() / "data" / default_subdir,
@@ -352,7 +353,8 @@ class TestBaseDataset:
             pytest.skip("BaseDataset not available")
 
         # BaseDataset should require subclass implementation
-        with pytest.raises(TypeError):
+        # BaseDataset calls _load_metadata() in __init__, which raises NotImplementedError
+        with pytest.raises(NotImplementedError, match="must implement _load_metadata"):
             # This should fail because _load_metadata is abstract
             class IncompleteDataset(BaseDataset):
                 pass
@@ -480,7 +482,9 @@ class TestReproducibility:
 
     def test_get_seed_worker(self):
         """Test seed worker function for DataLoader."""
-        worker_fn = get_seed_worker(42)
+        from src.utils.reproducibility import get_seed_worker
+
+        worker_fn = get_seed_worker
 
         assert callable(worker_fn)
 
@@ -583,18 +587,22 @@ class TestConfig:
         with open(config_path, "w") as f:
             yaml.dump(config_data, f)
 
-        loaded = load_config(config_path)
+        from src.utils.config import _load_yaml_file
+
+        loaded = _load_yaml_file(config_path)
 
         assert loaded["model"]["name"] == "resnet50"
         assert loaded["training"]["epochs"] == 100
 
     def test_merge_configs(self):
         """Test merging configuration dictionaries."""
+        from src.utils.config import _deep_merge
+
         base_config = {"model": {"name": "resnet50"}, "training": {"epochs": 100}}
 
         override_config = {"training": {"epochs": 200, "batch_size": 64}}
 
-        merged = merge_configs(base_config, override_config)
+        merged = _deep_merge(base_config, override_config)
 
         assert merged["model"]["name"] == "resnet50"
         assert merged["training"]["epochs"] == 200
@@ -602,10 +610,19 @@ class TestConfig:
 
     def test_validate_config(self):
         """Test configuration validation."""
-        valid_config = {"model": {"name": "resnet50"}, "training": {"epochs": 100}}
+        from src.utils.config import ExperimentConfig
+
+        valid_config = {
+            "experiment": {"name": "test", "project_name": "test_project"},
+            "dataset": {"name": "test_dataset", "root": "/data", "batch_size": 32},
+            "model": {"name": "resnet50", "num_classes": 10},
+            "training": {"max_epochs": 100, "learning_rate": 0.001},
+            "reproducibility": {"seed": 42},
+        }
 
         # Should not raise
-        validate_config(valid_config)
+        cfg = ExperimentConfig.model_validate(valid_config)
+        assert cfg.model.name == "resnet50"
 
     def test_load_nonexistent_config(self):
         """Test loading non-existent config file."""

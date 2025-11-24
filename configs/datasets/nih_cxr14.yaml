@@ -9,7 +9,9 @@ dataset:
   train_subset: null
   test_subset: null
 
-  image_subdir: "images"              # e.g. "images" or "images_001" etc.
+  # Images are in: images_001/images/, images_002/images/, ..., images_012/images/
+  # Total: 112,120 images across 12 folders (verified 2025-11-23)
+  image_subdir: "images"              # Base folder name (dataset loader handles multiple folders)
   metadata_csv: "Data_Entry_2017.csv" # main label file from NIH
   task: "multi_label_classification"
   num_classes: 14

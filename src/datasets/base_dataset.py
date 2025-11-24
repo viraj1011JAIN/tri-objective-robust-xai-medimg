@@ -476,3 +476,15 @@ class BaseMedicalDataset(Dataset):
             )
 
         return summary
+
+
+# Backwards compatibility alias for tests
+BaseDataset = BaseMedicalDataset
+
+
+__all__ = [
+    "BaseMedicalDataset",
+    "BaseDataset",  # Alias
+    "Sample",
+    "Split",
+]

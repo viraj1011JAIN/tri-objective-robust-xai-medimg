@@ -54,6 +54,27 @@ from src.attacks.pgd import PGD, PGDConfig, pgd_attack
 # ============================================================================
 
 
+@pytest.fixture(scope="session", autouse=True)
+def disable_deterministic_for_attacks():
+    """
+    Disable deterministic algorithms for attack tests.
+
+    CUDA operations with deterministic mode enabled throw errors on CUDA >= 10.2
+    when using CuBLAS. We need to temporarily disable this for attack generation.
+    """
+    original_setting = None
+    if hasattr(torch, "are_deterministic_algorithms_enabled"):
+        original_setting = torch.are_deterministic_algorithms_enabled()
+        # Disable deterministic algorithms for attack tests
+        torch.use_deterministic_algorithms(False)
+
+    yield
+
+    # Restore original setting if it existed
+    if original_setting is not None:
+        torch.use_deterministic_algorithms(original_setting)
+
+
 @pytest.fixture
 def device():
     """Get computation device."""

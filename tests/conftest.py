@@ -63,6 +63,10 @@ def pytest_configure(config: pytest.Config) -> None:
     - rq2: Tests related to Research Question 2 (Explainability)
     - rq3: Tests related to Research Question 3 (Selective Prediction)
     """
+    # Set CUBLAS_WORKSPACE_CONFIG for deterministic CUDA operations
+    if torch.cuda.is_available():
+        os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+
     config.addinivalue_line("markers", "gpu: mark tests that require a GPU")
     config.addinivalue_line("markers", "slow: mark slow tests (>10 seconds)")
     config.addinivalue_line(
@@ -218,6 +222,14 @@ def set_random_seeds(random_seed: int) -> None:
 
     # Set hash seed for Python
     os.environ["PYTHONHASHSEED"] = str(random_seed)
+
+    # Set CUBLAS workspace config for CUDA determinism
+    if torch.cuda.is_available():
+        os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+
+    # Disable torch deterministic algorithms to avoid CuBLAS errors in tests
+    if hasattr(torch, "use_deterministic_algorithms"):
+        torch.use_deterministic_algorithms(False)
 
 
 @pytest.fixture

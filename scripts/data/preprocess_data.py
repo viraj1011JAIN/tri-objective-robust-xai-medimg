@@ -219,7 +219,8 @@ def resolve_dataset_root(
         )
 
     candidates = [
-        Path("F:/data") / cfg.default_subdir,
+        Path("D:/data") / cfg.default_subdir,  # Samsung SSD T7 (primary)
+        Path("F:/data") / cfg.default_subdir,  # Legacy external drive
         Path("F:/Data") / cfg.default_subdir,
         Path("C:/Users/Dissertation/data") / cfg.default_subdir,
         Path("C:/Users/Viraj Jain/data") / cfg.default_subdir,

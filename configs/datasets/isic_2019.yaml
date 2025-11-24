@@ -9,7 +9,7 @@ dataset:
   train_subset: null
   test_subset: null
 
-  image_subdir: "images"
+  image_subdir: "train-image"  # Verified actual folder name on D:/data
   metadata_csv: "train_metadata.csv"
   task: "classification"
   num_classes: 8                  # 8 diagnostic categories in ISIC 2019

@@ -1,0 +1,185 @@
+# =============================================================================
+# Adversarial Training Configuration - MART (Dermoscopy/ISIC 2018)
+# =============================================================================
+#
+# MART (Misclassification Aware adversarial tRaining)
+# Configuration for dermoscopy classification (ISIC 2018, 7 classes)
+#
+# Key Properties:
+# - Adaptive weighting based on clean example misclassification
+# - Higher β than TRADES (β=3.0) for better robustness
+# - Focuses training on hard examples
+# - Better sample efficiency than TRADES
+#
+# Expected Results:
+# - Clean Accuracy: 74-81%
+# - Robust Accuracy (PGD-40): 48-58% (typically better than TRADES)
+# - Training Time: ~3-4x slower than standard training
+#
+# Reference:
+#   Wang et al. (2020): "Improving Adversarial Robustness Requires
+#   Revisiting Misclassified Examples", ICLR 2020
+#
+# Author: Viraj Pankaj Jain
+# Date: November 24, 2025
+# Version: 5.1.0
+# =============================================================================
+
+# Model Configuration
+model:
+  architecture: "resnet50"
+  num_classes: 7
+  pretrained: true
+  in_channels: 3
+
+# Dataset Configuration
+dataset:
+  name: "isic2018"
+  root: "data/processed/isic2018"
+  csv_path: "data/processed/isic2018/metadata_processed.csv"
+  image_size: 224
+
+  augmentation:
+    random_resized_crop: true
+    random_horizontal_flip: true
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    random_rotation: 15
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# Adversarial Training Configuration
+adversarial_training:
+  # Loss Configuration
+  loss_type: "mart"  # Misclassification-aware training
+  beta: 3.0  # Higher than TRADES (typical: 3.0-5.0)
+
+  # Attack Configuration
+  attack:
+    type: "pgd"
+    epsilon: 0.03137  # 8/255
+    num_steps: 10
+    step_size: 0.00784  # epsilon/4
+    random_start: true
+    norm: "Linf"
+    targeted: false
+
+  # Training Strategy
+  mix_clean: 0.0  # Pure adversarial
+  alternate_batches: false
+
+  # Optimization
+  gradient_clip: 1.0
+  use_amp: true
+
+  # Evaluation
+  evaluation:
+    attack_steps: 40
+    attack_epsilon: 0.03137
+    track_clean_acc: true
+    log_frequency: 10
+
+# Training Configuration
+training:
+  num_epochs: 50
+  batch_size: 32
+
+  optimizer:
+    type: "adam"
+    learning_rate: 1.0e-4
+    weight_decay: 1.0e-4
+    betas: [0.9, 0.999]
+
+  scheduler:
+    type: "reduce_lr_on_plateau"
+    mode: "max"
+    factor: 0.5
+    patience: 5
+    min_lr: 1.0e-6
+    verbose: true
+
+  early_stopping:
+    patience: 10
+    monitor: "robust_acc"
+    mode: "max"
+    min_delta: 0.001
+
+# Checkpointing
+checkpointing:
+  save_dir: "checkpoints/adversarial_training/mart_resnet50"
+  save_best: true
+  save_last: true
+  save_frequency: 5
+
+  include:
+    - model_state_dict
+    - optimizer_state_dict
+    - scheduler_state_dict
+    - epoch
+    - best_robust_acc
+    - best_clean_acc
+    - config
+
+# Logging
+logging:
+  mlflow:
+    enabled: true
+    experiment_name: "adversarial_training_isic"
+    run_name: "mart_resnet50_beta3.0"
+    tracking_uri: "file:./mlruns"
+
+  wandb:
+    enabled: false
+
+  tensorboard:
+    enabled: true
+    log_dir: "logs/adversarial_training/mart_resnet50"
+
+  console:
+    level: "INFO"
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false
+
+# Validation
+validation:
+  frequency: 1
+  batch_size: 64
+  num_workers: 4
+
+  robust_validation:
+    enabled: true
+    attack_steps: 40
+    attack_epsilon: 0.03137
+
+# Hardware
+hardware:
+  device: "cuda"
+  num_workers: 4
+  pin_memory: true
+
+  distributed:
+    enabled: false
+
+# Clinical Validation
+clinical_validation:
+  sensor_noise:
+    enabled: true
+    types: ["gaussian", "shot", "jpeg"]
+
+  fairness:
+    enabled: true
+    protected_attributes: ["age", "sex", "anatom_site_general"]
+
+# Ablation Studies
+ablation:
+  beta_values: [1.0, 3.0, 5.0, 7.0]  # MART beta sweep
+  epsilon_values: [0.00784, 0.01569, 0.03137]
+  num_steps_values: [1, 10, 20, 40]

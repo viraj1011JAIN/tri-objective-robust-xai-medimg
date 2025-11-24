@@ -1,0 +1,40 @@
+# PGD Default Configuration
+# Projected Gradient Descent for iterative L∞ attacks
+
+attack:
+  type: "pgd"
+  name: "PGD"
+  description: "Multi-step iterative gradient-based attack"
+
+# Perturbation parameters
+epsilon: 0.03137  # 8/255
+clip_min: 0.0
+clip_max: 1.0
+
+# PGD-specific parameters
+num_steps: 40
+step_size: null  # If null, defaults to epsilon/4
+random_start: true
+early_stop: false
+
+# Attack parameters
+targeted: false
+
+# Computation
+device: "cuda"
+batch_size: 32
+verbose: false
+random_seed: null
+
+# Medical imaging recommendations:
+# Dermoscopy:
+#   epsilon: 0.03137  # 8/255
+#   num_steps: 40
+#   step_size: 0.00784  # 2/255
+#   random_start: true
+#
+# Chest X-ray:
+#   epsilon: 0.01569  # 4/255
+#   num_steps: 40
+#   step_size: 0.00392  # 1/255
+#   random_start: true

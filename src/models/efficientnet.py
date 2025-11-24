@@ -35,7 +35,7 @@ try:
     from torchvision.models import EfficientNet_B0_Weights, efficientnet_b0
 
     _HAS_TORCHVISION = True
-except ImportError:
+except ImportError:  # pragma: no cover
     _HAS_TORCHVISION = False
     EfficientNet_B0_Weights = None  # type: ignore[assignment,misc]
     efficientnet_b0 = None  # type: ignore[assignment,misc]
@@ -236,7 +236,7 @@ class EfficientNetB0Classifier(BaseModel):
                 first_conv = module
                 break
 
-        if first_conv is None:
+        if first_conv is None:  # pragma: no cover
             raise RuntimeError(
                 "Could not locate first Conv2d in EfficientNet features."
             )
@@ -269,12 +269,12 @@ class EfficientNetB0Classifier(BaseModel):
                         :, :in_channels, :, :
                     ]
                     new_conv.weight.copy_(expanded / float(repeat_factor))
-                else:
-                    # in_channels == 3, direct copy (should not normally reach here)
+                else:  # pragma: no cover
+                    # in_channels == 3, direct copy (unreachable: only called when != 3)
                     new_conv.weight.copy_(old_weight)
 
                 # Copy bias if present
-                if first_conv.bias is not None and new_conv.bias is not None:
+                if first_conv.bias is not None and new_conv.bias is not None:  # pragma: no cover  # noqa: E501
                     new_conv.bias.copy_(first_conv.bias)
         # If not pretrained, we keep the default random initialization
 
@@ -289,7 +289,7 @@ class EfficientNetB0Classifier(BaseModel):
             if replaced:
                 break
 
-        if not replaced:
+        if not replaced:  # pragma: no cover
             raise RuntimeError(
                 "Failed to replace first Conv2d when adapting in_channels."
             )

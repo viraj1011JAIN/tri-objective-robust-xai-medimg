@@ -1,0 +1,186 @@
+# =============================================================================
+# Adversarial Training Configuration - Standard AT (Baseline)
+# =============================================================================
+#
+# Standard Adversarial Training (Madry et al., 2018)
+# Baseline configuration for comparison with TRADES/MART
+#
+# Key Properties:
+# - Simple adversarial training (cross-entropy on adversarial examples)
+# - No tradeoff parameter (pure robustness focus)
+# - Typically suffers from larger clean accuracy drop
+# - Useful as baseline for ablation studies
+#
+# Expected Results:
+# - Clean Accuracy: 70-78% (larger drop than TRADES/MART)
+# - Robust Accuracy (PGD-40): 40-50%
+# - Training Time: ~3-4x slower than standard training
+#
+# Reference:
+#   Madry et al. (2018): "Towards Deep Learning Models Resistant to
+#   Adversarial Attacks", ICLR 2018
+#
+# Author: Viraj Pankaj Jain
+# Date: November 24, 2025
+# Version: 5.1.0
+# =============================================================================
+
+# Model Configuration
+model:
+  architecture: "resnet50"
+  num_classes: 7
+  pretrained: true
+  in_channels: 3
+
+# Dataset Configuration
+dataset:
+  name: "isic2018"
+  root: "data/processed/isic2018"
+  csv_path: "data/processed/isic2018/metadata_processed.csv"
+  image_size: 224
+
+  augmentation:
+    random_resized_crop: true
+    random_horizontal_flip: true
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    random_rotation: 15
+    normalize:
+      mean: [0.485, 0.456, 0.406]
+      std: [0.229, 0.224, 0.225]
+
+# Adversarial Training Configuration
+adversarial_training:
+  # Loss Configuration
+  loss_type: "at"  # Standard adversarial training
+  beta: 0.0  # Not used for AT (no tradeoff parameter)
+
+  # Attack Configuration
+  attack:
+    type: "pgd"
+    epsilon: 0.03137  # 8/255
+    num_steps: 10
+    step_size: 0.00784  # epsilon/4
+    random_start: true
+    norm: "Linf"
+    targeted: false
+
+  # Training Strategy
+  mix_clean: 0.0  # Pure adversarial (0.0) or mixed (0.5)
+  alternate_batches: false
+
+  # Optimization
+  gradient_clip: 1.0
+  use_amp: true
+
+  # Evaluation
+  evaluation:
+    attack_steps: 40
+    attack_epsilon: 0.03137
+    track_clean_acc: true
+    log_frequency: 10
+
+# Training Configuration
+training:
+  num_epochs: 50
+  batch_size: 32
+
+  optimizer:
+    type: "adam"
+    learning_rate: 1.0e-4
+    weight_decay: 1.0e-4
+    betas: [0.9, 0.999]
+
+  scheduler:
+    type: "reduce_lr_on_plateau"
+    mode: "max"
+    factor: 0.5
+    patience: 5
+    min_lr: 1.0e-6
+    verbose: true
+
+  early_stopping:
+    patience: 10
+    monitor: "robust_acc"
+    mode: "max"
+    min_delta: 0.001
+
+# Checkpointing
+checkpointing:
+  save_dir: "checkpoints/adversarial_training/standard_at_resnet50"
+  save_best: true
+  save_last: true
+  save_frequency: 5
+
+  include:
+    - model_state_dict
+    - optimizer_state_dict
+    - scheduler_state_dict
+    - epoch
+    - best_robust_acc
+    - best_clean_acc
+    - config
+
+# Logging
+logging:
+  mlflow:
+    enabled: true
+    experiment_name: "adversarial_training_isic"
+    run_name: "standard_at_resnet50"
+    tracking_uri: "file:./mlruns"
+
+  wandb:
+    enabled: false
+
+  tensorboard:
+    enabled: true
+    log_dir: "logs/adversarial_training/standard_at_resnet50"
+
+  console:
+    level: "INFO"
+
+# Reproducibility
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false
+
+# Validation
+validation:
+  frequency: 1
+  batch_size: 64
+  num_workers: 4
+
+  robust_validation:
+    enabled: true
+    attack_steps: 40
+    attack_epsilon: 0.03137
+
+# Hardware
+hardware:
+  device: "cuda"
+  num_workers: 4
+  pin_memory: true
+
+  distributed:
+    enabled: false
+
+# Clinical Validation
+clinical_validation:
+  sensor_noise:
+    enabled: true
+    types: ["gaussian", "shot", "jpeg"]
+
+  fairness:
+    enabled: true
+    protected_attributes: ["age", "sex", "anatom_site_general"]
+
+# Ablation Studies
+ablation:
+  # Compare pure vs. mixed adversarial training
+  mix_clean_values: [0.0, 0.25, 0.5, 0.75]
+  epsilon_values: [0.00784, 0.01569, 0.03137]
+  num_steps_values: [1, 10, 20, 40]

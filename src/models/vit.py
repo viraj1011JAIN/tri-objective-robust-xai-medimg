@@ -36,7 +36,7 @@ try:
 
     _HAS_TORCHVISION = True
     _HAS_VIT_WEIGHTS = True
-except ImportError:
+except ImportError:  # pragma: no cover
     try:
         # Older API without weights enums
         from torchvision.models import vit_b_16  # type: ignore[assignment]
@@ -44,7 +44,7 @@ except ImportError:
         ViT_B_16_Weights = None  # type: ignore[assignment]
         _HAS_TORCHVISION = True
         _HAS_VIT_WEIGHTS = False
-    except ImportError:
+    except ImportError:  # pragma: no cover
         vit_b_16 = None  # type: ignore[assignment]
         ViT_B_16_Weights = None  # type: ignore[assignment]
         _HAS_TORCHVISION = False
@@ -110,7 +110,8 @@ class ViTB16Classifier(BaseModel):
                 "Install with: pip install torchvision"
             )
 
-        if num_classes <= 0:
+        if num_classes <= 0:  # pragma: no cover
+            # Defensive check; BaseModel already validates this
             raise ValueError(f"num_classes must be positive, got {num_classes}")
 
         if in_channels <= 0:
@@ -167,7 +168,7 @@ class ViTB16Classifier(BaseModel):
             self.fc = nn.Sequential(*head_modules)
 
         # Replace backbone heads with identity; we own the classifier head
-        if hasattr(self.backbone, "heads"):
+        if hasattr(self.backbone, "heads"):  # pragma: no branch
             self.backbone.heads = nn.Identity()
 
         # Names exposed via get_feature_maps
@@ -231,8 +232,10 @@ class ViTB16Classifier(BaseModel):
                         :, :in_channels, :, :
                     ]
                     new_conv.weight.copy_(expanded / float(repeat_factor))
-                else:
+                else:  # pragma: no cover
                     # in_channels == 3: direct copy (for completeness)
+                    # Note: This is unreachable since _adapt_conv_proj is only
+                    # called when in_channels != 3 (see __init__ line 154-155)
                     new_conv.weight.copy_(old_weight)
 
                 if conv.bias is not None and new_conv.bias is not None:

@@ -63,10 +63,13 @@ def setup_logging(log_dir: Path) -> None:
 
 
 def create_dataloaders(
-    batch_size: int, dataset: str
+    batch_size: int, dataset: str, use_real_data: bool = True
 ) -> Tuple[DataLoader, DataLoader, int]:
     """
-    Create toy train/validation DataLoaders for unit tests.
+    Create train/validation DataLoaders.
+
+    ⚠️ CRITICAL FIX: This function now loads REAL medical imaging data by default.
+    Previous version used synthetic random noise, causing 0% accuracy on real images.
 
     Parameters
     ----------
@@ -76,45 +79,121 @@ def create_dataloaders(
         Dataset name. Supported (case-insensitive):
         - "isic2018" (and "isic", "isic_2018")
         - "nih_chestxray14" (and "chest_x_ray", "chestxray14")
+    use_real_data:
+        If True (DEFAULT), load REAL medical images from disk.
+        If False, use synthetic data (ONLY for unit tests).
 
     Returns
     -------
     (train_loader, val_loader, num_classes)
     """
+    from pathlib import Path
+
+    from src.datasets.isic import ISICDataset
+    from src.datasets.transforms import get_test_transforms, get_train_transforms
+
     name = dataset.lower()
+
+    # ========================================================================
+    # PRODUCTION MODE: Load REAL medical imaging data
+    # ========================================================================
+    if use_real_data and name in {"isic2018", "isic_2018", "isic"}:
+        logger.info("=" * 80)
+        logger.info("🩺 LOADING REAL ISIC2018 MEDICAL IMAGING DATA")
+        logger.info("=" * 80)
+
+        num_classes = 7
+        data_root = Path("data/processed/isic2018")
+        csv_path = data_root / "metadata_processed.csv"
+
+        # Verify data exists
+        if not data_root.exists():
+            raise FileNotFoundError(
+                f"\n❌ REAL DATA NOT FOUND\n"
+                f"Expected data root: {data_root.absolute()}\n"
+                f"Please run preprocessing first:\n"
+                f"  python scripts/data/preprocess_isic2018.py\n"
+                f"Or set use_real_data=False for testing with synthetic data."
+            )
+
+        if not csv_path.exists():
+            raise FileNotFoundError(
+                f"\n❌ METADATA CSV NOT FOUND\n"
+                f"Expected: {csv_path.absolute()}\n"
+                f"Please run preprocessing first."
+            )
+
+        # Load transforms
+        train_transforms = get_train_transforms(dataset="isic", image_size=224)
+        test_transforms = get_test_transforms(dataset="isic", image_size=224)
+
+        # Load datasets
+        train_dataset = ISICDataset(
+            root=str(data_root),
+            split="train",
+            csv_path=str(csv_path),
+            transforms=train_transforms,
+        )
+
+        val_dataset = ISICDataset(
+            root=str(data_root),
+            split="val",
+            csv_path=str(csv_path),
+            transforms=test_transforms,
+        )
+
+        # Create dataloaders
+        train_loader = DataLoader(
+            train_dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=0,  # Avoid Windows multiprocessing issues
+            pin_memory=True,
+        )
+        val_loader = DataLoader(
+            val_dataset,
+            batch_size=batch_size,
+            shuffle=False,
+            num_workers=0,
+            pin_memory=True,
+        )
+
+        logger.info(f"✅ LOADED REAL DATA:")
+        logger.info(f"   Train: {len(train_dataset):,} samples")
+        logger.info(f"   Val:   {len(val_dataset):,} samples")
+        logger.info(f"   Classes: {num_classes}")
+        logger.info(f"   Batch size: {batch_size}")
+        logger.info("=" * 80)
+
+        return train_loader, val_loader, num_classes
+
+    # ========================================================================
+    # TEST MODE: Synthetic data (ONLY for unit tests)
+    # ========================================================================
+    logger.warning("⚠️  USING SYNTHETIC DATA (for testing only)")
+    logger.warning("⚠️  This will NOT work for real evaluation!")
 
     if name in {"isic2018", "isic_2018", "isic"}:
         num_samples = 256
         num_classes = 7
         channels = 3
-    elif name in {"nih_chestxray14", "chest_x_ray", "chestxray14"}:
+    elif name in {
+        "nih_chestxray14",
+        "chest_x_ray",
+        "chest_xray",
+        "chestxray14",
+    }:
         num_samples = 512
         num_classes = 14
         channels = 1
     else:
         raise ValueError(f"Unknown dataset: {dataset!r}")
 
-    # ------------------------------------------------------------------
-    # Create a simple synthetic dataset
-    # ------------------------------------------------------------------
-    # We keep this deterministic enough for tests but do not touch any
-    # global seed that might affect other tests.
     images = torch.randn(num_samples, channels, 224, 224)
     labels = torch.randint(0, num_classes, (num_samples,))
 
     full_dataset = TensorDataset(images, labels)
 
-    # ------------------------------------------------------------------
-    # IMPORTANT: match the unit-test expectations exactly
-    #
-    # The tests compute:
-    #   int(num_samples * 0.8) for train
-    #   int(num_samples * 0.2) for val
-    #
-    # Note that this intentionally "drops" the remainder sample when
-    # num_samples * 0.8 + num_samples * 0.2 != num_samples (e.g. 256).
-    # We therefore DO NOT use `num_samples - train_len` here.
-    # ------------------------------------------------------------------
     train_len = int(num_samples * 0.8)
     val_len = int(num_samples * 0.2)
 
@@ -242,11 +321,11 @@ def main(args):
         # Trainer
         # ------------------------------------------------------------------
         trainer_cfg = TrainingConfig(
-            max_epochs=cfg.training.max_epochs,
-            eval_every_n_epochs=cfg.training.eval_every_n_epochs,
-            log_every_n_steps=cfg.training.log_every_n_steps,
-            early_stopping_patience=cfg.training.early_stopping_patience,
-            gradient_clip_val=cfg.training.gradient_clip_val,
+            max_epochs=cfg["training"]["max_epochs"],
+            eval_every_n_epochs=cfg["training"].get("eval_every_n_epochs", 1),
+            log_every_n_steps=cfg["training"].get("log_every_n_steps", 10),
+            early_stopping_patience=cfg["training"]["early_stopping_patience"],
+            gradient_clip_val=cfg["training"].get("gradient_clip_val", 1.0),
             checkpoint_dir=str(checkpoint_dir),
         )
 

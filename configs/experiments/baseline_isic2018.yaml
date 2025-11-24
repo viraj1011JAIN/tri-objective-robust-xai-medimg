@@ -1,0 +1,86 @@
+# Baseline Training Configuration for ISIC2018
+# This config trains a ResNet-50 model on REAL ISIC2018 medical imaging data
+#
+# FIXED: 2025-11-23
+# Previous version used synthetic data (torch.randn), causing 0% accuracy
+# This version properly loads REAL medical images from data/processed/isic2018/
+
+experiment:
+  name: "baseline_isic2018"
+  description: "Baseline ResNet-50 training on REAL ISIC2018 skin lesion images"
+  task: "classification"
+
+model:
+  name: "resnet50"
+  num_classes: 7  # ISIC2018 has 7 diagnostic categories
+  pretrained: true  # Use ImageNet pretrained weights for faster convergence
+  in_channels: 3
+  dropout: 0.3
+  global_pool: "avg"
+
+dataset:
+  name: "isic2018"
+  root: "data/processed/isic2018"  # REQUIRED: Root directory for dataset
+  batch_size: 32  # Adjusted for 4GB GPU (RTX 3050)
+  num_workers: 0  # Disabled to avoid Windows multiprocessing issues
+  image_size: 224
+
+  # Augmentation settings
+  augmentation:
+    horizontal_flip: true
+    vertical_flip: true
+    rotation: 20
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.2
+    hue: 0.1
+
+training:
+  max_epochs: 50
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  optimizer: "adamw"
+  scheduler: "cosine"
+  warmup_epochs: 5
+
+  # Early stopping
+  early_stopping_patience: 10
+  early_stopping_metric: "val_loss"
+  early_stopping_mode: "min"
+
+  # Device settings
+  device: "cuda"
+  mixed_precision: true  # Enable AMP for faster training on RTX 3050
+
+  # Loss function
+  loss: "cross_entropy"
+  label_smoothing: 0.1  # Helps with generalization
+
+  # Gradient clipping
+  grad_clip_max_norm: 1.0
+
+  # Checkpointing
+  save_best_only: true
+  save_last: true
+
+logging:
+  log_interval: 10  # Log every 10 batches
+  val_interval: 1   # Validate every epoch
+  use_mlflow: true
+  use_tensorboard: false
+
+reproducibility:
+  seed: 42  # Will be overridden by --seed argument
+  deterministic_cudnn: true
+  benchmark_cudnn: false
+  enable_tf32: false
+
+# Expected training time on RTX 3050 (4GB):
+#   - Per epoch: ~15-20 minutes
+#   - Total (50 epochs): ~12-16 hours
+#   - With early stopping: ~8-12 hours typical
+#
+# Expected results (on REAL data):
+#   - Clean accuracy: 80-85%
+#   - AUROC (macro): 0.85-0.90
+#   - Val loss: < 0.5

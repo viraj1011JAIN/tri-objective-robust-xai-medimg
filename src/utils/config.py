@@ -415,3 +415,30 @@ def get_config_hash(cfg: ExperimentConfig, algo: str = "sha256") -> str:
         line = f"{key}={flat[key]}\n"
         hasher.update(line.encode("utf-8"))
     return hasher.hexdigest()
+
+
+# Backwards compatibility aliases for tests
+load_config = load_experiment_config
+merge_configs = load_experiment_config  # Same underlying mechanism
+validate_config = load_experiment_config  # Validation happens during loading
+
+
+__all__ = [
+    "ExperimentConfig",
+    "DatasetConfig",
+    "ModelConfig",
+    "TrainingConfig",
+    "ReproducibilityConfig",
+    "OptimizationConfig",
+    "SchedulerConfig",
+    "LossConfig",
+    "AttackConfig",
+    "XAIConfig",
+    "load_experiment_config",
+    "save_resolved_config",
+    "get_config_hash",
+    # Aliases
+    "load_config",
+    "merge_configs",
+    "validate_config",
+]

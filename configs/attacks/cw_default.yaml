@@ -1,0 +1,44 @@
+# Carlini & Wagner L2 Attack Configuration
+# Optimization-based attack minimizing L2 distance
+
+attack:
+  type: "cw"
+  name: "C&W-L2"
+  description: "Optimization-based L2 attack"
+
+# Perturbation parameters
+epsilon: 1.0  # Not strictly enforced (C&W finds minimal L2)
+clip_min: 0.0
+clip_max: 1.0
+
+# C&W-specific parameters
+confidence: 0.0  # κ parameter (higher = stronger attack)
+learning_rate: 0.01
+max_iterations: 1000
+binary_search_steps: 9
+initial_c: 0.001
+abort_early: true
+
+# Attack parameters
+targeted: false
+
+# Computation
+device: "cuda"
+batch_size: 32
+verbose: false
+random_seed: null
+
+# Medical imaging recommendations:
+# For high-quality attacks:
+#   confidence: 0
+#   max_iterations: 1000
+#   binary_search_steps: 9
+#
+# For stronger attacks:
+#   confidence: 20
+#   max_iterations: 5000
+#   binary_search_steps: 12
+#
+# For faster testing:
+#   max_iterations: 100
+#   binary_search_steps: 3

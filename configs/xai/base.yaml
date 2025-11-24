@@ -1,0 +1,41 @@
+# Base configuration for XAI methods
+# This file defines common settings for explainability techniques
+
+xai:
+  # Common settings across all XAI methods
+  enabled: true
+  save_explanations: true
+
+  # Concept-based explanation settings
+  concept:
+    enabled: true
+    num_concepts: 50
+    concept_bank_path: null  # Will be set by dataset config
+
+  # Attribution methods
+  gradcam:
+    enabled: true
+    target_layer: null  # Will be set based on model architecture
+
+  integrated_gradients:
+    enabled: true
+    n_steps: 50
+    internal_batch_size: 1
+
+  # Counterfactual explanations
+  counterfactual:
+    enabled: false  # Optional, computationally expensive
+    method: "diffusion"  # or "gan", "gradient"
+
+  # Output settings
+  visualization:
+    save_heatmaps: true
+    save_overlays: true
+    colormap: "jet"
+    alpha: 0.5
+
+  # Evaluation metrics for explanations
+  evaluation:
+    faithfulness: true
+    robustness: true
+    concept_consistency: true

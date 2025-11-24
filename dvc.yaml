@@ -16,7 +16,7 @@ stages:
       --output-dir data/processed/isic2018
     deps:
       - scripts/data/preprocess_data.py
-      - F:/data/isic_2018/metadata.csv
+      - D:/data/isic_2018/metadata.csv
     outs:
       - data/processed/isic2018
 
@@ -33,7 +33,7 @@ stages:
       --output-dir data/processed/isic2019
     deps:
       - scripts/data/preprocess_data.py
-      - F:/data/isic_2019/metadata.csv
+      - D:/data/isic_2019/metadata.csv
     outs:
       - data/processed/isic2019
 
@@ -50,7 +50,7 @@ stages:
       --output-dir data/processed/isic2020
     deps:
       - scripts/data/preprocess_data.py
-      - F:/data/isic_2020/metadata.csv
+      - D:/data/isic_2020/metadata.csv
     outs:
       - data/processed/isic2020
 
@@ -67,7 +67,7 @@ stages:
       --output-dir data/processed/derm7pt
     deps:
       - scripts/data/preprocess_data.py
-      - F:/data/derm7pt/metadata.csv
+      - D:/data/derm7pt/metadata.csv
     outs:
       - data/processed/derm7pt
 
@@ -84,7 +84,7 @@ stages:
       --output-dir data/processed/nih_cxr
     deps:
       - scripts/data/preprocess_data.py
-      - F:/data/nih_cxr/metadata.csv
+      - D:/data/nih_cxr/metadata.csv
     outs:
       - data/processed/nih_cxr
 
@@ -101,7 +101,7 @@ stages:
       --output-dir data/processed/padchest
     deps:
       - scripts/data/preprocess_data.py
-      - F:/data/padchest/metadata.csv
+      - D:/data/padchest/metadata.csv
     outs:
       - data/processed/padchest
 
@@ -118,11 +118,11 @@ stages:
     cmd: >
       python -m scripts.data.build_concept_bank
       --dataset isic2018
-      --metadata-csv F:/data/isic_2018/metadata.csv
+      --metadata-csv D:/data/isic_2018/metadata.csv
       --output-path data/concepts/isic2018_concept_bank.json
     deps:
       - scripts/data/build_concept_bank.py
-      - F:/data/isic_2018/metadata.csv
+      - D:/data/isic_2018/metadata.csv
       - data/processed/isic2018
     outs:
       - data/concepts/isic2018_concept_bank.json
@@ -131,11 +131,11 @@ stages:
     cmd: >
       python -m scripts.data.build_concept_bank
       --dataset isic2019
-      --metadata-csv F:/data/isic_2019/metadata.csv
+      --metadata-csv D:/data/isic_2019/metadata.csv
       --output-path data/concepts/isic2019_concept_bank.json
     deps:
       - scripts/data/build_concept_bank.py
-      - F:/data/isic_2019/metadata.csv
+      - D:/data/isic_2019/metadata.csv
       - data/processed/isic2019
     outs:
       - data/concepts/isic2019_concept_bank.json
@@ -144,11 +144,11 @@ stages:
     cmd: >
       python -m scripts.data.build_concept_bank
       --dataset isic2020
-      --metadata-csv F:/data/isic_2020/metadata.csv
+      --metadata-csv D:/data/isic_2020/metadata.csv
       --output-path data/concepts/isic2020_concept_bank.json
     deps:
       - scripts/data/build_concept_bank.py
-      - F:/data/isic_2020/metadata.csv
+      - D:/data/isic_2020/metadata.csv
       - data/processed/isic2020
     outs:
       - data/concepts/isic2020_concept_bank.json
@@ -157,11 +157,11 @@ stages:
     cmd: >
       python -m scripts.data.build_concept_bank
       --dataset derm7pt
-      --metadata-csv F:/data/derm7pt/metadata.csv
+      --metadata-csv D:/data/derm7pt/metadata.csv
       --output-path data/concepts/derm7pt_concept_bank.json
     deps:
       - scripts/data/build_concept_bank.py
-      - F:/data/derm7pt/metadata.csv
+      - D:/data/derm7pt/metadata.csv
       - data/processed/derm7pt
     outs:
       - data/concepts/derm7pt_concept_bank.json
@@ -170,11 +170,11 @@ stages:
     cmd: >
       python -m scripts.data.build_concept_bank
       --dataset nih_cxr
-      --metadata-csv F:/data/nih_cxr/metadata.csv
+      --metadata-csv D:/data/nih_cxr/metadata.csv
       --output-path data/concepts/nih_cxr_concept_bank.json
     deps:
       - scripts/data/build_concept_bank.py
-      - F:/data/nih_cxr/metadata.csv
+      - D:/data/nih_cxr/metadata.csv
       - data/processed/nih_cxr
     outs:
       - data/concepts/nih_cxr_concept_bank.json
@@ -183,11 +183,11 @@ stages:
     cmd: >
       python -m scripts.data.build_concept_bank
       --dataset padchest
-      --metadata-csv F:/data/padchest/metadata.csv
+      --metadata-csv D:/data/padchest/metadata.csv
       --output-path data/concepts/padchest_concept_bank.json
     deps:
       - scripts/data/build_concept_bank.py
-      - F:/data/padchest/metadata.csv
+      - D:/data/padchest/metadata.csv
       - data/processed/padchest
     outs:
       - data/concepts/padchest_concept_bank.json

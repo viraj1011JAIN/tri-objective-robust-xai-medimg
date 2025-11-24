@@ -1,0 +1,87 @@
+# EfficientNet-B0 Model Configuration
+# Efficient baseline with good accuracy/efficiency trade-off
+
+model:
+  name: efficientnet_b0
+  architecture: efficientnet_b0
+  pretrained: true
+  num_classes: 7
+  
+  in_channels: 3
+  features_only: false
+  drop_rate: 0.2  # Dropout in classifier
+  drop_path_rate: 0.2  # Stochastic depth
+  global_pool: avg
+
+training:
+  optimizer:
+    type: adamw
+    lr: 0.0001
+    weight_decay: 0.01
+    betas: [0.9, 0.999]
+    
+  scheduler:
+    type: cosine
+    T_max: 100
+    eta_min: 0.000001
+    warmup_epochs: 5  # Warmup for better convergence
+    
+  loss:
+    type: cross_entropy
+    label_smoothing: 0.1
+    
+  batch_size: 64  # Efficient model allows larger batch
+  num_epochs: 100
+  gradient_clip: 1.0
+  use_amp: true
+
+augmentation:
+  train:
+    - RandomResizedCrop:
+        size: 224
+        scale: [0.8, 1.0]
+    - RandomHorizontalFlip:
+        p: 0.5
+    - RandomVerticalFlip:
+        p: 0.5
+    - RandomRotation:
+        degrees: 15
+    - ColorJitter:
+        brightness: 0.2
+        contrast: 0.2
+        saturation: 0.2
+        hue: 0.1
+    - Normalize:
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+        
+  val:
+    - Resize:
+        size: 256
+    - CenterCrop:
+        size: 224
+    - Normalize:
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+capacity:
+  parameters: 5288548  # ~5.3M parameters
+  flops: 390733568  # ~391M FLOPs
+
+tasks:
+  dermoscopy:
+    num_classes: 7
+    batch_size: 64
+    image_size: 224
+    
+  chest_xray:
+    num_classes: 14
+    batch_size: 32
+    image_size: 224
+    loss:
+      type: bce_with_logits
+      
+  retinopathy:
+    num_classes: 5
+    batch_size: 64
+    image_size: 224

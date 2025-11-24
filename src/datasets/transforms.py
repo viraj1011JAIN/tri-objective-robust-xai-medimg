@@ -200,3 +200,32 @@ def build_transforms(
         return get_chest_xray_transforms(split=split, image_size=image_size)
 
     raise ValueError(f"Unknown dataset '{dataset}' for build_transforms().")
+
+
+# Backwards compatibility aliases for tests
+def get_train_transforms(dataset: str = "isic", image_size: int = 224) -> A.Compose:
+    """Get training transforms for a dataset."""
+    return build_transforms(dataset, "train", image_size)
+
+
+def get_val_transforms(dataset: str = "isic", image_size: int = 224) -> A.Compose:
+    """Get validation transforms for a dataset."""
+    return build_transforms(dataset, "val", image_size)
+
+
+def get_test_transforms(dataset: str = "isic", image_size: int = 224) -> A.Compose:
+    """Get test transforms for a dataset."""
+    return build_transforms(dataset, "test", image_size)
+
+
+__all__ = [
+    "build_transforms",
+    "get_train_transforms",
+    "get_val_transforms",
+    "get_test_transforms",
+    "get_isic_transforms",
+    "get_derm7pt_transforms",
+    "get_chest_xray_transforms",
+    "IMAGENET_MEAN",
+    "IMAGENET_STD",
+]

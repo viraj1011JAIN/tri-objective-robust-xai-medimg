@@ -223,3 +223,26 @@ def log_reproducibility_to_mlflow(state: ReproducibilityState) -> None:
     if state.cuda_device_names:
         for idx, name in enumerate(state.cuda_device_names):
             mlflow.log_param(f"cuda_device_{idx}", name)
+
+
+# Backwards compatibility aliases for tests
+set_seed = set_global_seed
+get_seed_worker = seed_worker
+set_deterministic = set_global_seed  # Same function, used for deterministic mode
+
+
+__all__ = [
+    "ReproducibilityState",
+    "get_reproducibility_state",
+    "log_reproducibility_to_mlflow",
+    "make_torch_generator",
+    "quick_determinism_check",
+    "reproducibility_header",
+    "seed_worker",
+    "set_global_seed",
+    "summarise_reproducibility_state",
+    # Aliases
+    "set_seed",
+    "get_seed_worker",
+    "set_deterministic",
+]

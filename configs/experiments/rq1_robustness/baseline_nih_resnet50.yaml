@@ -1,0 +1,150 @@
+experiment:
+  name: rq1_baseline_nih_resnet50
+  output_dir: results/checkpoints/rq1_robustness/baseline_nih_resnet50
+
+# Reproducibility settings
+reproducibility:
+  seed: 42
+  deterministic: true
+  benchmark: false
+
+dataset:
+  # Multi-label chest X-ray dataset (NIH ChestX-ray14)
+  name: nih_chestxray14
+  
+  # Dataset paths
+  root: F:/data/NIH_ChestXray14
+  data_root: F:/data/NIH_ChestXray14
+  
+  # NIH ChestX-ray14 has 14 disease labels (multi-label task)
+  num_classes: 14
+  task_type: multi_label
+  
+  # Class names for NIH ChestX-ray14
+  class_names:
+    - Atelectasis
+    - Cardiomegaly
+    - Effusion
+    - Infiltration
+    - Mass
+    - Nodule
+    - Pneumonia
+    - Pneumothorax
+    - Consolidation
+    - Edema
+    - Emphysema
+    - Fibrosis
+    - Pleural_Thickening
+    - Hernia
+  
+  # Metadata CSV configuration
+  csv_path: F:/data/NIH_ChestXray14/metadata.csv
+  image_path_column: image_path
+  labels_column: labels
+  split_column: split
+  label_separator: "|"
+  
+  # Training input pipeline
+  batch_size: 32
+  num_workers: 4
+  pin_memory: true
+  image_size: 224
+  
+  # Optional debug limits
+  max_train_batches_debug: 20
+  max_val_batches_debug: 5
+
+model:
+  name: resnet50
+  architecture: resnet50
+  num_classes: 14
+  pretrained: true
+  
+  # Multi-label specific: sigmoid activation for outputs
+  use_sigmoid: true
+
+training:
+  # Training duration
+  max_epochs: 30
+  epochs: 30
+  
+  # Optimizer configuration
+  optimizer: adamw
+  learning_rate: 1.0e-4
+  weight_decay: 1.0e-4
+  
+  # Loss function for multi-label classification
+  loss:
+    type: bce_with_logits
+    # Positive class weights (computed from training set imbalance)
+    # Will be overridden by computed class weights if use_class_weights=true
+    pos_weight: null
+    use_class_weights: true
+    reduction: mean
+  
+  # Trainer behavior
+  grad_clip_norm: 1.0
+  grad_accum_steps: 1
+  mixed_precision: true
+  
+  # Device and DataLoader options
+  device: cuda
+  num_workers: 4
+  pin_memory: true
+  
+  # Early stopping (monitor macro AUROC)
+  early_stop_patience: 10
+  early_stop_metric: val_auroc_macro
+  early_stop_mode: max
+  
+  # Checkpointing
+  save_freq: 0  # only best/latest
+  checkpoint_dir: results/checkpoints/rq1_robustness/baseline_nih_resnet50
+  keep_n_checkpoints: 3
+  
+  # MLflow logging
+  use_mlflow: true
+  mlflow_experiment: RQ1_Baseline_NIH_ResNet50
+  mlflow_tracking_uri: null  # use default local MLflow
+  
+  # Logging frequency (in training steps)
+  log_interval: 50
+  
+  # Multi-label specific metrics
+  metrics:
+    - auroc_macro
+    - auroc_micro
+    - auroc_per_class
+    - hamming_loss
+    - subset_accuracy
+
+# Evaluation configuration
+evaluation:
+  batch_size: 32
+  num_workers: 4
+  
+  # Multi-label thresholds
+  threshold: 0.5  # Default threshold for binary predictions
+  threshold_search: true  # Search for optimal per-class thresholds
+  
+  # Cross-site evaluation settings
+  cross_site:
+    enabled: true
+    datasets:
+      - padchest
+    
+    # Label harmonization for PadChest
+    label_harmonization:
+      pneumothorax: Pneumothorax
+      cardiomegaly: Cardiomegaly
+      effusion: Effusion
+      infiltration: Infiltration
+      mass: Mass
+      nodule: Nodule
+      pneumonia: Pneumonia
+      consolidation: Consolidation
+      edema: Edema
+      emphysema: Emphysema
+      fibrosis: Fibrosis
+      pleural_thickening: Pleural_Thickening
+      atelectasis: Atelectasis
