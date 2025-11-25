@@ -275,9 +275,11 @@ class BaselineExplanationQuality:
         if last_conv_name:
             return [last_conv_name]
 
-        # Ultimate fallback
-        logger.warning("Could not auto-detect target layers. Using empty list.")
-        return ["conv2"]  # Default fallback
+        # No fallback - force explicit specification
+        raise ValueError(
+            "Could not auto-detect target layers. "
+            "Please specify target_layers manually in BaselineQualityConfig."
+        )
 
     def evaluate_batch(
         self,
@@ -304,6 +306,15 @@ class BaselineExplanationQuality:
         """
         images = images.to(self.device)
         labels = labels.to(self.device)
+
+        # Validate masks shape if provided
+        if masks is not None:
+            if masks.shape[0] != images.shape[0]:
+                raise ValueError(
+                    f"masks batch size {masks.shape[0]} doesn't match "
+                    f"images batch size {images.shape[0]}"
+                )
+            masks = masks.to(self.device)
 
         results = {}
 
@@ -440,10 +451,18 @@ class BaselineExplanationQuality:
         total_samples = 0
         max_samples = self.config.num_samples or float("inf")
 
+        # Warn about memory usage for large visualization counts
+        if self.config.num_visualizations > 50:
+            logger.warning(
+                f"Storing {self.config.num_visualizations} visualization "
+                "samples may consume significant memory (est. "
+                f"{self.config.num_visualizations * 0.015:.1f}MB)"
+            )
+
         pbar = tqdm(
             dataloader,
-            desc="Evaluating baseline quality",
-            disable=(self.config.verbose == 0),
+            desc="Evaluating Baseline Quality",
+            disable=self.config.verbose < 1,
         )
 
         for batch in pbar:
@@ -512,6 +531,14 @@ class BaselineExplanationQuality:
         # Compute statistics (mean, std, 95% CI)
         def compute_stats(values: List[float]) -> Dict[str, float]:
             """Compute mean, std, and 95% confidence interval."""
+            if not values:
+                return {
+                    "mean": 0.0,
+                    "std": 0.0,
+                    "ci_low": 0.0,
+                    "ci_high": 0.0,
+                    "n": 0,
+                }
             arr = np.array(values)
             mean = np.mean(arr)
             std = np.std(arr)
@@ -653,7 +680,7 @@ class BaselineExplanationQuality:
 
         Args:
             image: RGB image [H, W, 3]
-            heatmap: Heatmap [H', W']
+            heatmap: Heatmap [H', W'] (float32, range [0, 1])
             alpha: Overlay transparency
 
         Returns:
@@ -662,11 +689,14 @@ class BaselineExplanationQuality:
         import matplotlib.cm as cm
         from PIL import Image as PILImage
 
+        # Convert float heatmap to uint8 BEFORE PIL (Critical Fix)
+        heatmap_uint8 = (heatmap * 255).astype(np.uint8)
+
         # Resize heatmap to match image
-        heatmap_resized = PILImage.fromarray(heatmap).resize(
+        heatmap_resized = PILImage.fromarray(heatmap_uint8).resize(
             (image.shape[1], image.shape[0]), PILImage.BILINEAR
         )
-        heatmap_resized = np.array(heatmap_resized)
+        heatmap_resized = np.array(heatmap_resized).astype(np.float32) / 255.0
 
         # Normalize heatmap
         heatmap_resized = (heatmap_resized - heatmap_resized.min()) / (
