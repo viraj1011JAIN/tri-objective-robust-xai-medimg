@@ -461,6 +461,10 @@ class TestIntegration:
 
     def test_end_to_end_evaluation(self, dummy_model, sample_dataloader, tmp_path):
         """Test complete evaluation pipeline."""
+        import matplotlib
+
+        matplotlib.use("Agg")  # Use non-interactive backend for tests
+
         config = BaselineQualityConfig(
             epsilon=2 / 255,
             num_samples=8,
@@ -658,3 +662,141 @@ class TestEdgeCases:
         assert save_dir.exists()
         saved_files = list(save_dir.glob("*.png"))
         assert len(saved_files) == 0
+
+
+# ============================================================================
+# Additional Coverage Tests (Post-Review)
+# ============================================================================
+
+
+class TestAutoDetectFailure:
+    """Test auto-detect target layers error handling."""
+
+    def test_auto_detect_raises_on_unknown_architecture(self, device):
+        """
+        Test ValueError when architecture has no Conv2d layers.
+
+        This validates the fix for the hardcoded 'conv2' fallback bug.
+        """
+
+        class NoConvNet(nn.Module):
+            """Network without any Conv2d layers."""
+
+            def __init__(self):
+                super().__init__()
+                self.fc1 = nn.Linear(100, 50)
+                self.fc2 = nn.Linear(50, 10)
+
+            def forward(self, x):
+                x = x.flatten(1)
+                x = torch.relu(self.fc1(x))
+                return self.fc2(x)
+
+        model = NoConvNet().to(device)
+        config = BaselineQualityConfig(
+            target_layers=None,  # Force auto-detection
+            device=str(device),
+        )
+
+        with pytest.raises(ValueError, match="Could not auto-detect target layers"):
+            BaselineExplanationQuality(model, config)
+
+
+class TestLoggingAndWarnings:
+    """Test logging and warning messages."""
+
+    def test_log_summary_content(self, dummy_model, sample_dataloader, device, caplog):
+        """Test _log_summary produces expected output."""
+        import logging
+
+        config = BaselineQualityConfig(
+            num_samples=8,
+            compute_faithfulness=True,
+            save_visualizations=False,
+            verbose=1,
+            device=str(device),
+        )
+        evaluator = BaselineExplanationQuality(dummy_model, config)
+
+        with caplog.at_level(logging.INFO):
+            results = evaluator.evaluate_dataset(sample_dataloader)
+
+        # Verify results were computed
+        assert results["num_samples"] > 0
+
+        # Check key sections appear in logs
+        log_text = caplog.text
+        assert "BASELINE EXPLANATION QUALITY SUMMARY" in log_text
+        assert "Stability Metrics" in log_text
+        assert "ssim" in log_text.lower()
+
+        # If faithfulness computed, should appear
+        if config.compute_faithfulness:
+            assert "Faithfulness Metrics" in log_text
+
+    def test_memory_warning_logged(self, dummy_model, device, caplog):
+        """Test memory warning appears when num_visualizations > 50."""
+        import logging
+
+        config = BaselineQualityConfig(
+            num_visualizations=100,
+            verbose=1,
+            device=str(device),
+        )
+        evaluator = BaselineExplanationQuality(dummy_model, config)
+
+        # Create small dataloader
+        images = torch.randn(8, 3, 28, 28)
+        labels = torch.randint(0, 10, (8,))
+        dataset = TensorDataset(images, labels)
+        dataloader = DataLoader(dataset, batch_size=4)
+
+        with caplog.at_level(logging.WARNING):
+            results = evaluator.evaluate_dataset(dataloader)
+
+        # Verify evaluation ran
+        assert results["num_samples"] > 0
+
+        # Check warning appears
+        assert "memory" in caplog.text.lower()
+        assert "100" in caplog.text  # num_visualizations mentioned
+
+
+class TestHypothesisValidation:
+    """Test dissertation hypothesis validation (H2)."""
+
+    def test_baseline_ssim_below_h2_threshold(
+        self, dummy_model, sample_dataloader, device
+    ):
+        """
+        Validate baseline has low stability (SSIM < 0.75).
+
+        H2 states: SSIM ≥ 0.75 with λ_expl > 0
+        Therefore baseline (λ_expl = 0) should have SSIM < 0.75.
+
+        Note: This test uses untrained model, so SSIM will be low.
+        With a trained model, SSIM might be higher but still below 0.75.
+        """
+        config = BaselineQualityConfig(
+            num_samples=16,
+            compute_faithfulness=False,  # Faster
+            save_visualizations=False,
+            verbose=0,
+            device=str(device),
+        )
+        evaluator = BaselineExplanationQuality(dummy_model, config)
+        results = evaluator.evaluate_dataset(sample_dataloader)
+
+        ssim_mean = results["stability"]["ssim"]["mean"]
+
+        # Validate SSIM is in valid range
+        assert 0.0 <= ssim_mean <= 1.0, f"SSIM should be in [0,1], got {ssim_mean}"
+
+        # Dissertation hypothesis: Baseline SSIM < H2 threshold
+        # Note: With random untrained model, this should easily pass
+        # With trained baseline, expect SSIM ~0.55-0.60
+        assert ssim_mean < 0.75, (
+            f"Baseline SSIM {ssim_mean:.3f} should be below H2 threshold "
+            f"0.75. If this fails with trained model, verify model is not "
+            f"tri-objective trained (λ_expl should be 0)."
+        )
