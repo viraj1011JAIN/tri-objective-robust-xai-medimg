@@ -6,12 +6,18 @@ Provides production-ready implementations of visual explanation methods:
 - AttentionRollout: For Vision Transformers
 - Stability Metrics: SSIM, MS-SSIM, Spearman, L2, Cosine (Phase 6.2)
 - Faithfulness Metrics: Deletion/Insertion Curves, Pointing Game (Phase 6.3)
+- Baseline Quality: Evaluation framework for baseline explanations (Phase 6.4)
 
 Author: Viraj Pankaj Jain
 Institution: University of Glasgow
 Date: November 25, 2025
 """
 
+from src.xai.baseline_explanation_quality import (
+    BaselineExplanationQuality,
+    BaselineQualityConfig,
+    create_baseline_quality_evaluator,
+)
 from src.xai.faithfulness import (
     DeletionMetric,
     FaithfulnessConfig,
@@ -70,6 +76,10 @@ __all__ = [
     "InsertionMetric",
     "PointingGame",
     "create_faithfulness_metrics",
+    # Baseline Quality
+    "BaselineExplanationQuality",
+    "BaselineQualityConfig",
+    "create_baseline_quality_evaluator",
 ]
 
 __version__ = "6.3.0"
