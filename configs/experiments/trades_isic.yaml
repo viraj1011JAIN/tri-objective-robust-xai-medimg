@@ -1,0 +1,302 @@
+# =============================================================================
+# TRADES Training Configuration - Phase 5.3
+# =============================================================================
+# TRADES: TRadeoff-inspired Adversarial DEfense via Surrogate-loss minimization
+#
+# Loss Formulation:
+#   L_TRADES = L_CE(f(x), y) + β * KL(f(x) || f(x_adv))
+#
+# Key Features:
+#   - Explicit clean loss preservation (better clean accuracy)
+#   - KL divergence for output smoothness (better robustness)
+#   - Beta parameter for controllable trade-off
+#
+# Author: Viraj Pankaj Jain
+# Date: November 2025
+# =============================================================================
+
+# Model Configuration
+model:
+  architecture: "resnet50"  # resnet50, efficientnet_b0, vit_b_16
+  num_classes: 7            # ISIC 2018 has 7 diagnostic classes
+  pretrained: true          # Use ImageNet pre-trained weights
+  checkpoint: null          # Path to checkpoint for resuming (optional)
+
+# Dataset Configuration
+data:
+  name: "isic2018"
+  data_dir: "/content/drive/MyDrive/data/isic_2018"
+  metadata_csv: "/content/drive/MyDrive/data/isic_2018/metadata.csv"
+  processed_dir: "data/processed/isic2018"
+
+  # Data splits
+  splits:
+    train: 0.7
+    val: 0.15
+    test: 0.15
+
+  # Image preprocessing
+  image_size: 224
+  normalization:
+    mean: [0.485, 0.456, 0.406]  # ImageNet statistics
+    std: [0.229, 0.224, 0.225]
+
+  # Data augmentation (training only)
+  augmentation:
+    random_horizontal_flip: true
+    random_vertical_flip: true
+    random_rotation: 20
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+
+# TRADES-Specific Configuration
+trades:
+  # Beta parameter: controls clean-robust trade-off
+  # Higher beta → more robustness, lower clean accuracy
+  # Lower beta → better clean accuracy, less robustness
+  beta: 6.0
+
+  # Training attack configuration (inner maximization)
+  train_attack:
+    attack_type: "pgd"
+    epsilon: 0.03137          # 8/255 in [0,1] range
+    num_steps: 7              # 7 PGD steps during training
+    step_size: 0.00784        # ε/4 = 2/255
+    random_start: true
+    loss_type: "kl"           # KL divergence (TRADES signature)
+    targeted: false
+    clip_min: 0.0
+    clip_max: 1.0
+
+  # Validation attack configuration (for monitoring)
+  val_attack:
+    attack_type: "pgd"
+    epsilon: 0.03137          # Same ε for fair comparison
+    num_steps: 10             # More steps for evaluation
+    step_size: 0.00784
+    random_start: true
+    loss_type: "kl"
+    targeted: false
+    clip_min: 0.0
+    clip_max: 1.0
+
+# Training Configuration
+training:
+  # Optimization
+  num_epochs: 100
+  batch_size: 32
+  learning_rate: 0.01
+  momentum: 0.9
+  weight_decay: 0.0005
+  nesterov: true
+
+  # Learning rate scheduler
+  lr_scheduler:
+    type: "multistep"         # multistep, cosine
+    milestones: [50, 75]      # Reduce LR at these epochs
+    gamma: 0.1                # LR multiplier
+
+  # Mixed precision training
+  amp:
+    enabled: true             # Use automatic mixed precision
+    opt_level: "O1"           # Optimization level
+
+  # Gradient clipping
+  grad_clip:
+    enabled: true
+    max_norm: 1.0
+    norm_type: 2.0
+
+  # Checkpointing
+  save_freq: 10               # Save checkpoint every N epochs
+  keep_last_n: 3              # Keep only last N checkpoints
+  save_best: true             # Save best validation model
+
+  # Data loading
+  num_workers: 4
+  pin_memory: true
+  persistent_workers: false
+  prefetch_factor: 2
+
+  # Early stopping
+  early_stopping:
+    enabled: false
+    patience: 20
+    min_delta: 0.001
+    monitor: "val_robust_accuracy"
+
+# Evaluation Configuration
+evaluation:
+  # Metrics to compute
+  metrics:
+    - "accuracy"
+    - "balanced_accuracy"
+    - "f1_macro"
+    - "f1_weighted"
+    - "precision_macro"
+    - "recall_macro"
+    - "auroc"
+    - "auprc"
+    - "confusion_matrix"
+
+  # Calibration metrics
+  calibration:
+    enabled: true
+    num_bins: 15
+    metrics:
+      - "ece"                 # Expected Calibration Error
+      - "mce"                 # Maximum Calibration Error
+      - "brier_score"         # Brier Score
+      - "nll"                 # Negative Log-Likelihood
+
+  # Robustness evaluation
+  attacks:
+    fgsm:
+      enabled: true
+      epsilons: [0.00784, 0.01569, 0.03137]  # 2/255, 4/255, 8/255
+
+    pgd:
+      enabled: true
+      epsilons: [0.00784, 0.01569, 0.03137]
+      num_steps: 20           # More steps for evaluation
+      step_size: 0.00196      # ε/10
+      random_start: true
+
+    cw:
+      enabled: true
+      confidence: 0.0
+      learning_rate: 0.01
+      max_iterations: 1000
+      binary_search_steps: 9
+      initial_const: 0.001
+
+    autoattack:
+      enabled: false          # Expensive, enable if needed
+      norm: "Linf"
+      eps: 0.03137
+
+  # Cross-site generalization
+  cross_site:
+    enabled: true
+    datasets:
+      - name: "isic2019"
+        data_dir: "/content/drive/MyDrive/data/isic_2019"
+        metadata_csv: "/content/drive/MyDrive/data/isic_2019/metadata.csv"
+
+      - name: "isic2020"
+        data_dir: "/content/drive/MyDrive/data/isic_2020"
+        metadata_csv: "/content/drive/MyDrive/data/isic_2020/metadata.csv"
+
+      - name: "derm7pt"
+        data_dir: "/content/drive/MyDrive/data/derm7pt"
+        metadata_csv: "/content/drive/MyDrive/data/derm7pt/metadata.csv"
+
+# Comparison Configuration (TRADES vs PGD-AT)
+comparison:
+  enabled: true
+  baseline_method: "pgd_at"
+  baseline_results: "results/phase_5_2_pgd_at/evaluation_metrics/all_seeds_results.json"
+
+  # Statistical tests
+  statistical_tests:
+    - "paired_ttest"          # Paired t-test
+    - "cohens_d"              # Effect size
+    - "hedges_g"              # Corrected effect size
+    - "bootstrap_ci"          # Bootstrap confidence intervals
+
+  # Significance level
+  alpha: 0.01                 # p < 0.01 for significance
+
+  # Multiple comparison correction
+  multiple_comparison_correction:
+    enabled: true
+    method: "bonferroni"      # bonferroni, holm
+
+# Trade-off Analysis Configuration
+tradeoff_analysis:
+  enabled: true
+
+  # Objectives to analyze
+  objectives:
+    - "clean_accuracy"
+    - "robust_accuracy"
+    - "ece"
+    - "auroc"
+
+  # Pareto frontier computation
+  pareto:
+    enabled: true
+    maximize: [true, true, false, true]  # Directions for each objective
+
+  # Knee point detection
+  knee_point:
+    enabled: true
+    method: "point_to_line_distance"
+
+  # Beta sensitivity analysis (optional, for hyperparameter tuning)
+  beta_sensitivity:
+    enabled: false
+    beta_values: [1.0, 3.0, 6.0, 10.0, 15.0]
+
+# Output Configuration
+output:
+  base_dir: "results/phase_5_3_trades"
+
+  # Subdirectories
+  checkpoints_dir: "checkpoints"
+  logs_dir: "logs"
+  metrics_dir: "evaluation_metrics"
+  plots_dir: "evaluation_plots"
+  reports_dir: "reports"
+
+  # MLflow tracking
+  mlflow:
+    enabled: true
+    tracking_uri: "mlruns"
+    experiment_name: "Phase_5.3_TRADES"
+    run_name_prefix: "trades_isic2018"
+    log_models: true
+    log_artifacts: true
+
+  # DVC tracking
+  dvc:
+    enabled: false
+    remote: "myremote"
+
+  # Logging
+  logging:
+    level: "INFO"             # DEBUG, INFO, WARNING, ERROR
+    format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    console: true
+    file: true
+
+# Resource Management
+resources:
+  device: "cuda"              # cuda, cpu
+  cuda_device: 0              # GPU device ID
+  deterministic: true         # Deterministic training
+  benchmark: false            # CUDNN benchmark (faster but non-deterministic)
+  clear_memory_between_epochs: true
+
+# Reproducibility
+reproducibility:
+  seed: 42                    # Base seed (will be overridden by command-line args)
+  use_deterministic_algorithms: true
+  warn_only: false
+
+# Experiment Metadata
+metadata:
+  project: "Tri-Objective Robust XAI for Medical Imaging"
+  phase: "5.3"
+  task: "TRADES Adversarial Training"
+  dataset: "ISIC 2018"
+  author: "Viraj Pankaj Jain"
+  institution: "University of Glasgow"
+  date: "November 2025"
+  description: |
+    TRADES training for Phase 5.3 of the dissertation.
+    Implements TRadeoff-inspired Adversarial DEfense via Surrogate-loss minimization
+    to achieve better clean-robust accuracy trade-off than standard PGD-AT.
