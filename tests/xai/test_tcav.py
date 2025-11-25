@@ -520,3 +520,185 @@ class TestEdgeCases:
 
         images, count = tcav.load_concept_data("few_samples")
         assert count == 2
+
+    def test_low_accuracy_cav_warning(self, tcav_config, caplog):
+        """Test warning when CAV accuracy is low."""
+        import logging
+
+        # Set strict threshold
+        tcav_config.min_cav_accuracy = 0.99  # Nearly impossible to achieve
+        tcav = TCAV(tcav_config)
+
+        with caplog.at_level(logging.WARNING):
+            cav, metrics = tcav.train_cav(
+                concept="pigment_network", layer="layer2", random_concept="random"
+            )
+
+        # Check warning was logged
+        assert any("below threshold" in record.message for record in caplog.records)
+        assert cav is not None  # CAV still returned
+
+    def test_precompute_all_cavs(self, tcav_config, mock_concept_dir):
+        """Test precomputing all CAVs."""
+        tcav = TCAV(tcav_config)
+
+        # Create random concept directories
+        for i in range(2):
+            random_dir = mock_concept_dir / f"random_{i}"
+            random_dir.mkdir()
+            for j in range(10):
+                img = Image.new("RGB", (224, 224), color=(j * 20, j * 20, j * 20))
+                img.save(random_dir / f"img_{j}.png")
+
+        concepts = ["pigment_network", "ruler"]
+
+        # Precompute with 2 random concepts
+        tcav.config.num_random_concepts = 2
+        tcav.precompute_all_cavs(concepts)
+
+        # Should have CAVs for both layers and concepts
+        assert "layer2" in tcav.cavs
+        assert "layer3" in tcav.cavs
+        assert "pigment_network" in tcav.cavs["layer2"]
+        assert "ruler" in tcav.cavs["layer2"]
+
+    def test_precompute_with_error(self, tcav_config, mock_concept_dir, caplog):
+        """Test precompute handles errors gracefully."""
+        import logging
+
+        tcav = TCAV(tcav_config)
+
+        # Create random concept directories
+        for i in range(2):
+            random_dir = mock_concept_dir / f"random_{i}"
+            random_dir.mkdir()
+            for j in range(10):
+                img = Image.new("RGB", (224, 224), color=(j * 20, j * 20, j * 20))
+                img.save(random_dir / f"img_{j}.png")
+
+        # Include a non-existent concept
+        concepts = ["pigment_network", "nonexistent_concept"]
+
+        with caplog.at_level(logging.ERROR):
+            tcav.precompute_all_cavs(concepts)
+
+        # Check error was logged
+        assert any("Failed to train CAV" in record.message for record in caplog.records)
+
+        # Should still have CAV for valid concept
+        assert "pigment_network" in tcav.cavs.get("layer2", {})
+
+    def test_multilayer_tcav_with_missing_cavs(self, tcav_config, caplog):
+        """Test multilayer TCAV when some CAVs are missing."""
+        import logging
+
+        tcav = TCAV(tcav_config)
+
+        # Only train CAV for one layer
+        tcav.train_cav("pigment_network", "layer2", "random")
+        # Don't train for layer3
+
+        inputs = torch.randn(4, 3, 224, 224)
+
+        with caplog.at_level(logging.WARNING):
+            scores = tcav.compute_multilayer_tcav(
+                inputs=inputs, target_class=1, concept="pigment_network"
+            )
+
+        # Should have score for layer2 only
+        assert "layer2" in scores
+        assert "layer3" not in scores
+
+        # Check warning was logged
+        assert any(
+            "Skipping layer layer3" in record.message for record in caplog.records
+        )
+
+    def test_backward_hook_with_4d_activation(self, tcav_config):
+        """Test compute_tcav_score with 4D activations (spatial)."""
+        tcav = TCAV(tcav_config)
+
+        # Train CAV
+        tcav.train_cav("pigment_network", "layer2", "random")
+
+        # layer2 outputs 4D tensors (B, C, H, W)
+        inputs = torch.randn(4, 3, 224, 224)
+        score = tcav.compute_tcav_score(
+            inputs=inputs,
+            target_class=1,
+            concept="pigment_network",
+            layer="layer2",  # This layer has spatial dims
+        )
+
+        assert 0 <= score <= 100
+
+    def test_invalid_layer_in_compute_tcav(self, tcav_config):
+        """Test compute_tcav_score with invalid layer."""
+        tcav = TCAV(tcav_config)
+
+        # Manually add a CAV for a non-existent layer to bypass the CAV check
+        tcav.cavs["nonexistent_layer"] = {}
+        tcav.cavs["nonexistent_layer"]["pigment_network"] = torch.randn(32)
+
+        inputs = torch.randn(4, 3, 224, 224)
+
+        # Try to compute - should fail when looking for layer in model
+        with pytest.raises(ValueError, match="not found"):
+            tcav.compute_tcav_score(
+                inputs=inputs,
+                target_class=1,
+                concept="pigment_network",
+                layer="nonexistent_layer",
+            )
+
+    def test_info_logging(self, tcav_config, caplog):
+        """Test info logging is properly called."""
+        import logging
+
+        tcav = TCAV(tcav_config)
+
+        # Test load_concept_data logging
+        with caplog.at_level(logging.INFO):
+            images, count = tcav.load_concept_data("pigment_network")
+
+        # Check info log for loaded images
+        assert any(
+            "Loaded" in record.message and "pigment_network" in record.message
+            for record in caplog.records
+        )
+
+        caplog.clear()
+
+        # Test load_state logging
+        tcav.train_cav("pigment_network", "layer2", "random")
+        state_path = tcav_config.cav_dir / "test_state.pt"
+        tcav.save_state(state_path)
+
+        tcav2 = TCAV(tcav_config)
+        with caplog.at_level(logging.INFO):
+            tcav2.load_state(state_path)
+
+        # Check info logs for loaded state
+        assert any("Loaded TCAV state" in record.message for record in caplog.records)
+        assert any(
+            "Loaded" in record.message and "CAVs" in record.message
+            for record in caplog.records
+        )
+
+    def test_backward_hook_with_3d_activation(self, tcav_config):
+        """Test compute_tcav_score with 3D (already pooled) activations."""
+        tcav = TCAV(tcav_config)
+
+        # Train CAV for layer3 (which might have different dims)
+        tcav.train_cav("pigment_network", "layer3", "random")
+
+        # Compute TCAV score - tests the else branch in backward hook
+        inputs = torch.randn(4, 3, 224, 224)
+        score = tcav.compute_tcav_score(
+            inputs=inputs,
+            target_class=1,
+            concept="pigment_network",
+            layer="layer3",
+        )
+
+        assert 0 <= score <= 100
