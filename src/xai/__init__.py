@@ -10,6 +10,7 @@ Provides production-ready implementations of visual explanation methods:
 - Concept Bank: TCAV concept extraction for semantic alignment (Phase 6.5)
 - TCAV: Testing with Concept Activation Vectors (Phase 6.6)
 - Baseline TCAV Evaluation: Baseline concept reliance analysis (Phase 6.7)
+- Representation Analysis: CKA, SVCCA, domain gap analysis (Phase 6.8)
 
 Author: Viraj Pankaj Jain
 Institution: University of Glasgow
@@ -50,6 +51,15 @@ from src.xai.gradcam import (
     GradCAMPlusPlus,
     create_gradcam,
     get_recommended_layers,
+)
+from src.xai.representation_analysis import (
+    CKAAnalyzer,
+    DomainGapAnalyzer,
+    RepresentationConfig,
+    SVCCAAnalyzer,
+    create_cka_analyzer,
+    create_domain_gap_analyzer,
+    create_svcca_analyzer,
 )
 from src.xai.stability_metrics import (
     SSIM,
@@ -126,6 +136,14 @@ __all__ = [
     "BaselineTCAVConfig",
     "ConceptCategory",
     "create_baseline_tcav_evaluator",
+    # Representation Analysis
+    "RepresentationConfig",
+    "CKAAnalyzer",
+    "SVCCAAnalyzer",
+    "DomainGapAnalyzer",
+    "create_cka_analyzer",
+    "create_svcca_analyzer",
+    "create_domain_gap_analyzer",
 ]
 
-__version__ = "6.7.0"
+__version__ = "6.8.0"
