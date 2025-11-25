@@ -8,6 +8,7 @@ Provides production-ready implementations of visual explanation methods:
 - Faithfulness Metrics: Deletion/Insertion Curves, Pointing Game (Phase 6.3)
 - Baseline Quality: Evaluation framework for baseline explanations (Phase 6.4)
 - Concept Bank: TCAV concept extraction for semantic alignment (Phase 6.5)
+- TCAV: Testing with Concept Activation Vectors (Phase 6.6)
 
 Author: Viraj Pankaj Jain
 Institution: University of Glasgow
@@ -52,6 +53,14 @@ from src.xai.stability_metrics import (
     create_stability_metrics,
     normalized_l2_distance,
     spearman_correlation,
+)
+from src.xai.tcav import (
+    TCAV,
+    ActivationExtractor,
+    CAVTrainer,
+    ConceptDataset,
+    TCAVConfig,
+    create_tcav,
 )
 
 try:
@@ -98,6 +107,13 @@ __all__ = [
     "DERMOSCOPY_ARTIFACT_CONCEPTS",
     "CHEST_XRAY_MEDICAL_CONCEPTS",
     "CHEST_XRAY_ARTIFACT_CONCEPTS",
+    # TCAV
+    "TCAV",
+    "TCAVConfig",
+    "ActivationExtractor",
+    "CAVTrainer",
+    "ConceptDataset",
+    "create_tcav",
 ]
 
-__version__ = "6.5.0"
+__version__ = "6.6.0"
