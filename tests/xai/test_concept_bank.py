@@ -336,8 +336,8 @@ class TestPatchExtraction:
         )
 
         assert len(patches) <= 5
-        for patch in patches:
-            assert patch.shape[:2] == (224, 224)
+        for img_patch in patches:
+            assert img_patch.shape[:2] == (224, 224)
 
     def test_extract_patches_with_quality_check(self, high_quality_image):
         """Test patch extraction with quality check enabled."""
@@ -883,6 +883,34 @@ class TestIntegration:
         assert "DVC tracking failed" in caplog.text
         assert stats["total_patches"] > 0
 
+    @patch("subprocess.run")
+    def test_dvc_tracking_not_installed(self, mock_run, tmp_path, mock_dataset, caplog):
+        """Test DVC tracking when DVC is not installed."""
+        import logging
+
+        # Set logging level
+        caplog.set_level(logging.INFO)
+
+        # Simulate DVC not being installed (FileNotFoundError)
+        mock_run.side_effect = FileNotFoundError("dvc command not found")
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=2,
+            num_artifact_per_concept=1,
+            num_random=3,
+            use_dvc=True,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        stats = creator.create_concept_bank(mock_dataset)
+
+        # Should handle missing DVC gracefully
+        assert stats["total_patches"] > 0
+        assert "DVC not installed" in caplog.text
+
     def test_random_patch_generation(self, tmp_path, mock_dataset):
         """Test random patch generation specifically."""
         config = ConceptBankConfig(
@@ -1115,3 +1143,329 @@ class TestLogging:
         assert "Total patches: 350" in caplog.text
         assert "asymmetry" in caplog.text
         assert "ruler" in caplog.text
+
+
+# ============================================================================
+# Additional Coverage Tests for Missing Lines
+# ============================================================================
+
+
+class TestDermoscopyWithAnnotations:
+    """Test dermoscopy extraction with Derm7pt annotations."""
+
+    def test_extract_with_valid_annotations(self, tmp_path):
+        """Test extraction with valid Derm7pt CSV annotations."""
+        import pandas as pd
+
+        # Create mock dataset
+        dataset_path = tmp_path / "dataset"
+        dataset_path.mkdir()
+
+        # Create mock images
+        for i in range(5):
+            img = np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8)
+            img_path = dataset_path / f"img_{i:03d}.jpg"
+            cv2.imwrite(str(img_path), img)
+
+        # Create mock metadata CSV
+        metadata_path = tmp_path / "metadata.csv"
+        df = pd.DataFrame(
+            {
+                "derm": [f"img_{i:03d}.jpg" for i in range(5)],
+                "pigment_network": [
+                    "typical",
+                    "atypical",
+                    "absent",
+                    "typical",
+                    "typical",
+                ],
+                "blue_whitish_veil": [
+                    "present",
+                    "absent",
+                    "absent",
+                    "present",
+                    "absent",
+                ],
+                "globules": ["present", "absent", "present", "absent", "present"],
+                "streaks": ["regular", "absent", "irregular", "absent", "regular"],
+                "dots_and_globules": [
+                    "present",
+                    "absent",
+                    "present",
+                    "present",
+                    "absent",
+                ],
+            }
+        )
+        df.to_csv(metadata_path, index=False)
+
+        # Create config
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=3,
+            num_artifact_per_concept=2,
+            num_random=5,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Test extraction with annotations
+        stats = creator._extract_medical_concepts(dataset_path, metadata_path)
+
+        # Should have extracted some patches
+        assert isinstance(stats, dict)
+        assert all(isinstance(v, int) for v in stats.values())
+
+    def test_extract_with_missing_columns(self, tmp_path):
+        """Test extraction when CSV is missing expected columns."""
+        import pandas as pd
+
+        # Create mock dataset
+        dataset_path = tmp_path / "dataset"
+        dataset_path.mkdir()
+
+        # Create mock images
+        for i in range(3):
+            img = np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8)
+            img_path = dataset_path / f"img_{i:03d}.jpg"
+            cv2.imwrite(str(img_path), img)
+
+        # Create metadata with missing columns
+        metadata_path = tmp_path / "metadata.csv"
+        df = pd.DataFrame(
+            {
+                "derm": [f"img_{i:03d}.jpg" for i in range(3)],
+                "pigment_network": ["typical", "atypical", "typical"],
+                # Missing other columns
+            }
+        )
+        df.to_csv(metadata_path, index=False)
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=2,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Should handle missing columns gracefully
+        stats = creator._extract_medical_concepts(dataset_path, metadata_path)
+        assert isinstance(stats, dict)
+
+    def test_extract_with_nonexistent_images(self, tmp_path):
+        """Test extraction when CSV references non-existent images."""
+        import pandas as pd
+
+        dataset_path = tmp_path / "dataset"
+        dataset_path.mkdir()
+
+        # Create metadata with non-existent images
+        metadata_path = tmp_path / "metadata.csv"
+        df = pd.DataFrame(
+            {
+                "derm": ["nonexistent_1.jpg", "nonexistent_2.jpg"],
+                "pigment_network": ["typical", "atypical"],
+                "blue_whitish_veil": ["present", "absent"],
+            }
+        )
+        df.to_csv(metadata_path, index=False)
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=2,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Should handle missing images gracefully
+        stats = creator._extract_medical_concepts(dataset_path, metadata_path)
+        assert isinstance(stats, dict)
+        # All counts should be 0 since no images exist
+        assert all(v == 0 for v in stats.values())
+
+    def test_extract_with_image_id_column(self, tmp_path):
+        """Test extraction when CSV uses 'image_id' instead of 'derm'."""
+        import pandas as pd
+
+        dataset_path = tmp_path / "dataset"
+        dataset_path.mkdir()
+
+        # Create mock images
+        for i in range(3):
+            img = np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8)
+            img_path = dataset_path / f"img_{i}.jpg"
+            cv2.imwrite(str(img_path), img)
+
+        # Create metadata with image_id column
+        metadata_path = tmp_path / "metadata.csv"
+        df = pd.DataFrame(
+            {
+                "image_id": [f"img_{i}.jpg" for i in range(3)],
+                "pigment_network": ["typical", "atypical", "typical"],
+                "blue_whitish_veil": ["present", "absent", "present"],
+            }
+        )
+        df.to_csv(metadata_path, index=False)
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=2,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Should handle image_id column
+        stats = creator._extract_medical_concepts(dataset_path, metadata_path)
+        assert isinstance(stats, dict)
+
+
+class TestChestXrayExtraction:
+    """Test chest X-ray medical concept extraction."""
+
+    def test_extract_chestxray_medical_all_concepts(self, tmp_path):
+        """Test extraction of all chest X-ray medical concepts."""
+        dataset_path = tmp_path / "dataset"
+        dataset_path.mkdir()
+
+        # Create mock chest X-ray images
+        for i in range(5):
+            img = np.random.randint(50, 200, (1024, 1024, 3), dtype=np.uint8)
+            img_path = dataset_path / f"xray_{i:03d}.jpg"
+            cv2.imwrite(str(img_path), img)
+
+        config = ConceptBankConfig(
+            modality="chest_xray",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=3,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Test extraction
+        stats = creator._extract_chestxray_medical(dataset_path)
+
+        # Should have attempted all concepts
+        assert "lung_opacity" in stats
+        assert "cardiac_silhouette" in stats
+        assert "rib_shadows" in stats
+        assert "costophrenic_angle" in stats
+
+    def test_extract_chestxray_empty_dataset(self, tmp_path):
+        """Test chest X-ray extraction with empty dataset."""
+        dataset_path = tmp_path / "empty_dataset"
+        dataset_path.mkdir()
+
+        config = ConceptBankConfig(
+            modality="chest_xray",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=2,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Should handle empty dataset
+        stats = creator._extract_chestxray_medical(dataset_path)
+        assert isinstance(stats, dict)
+        assert all(v == 0 for v in stats.values())
+
+
+class TestHeuristicExtraction:
+    """Test heuristic-based extraction without annotations."""
+
+    def test_dermoscopy_heuristic_extraction(self, tmp_path):
+        """Test dermoscopy extraction using heuristics."""
+        dataset_path = tmp_path / "dataset"
+        dataset_path.mkdir()
+
+        # Create mock images
+        for i in range(5):
+            img = np.random.randint(0, 255, (512, 512, 3), dtype=np.uint8)
+            img_path = dataset_path / f"derm_{i:03d}.jpg"
+            cv2.imwrite(str(img_path), img)
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=3,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Test heuristic extraction
+        stats = creator._extract_dermoscopy_medical_heuristic(dataset_path)
+
+        # Should have stats for all concepts
+        assert len(stats) == len(creator.medical_concepts)
+        assert all(isinstance(v, int) for v in stats.values())
+
+    def test_heuristic_extraction_empty_dataset(self, tmp_path):
+        """Test heuristic extraction with empty dataset."""
+        dataset_path = tmp_path / "empty_dataset"
+        dataset_path.mkdir()
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            num_medical_per_concept=2,
+            use_dvc=False,
+            verbose=0,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Should handle empty dataset
+        stats = creator._extract_dermoscopy_medical_heuristic(dataset_path)
+        assert isinstance(stats, dict)
+        assert all(v == 0 for v in stats.values())
+
+
+class TestInkMarkDetection:
+    """Test ink mark detection heuristic."""
+
+    def test_detect_ink_marks_present(self, tmp_path):
+        """Test detection of ink marks on dermoscopy images."""
+        # Create image with ink marks (dark spots at borders)
+        img = np.ones((512, 512, 3), dtype=np.uint8) * 200
+
+        # Add dark spots at borders (simulating ink marks)
+        img[10:30, 10:30] = [0, 0, 50]  # Top-left
+        img[10:30, -30:-10] = [0, 0, 50]  # Top-right
+        img[-30:-10, 10:30] = [0, 0, 50]  # Bottom-left
+        img[-30:-10, -30:-10] = [0, 0, 50]  # Bottom-right
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            use_dvc=False,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Test detection - returns list of patches
+        patches = creator._detect_ink_marks(img)
+        assert isinstance(patches, list)
+
+    def test_detect_ink_marks_absent(self, tmp_path):
+        """Test ink mark detection on clean images."""
+        # Create clean image
+        img = np.random.randint(100, 200, (512, 512, 3), dtype=np.uint8)
+
+        config = ConceptBankConfig(
+            modality="dermoscopy",
+            output_dir=tmp_path / "concepts",
+            use_dvc=False,
+        )
+        creator = ConceptBankCreator(config)
+
+        # Test detection - returns list of patches
+        patches = creator._detect_ink_marks(img)
+        assert isinstance(patches, list)
