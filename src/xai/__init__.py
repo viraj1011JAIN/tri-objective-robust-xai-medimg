@@ -5,12 +5,21 @@ Provides production-ready implementations of visual explanation methods:
 - Grad-CAM++: Improved Grad-CAM with weighted gradients
 - AttentionRollout: For Vision Transformers
 - Stability Metrics: SSIM, MS-SSIM, Spearman, L2, Cosine (Phase 6.2)
+- Faithfulness Metrics: Deletion/Insertion Curves, Pointing Game (Phase 6.3)
 
 Author: Viraj Pankaj Jain
 Institution: University of Glasgow
 Date: November 25, 2025
 """
 
+from src.xai.faithfulness import (
+    DeletionMetric,
+    FaithfulnessConfig,
+    FaithfulnessMetrics,
+    InsertionMetric,
+    PointingGame,
+    create_faithfulness_metrics,
+)
 from src.xai.gradcam import (
     GradCAM,
     GradCAMConfig,
@@ -54,6 +63,13 @@ __all__ = [
     "spearman_correlation",
     "normalized_l2_distance",
     "cosine_similarity",
+    # Faithfulness Metrics
+    "FaithfulnessMetrics",
+    "FaithfulnessConfig",
+    "DeletionMetric",
+    "InsertionMetric",
+    "PointingGame",
+    "create_faithfulness_metrics",
 ]
 
-__version__ = "6.2.0"
+__version__ = "6.3.0"

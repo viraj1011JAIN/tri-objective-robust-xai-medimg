@@ -36,7 +36,6 @@ from src.xai.stability_metrics import (
     spearman_correlation,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
@@ -634,7 +633,13 @@ class TestStabilityMetrics:
         results = stability_metrics.compute_all(h1, h2, include_ms_ssim=True)
 
         # Check all expected keys are present
-        expected_keys = ["ssim", "ms_ssim", "spearman", "l2_distance", "cosine_similarity"]
+        expected_keys = [
+            "ssim",
+            "ms_ssim",
+            "spearman",
+            "l2_distance",
+            "cosine_similarity",
+        ]
         for key in expected_keys:
             assert key in results
             assert isinstance(results[key], float)
@@ -744,15 +749,17 @@ class TestIntegration:
 
         # Simulate highly stable explanations (small perturbation)
         heatmap_clean = torch.rand(4, 1, 14, 14, device=device)
-        heatmap_adv = heatmap_clean + 0.02 * torch.randn_like(heatmap_clean)  # Smaller noise
+        heatmap_adv = heatmap_clean + 0.02 * torch.randn_like(
+            heatmap_clean
+        )  # Smaller noise
 
         metrics = create_stability_metrics()
         ssim_val = metrics.compute_ssim(heatmap_clean, heatmap_adv)
 
         # Should meet H2 threshold for dissertation validation
-        assert ssim_val >= 0.75, (
-            f"H2 requires SSIM ≥ 0.75 for stable explanations, got {ssim_val:.3f}"
-        )
+        assert (
+            ssim_val >= 0.75
+        ), f"H2 requires SSIM ≥ 0.75 for stable explanations, got {ssim_val:.3f}"
 
 
 # ============================================================================

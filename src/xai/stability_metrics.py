@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
@@ -232,14 +232,10 @@ class SSIM(nn.Module):
         """
         # Validate inputs
         if x.shape != y.shape:
-            raise ValueError(
-                f"Input shapes must match: x={x.shape}, y={y.shape}"
-            )
+            raise ValueError(f"Input shapes must match: x={x.shape}, y={y.shape}")
 
         if x.dim() != 4:
-            raise ValueError(
-                f"Expected 4D input (B, C, H, W), got {x.dim()}D"
-            )
+            raise ValueError(f"Expected 4D input (B, C, H, W), got {x.dim()}D")
 
         # Move window to input device if needed
         # (register_buffer handles device when module.to(device) is called,
@@ -261,7 +257,9 @@ class SSIM(nn.Module):
 
         # SSIM formula
         numerator = (2 * mu_xy + self.c1) * (2 * sigma_xy + self.c2)
-        denominator = (mu_x_sq + mu_y_sq + self.c1) * (sigma_x_sq + sigma_y_sq + self.c2)
+        denominator = (mu_x_sq + mu_y_sq + self.c1) * (
+            sigma_x_sq + sigma_y_sq + self.c2
+        )
 
         ssim_map = numerator / denominator
 
@@ -723,9 +721,7 @@ class StabilityMetrics:
             f"scales={len(self.config.ms_ssim_weights)})"
         )
 
-    def _preprocess_heatmaps(
-        self, x: Tensor, y: Tensor
-    ) -> Tuple[Tensor, Tensor]:
+    def _preprocess_heatmaps(self, x: Tensor, y: Tensor) -> Tuple[Tensor, Tensor]:
         """
         Preprocess heatmaps before metric computation.
 
@@ -751,9 +747,7 @@ class StabilityMetrics:
 
         # Validate shapes
         if x.shape != y.shape:
-            raise ValueError(
-                f"Heatmap shapes must match: x={x.shape}, y={y.shape}"
-            )
+            raise ValueError(f"Heatmap shapes must match: x={x.shape}, y={y.shape}")
 
         # Normalize if requested
         if self.config.normalize_heatmaps:
@@ -830,7 +824,9 @@ class StabilityMetrics:
             Normalized L2 distance ∈ [0, 1]
         """
         x, y = self._preprocess_heatmaps(x, y)
-        dist = normalized_l2_distance(x, y, reduction="mean", epsilon=self.config.epsilon)
+        dist = normalized_l2_distance(
+            x, y, reduction="mean", epsilon=self.config.epsilon
+        )
         return float(dist.item())
 
     def compute_cosine_similarity(self, x: Tensor, y: Tensor) -> float:
