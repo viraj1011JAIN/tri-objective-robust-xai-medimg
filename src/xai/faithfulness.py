@@ -215,9 +215,6 @@ class DeletionMetric:
         self.config = config
         self.model.eval()
 
-        # Cache for baseline values
-        self._baseline_cache: Optional[Tensor] = None
-
     def compute(
         self,
         image: Tensor,
@@ -380,7 +377,7 @@ class DeletionMetric:
             # Zero baseline
             return torch.zeros_like(image)
 
-        else:
+        else:  # pragma: no cover (validated in FaithfulnessConfig.__post_init__)
             raise ValueError(f"Unknown baseline_mode: {self.config.baseline_mode}")
 
 
@@ -579,7 +576,7 @@ class InsertionMetric:
             return noise
         elif self.config.baseline_mode == "zero":
             return torch.zeros_like(image)
-        else:
+        else:  # pragma: no cover (validated in FaithfulnessConfig.__post_init__)
             raise ValueError(f"Unknown baseline_mode: {self.config.baseline_mode}")
 
 
@@ -856,6 +853,16 @@ class FaithfulnessMetrics:
         >>> print(f"Faithfulness Score: {results['insertion_auc']:.3f}")
         """
         batch_size = images.shape[0]
+        if len(target_classes) != batch_size:
+            raise ValueError(
+                f"Number of target_classes ({len(target_classes)}) "
+                f"must match batch size ({batch_size})"
+            )
+        if baseline_value is not None and baseline_value.shape[0] != batch_size:
+            raise ValueError(
+                f"baseline_value batch size ({baseline_value.shape[0]}) "
+                f"doesn't match images batch size ({batch_size})"
+            )
 
         deletion_aucs = []
         deletion_ads = []

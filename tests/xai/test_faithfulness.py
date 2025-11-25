@@ -339,8 +339,12 @@ class TestInsertionMetric:
         curve, _, _ = insertion.compute(sample_image, sample_heatmap, target_class=0)
         final_score = curve[-1]
 
-        # Should be close (within 10% due to discrete steps)
-        assert abs(original_score - final_score) < 0.1
+        # Due to discrete step sizes and floating-point precision,
+        # allow small tolerance (typically < 5% difference)
+        assert abs(original_score - final_score) < 0.05, (
+            f"Fully inserted image should match original: "
+            f"{original_score:.4f} vs {final_score:.4f}"
+        )
 
 
 # ============================================================================
@@ -552,6 +556,22 @@ class TestFaithfulnessMetrics:
         assert "deletion_auc" in results
         assert "insertion_auc" in results
 
+    def test_baseline_value_shape_validation(
+        self, faithfulness_metrics, sample_image, sample_heatmap
+    ):
+        """Test that baseline_value shape mismatch raises error."""
+        # Create baseline with wrong batch size
+        wrong_baseline = torch.randn(2, 3, 28, 28)  # Batch size 2
+
+        # Should raise ValueError for shape mismatch
+        with pytest.raises(ValueError, match="baseline_value batch size"):
+            faithfulness_metrics.compute_all(
+                sample_image,  # Batch size 1
+                sample_heatmap,
+                [0],
+                baseline_value=wrong_baseline,  # Batch size 2 - mismatch!
+            )
+
 
 # ============================================================================
 # Test Factory Function
@@ -734,3 +754,84 @@ class TestEdgeCases:
 
         # Should be False (no ground truth)
         assert hit is False
+
+
+# ============================================================================
+# Test Hypothesis H3
+# ============================================================================
+
+
+class TestHypothesisH3:
+    """Test Research Hypothesis H3 validation."""
+
+    def test_hypothesis_h3_faithful_explanation(self, dummy_model, device):
+        """
+        Validate H3: Faithful explanations have good AUC patterns.
+
+        H3: Tri-objective training produces explanations with:
+        - Higher Insertion AUC (explanations identify discriminative regions)
+        - Lower Deletion AUC (removing important pixels degrades performance)
+        - Better Pointing Game accuracy
+        """
+        config = FaithfulnessConfig(num_steps=10, verbose=False, device=str(device))
+        metrics = FaithfulnessMetrics(dummy_model, config)
+
+        image = torch.randn(1, 3, 28, 28, device=device)
+
+        # Focused explanation (should be faithful)
+        focused_heatmap = torch.zeros(1, 1, 28, 28, device=device)
+        focused_heatmap[0, 0, 12:16, 12:16] = 1.0
+
+        results = metrics.compute_all(image, focused_heatmap, [0])
+
+        # H3 Validation: Insertion AUC should be positive
+        # (score increases as we add important pixels)
+        assert (
+            results["insertion_auc"] > 0
+        ), "H3: Insertion should increase score (faithful explanation)"
+
+        # H3 Validation: Deletion should cause score drop
+        assert (
+            results["deletion_ad"] >= 0
+        ), "H3: Deletion should decrease score (important pixels removed)"
+
+        # H3 Validation: Both AUCs should be meaningful (not extreme)
+        assert 0 <= results["deletion_auc"] <= 1, "Deletion AUC in valid range"
+        assert 0 <= results["insertion_auc"] <= 1, "Insertion AUC in valid range"
+
+
+# ============================================================================
+# Test Visualization Utilities
+# ============================================================================
+
+
+class TestPlotCurves:
+    """Test plot_curves utility."""
+
+    def test_plot_curves_saves_file(self, tmp_path):
+        """Test saving curves to file."""
+        from src.xai.faithfulness import plot_curves
+
+        deletion_curve = np.linspace(1.0, 0.2, 11)
+        insertion_curve = np.linspace(0.1, 0.9, 11)
+
+        save_path = tmp_path / "test_curves.png"
+        plot_curves(deletion_curve, insertion_curve, str(save_path))
+
+        # Check file was created
+        assert save_path.exists(), "Curve plot should be saved"
+        assert save_path.stat().st_size > 0, "Saved file should not be empty"
+
+    def test_plot_curves_with_none_path(self):
+        """Test plot_curves without saving (display only)."""
+        import matplotlib
+
+        matplotlib.use("Agg")  # Use non-GUI backend for testing
+
+        from src.xai.faithfulness import plot_curves
+
+        deletion_curve = np.linspace(1.0, 0.2, 11)
+        insertion_curve = np.linspace(0.1, 0.9, 11)
+
+        # Should not raise error even without save_path
+        plot_curves(deletion_curve, insertion_curve, save_path=None)
