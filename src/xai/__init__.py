@@ -7,6 +7,7 @@ Provides production-ready implementations of visual explanation methods:
 - Stability Metrics: SSIM, MS-SSIM, Spearman, L2, Cosine (Phase 6.2)
 - Faithfulness Metrics: Deletion/Insertion Curves, Pointing Game (Phase 6.3)
 - Baseline Quality: Evaluation framework for baseline explanations (Phase 6.4)
+- Concept Bank: TCAV concept extraction for semantic alignment (Phase 6.5)
 
 Author: Viraj Pankaj Jain
 Institution: University of Glasgow
@@ -17,6 +18,15 @@ from src.xai.baseline_explanation_quality import (
     BaselineExplanationQuality,
     BaselineQualityConfig,
     create_baseline_quality_evaluator,
+)
+from src.xai.concept_bank import (
+    CHEST_XRAY_ARTIFACT_CONCEPTS,
+    CHEST_XRAY_MEDICAL_CONCEPTS,
+    DERMOSCOPY_ARTIFACT_CONCEPTS,
+    DERMOSCOPY_MEDICAL_CONCEPTS,
+    ConceptBankConfig,
+    ConceptBankCreator,
+    create_concept_bank_creator,
 )
 from src.xai.faithfulness import (
     DeletionMetric,
@@ -80,6 +90,14 @@ __all__ = [
     "BaselineExplanationQuality",
     "BaselineQualityConfig",
     "create_baseline_quality_evaluator",
+    # Concept Bank
+    "ConceptBankCreator",
+    "ConceptBankConfig",
+    "create_concept_bank_creator",
+    "DERMOSCOPY_MEDICAL_CONCEPTS",
+    "DERMOSCOPY_ARTIFACT_CONCEPTS",
+    "CHEST_XRAY_MEDICAL_CONCEPTS",
+    "CHEST_XRAY_ARTIFACT_CONCEPTS",
 ]
 
-__version__ = "6.4.0"
+__version__ = "6.5.0"
