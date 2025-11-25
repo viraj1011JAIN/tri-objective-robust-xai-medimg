@@ -825,6 +825,7 @@ class TestPlotCurves:
     def test_plot_curves_with_none_path(self):
         """Test plot_curves without saving (display only)."""
         import matplotlib
+        import matplotlib.pyplot as plt
 
         matplotlib.use("Agg")  # Use non-GUI backend for testing
 
@@ -833,5 +834,8 @@ class TestPlotCurves:
         deletion_curve = np.linspace(1.0, 0.2, 11)
         insertion_curve = np.linspace(0.1, 0.9, 11)
 
-        # Should not raise error even without save_path
+        initial_figs = plt.get_fignums()
         plot_curves(deletion_curve, insertion_curve, save_path=None)
+
+        # Verify figure was closed (no memory leak)
+        assert len(plt.get_fignums()) == len(initial_figs), "Figure should be closed"
