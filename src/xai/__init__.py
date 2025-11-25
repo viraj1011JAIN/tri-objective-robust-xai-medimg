@@ -9,6 +9,7 @@ Provides production-ready implementations of visual explanation methods:
 - Baseline Quality: Evaluation framework for baseline explanations (Phase 6.4)
 - Concept Bank: TCAV concept extraction for semantic alignment (Phase 6.5)
 - TCAV: Testing with Concept Activation Vectors (Phase 6.6)
+- Baseline TCAV Evaluation: Baseline concept reliance analysis (Phase 6.7)
 
 Author: Viraj Pankaj Jain
 Institution: University of Glasgow
@@ -19,6 +20,12 @@ from src.xai.baseline_explanation_quality import (
     BaselineExplanationQuality,
     BaselineQualityConfig,
     create_baseline_quality_evaluator,
+)
+from src.xai.baseline_tcav_evaluation import (
+    BaselineTCAVConfig,
+    BaselineTCAVEvaluator,
+    ConceptCategory,
+    create_baseline_tcav_evaluator,
 )
 from src.xai.concept_bank import (
     CHEST_XRAY_ARTIFACT_CONCEPTS,
@@ -114,6 +121,11 @@ __all__ = [
     "CAVTrainer",
     "ConceptDataset",
     "create_tcav",
+    # Baseline TCAV Evaluation
+    "BaselineTCAVEvaluator",
+    "BaselineTCAVConfig",
+    "ConceptCategory",
+    "create_baseline_tcav_evaluator",
 ]
 
-__version__ = "6.6.0"
+__version__ = "6.7.0"
