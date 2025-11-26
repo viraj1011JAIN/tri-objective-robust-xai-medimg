@@ -1,7 +1,7 @@
 frozen: true
 deps:
 - hash: md5
-  path:/content/drive/MyDrive/data/nih_cxr/Data_Entry_2017_v2020.csv
+  path: G:/My Drive/data/data/nih_cxr/Data_Entry_2017_v2020.csv
 outs:
 - hash: md5
   path: nih_cxr_metadata.csv

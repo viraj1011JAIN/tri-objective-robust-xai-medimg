@@ -1,7 +1,7 @@
 frozen: true
 deps:
 - hash: md5
-  path:/content/drive/MyDrive/data/isic_2018/metadata.csv
+  path: G:/My Drive/data/data/isic_2018/metadata.csv
 outs:
 - hash: md5
   path: isic_2018_metadata.csv
