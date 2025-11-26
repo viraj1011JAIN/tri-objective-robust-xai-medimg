@@ -32,16 +32,16 @@ Phase 2 establishes a complete data pipeline infrastructure for medical imaging 
 
 **Total Storage:** ~49.04 GB (metadata tracked via DVC)
 **Total Images:** 185,410 medical images
-**Storage Location:** `G:\My Drive\data\data\` (external fixed location)
+**Storage Location:** `/content/drive/MyDrive/data/data/` (Google Drive, mounted in Colab)
 
 | Dataset | Images | Size | Classes | Task Type | Path |
 |---------|--------|------|---------|-----------|------|
-| **ISIC 2018** | 12,820 | 5.46 GB | 7 | Multi-class | `G:\My Drive\data\data\isic_2018` |
-| **ISIC 2019** | 25,331 | 0.35 GB | 8 | Multi-class | `G:\My Drive\data\data\isic_2019` |
-| **ISIC 2020** | 33,126 | 0.59 GB | 2 | Binary | `G:\My Drive\data\data\isic_2020` |
-| **Derm7pt** | 2,013 | 0.15 GB | 2 + 7 concepts | Binary + Attributes | `G:\My Drive\data\data\derm7pt` |
-| **NIH CXR-14** | 112,120 | ~40 GB | 14 | Multi-label | `G:\My Drive\data\data\nih_cxr` |
-| **PadChest** | 48 | ~3 GB | 174+ | Multi-label | `G:\My Drive\data\data\padchest\padchest` |
+| **ISIC 2018** | 12,820 | 5.46 GB | 7 | Multi-class | `/content/drive/MyDrive/data/data/isic_2018` |
+| **ISIC 2019** | 25,331 | 0.35 GB | 8 | Multi-class | `/content/drive/MyDrive/data/data/isic_2019` |
+| **ISIC 2020** | 33,126 | 0.59 GB | 2 | Binary | `/content/drive/MyDrive/data/data/isic_2020` |
+| **Derm7pt** | 2,013 | 0.15 GB | 2 + 7 concepts | Binary + Attributes | `/content/drive/MyDrive/data/data/derm7pt` |
+| **NIH CXR-14** | 112,120 | ~40 GB | 14 | Multi-label | `/content/drive/MyDrive/data/data/nih_cxr` |
+| **PadChest** | 48 | ~3 GB | 174+ | Multi-label | `/content/drive/MyDrive/data/data/padchest/padchest` |
 
 ### 1.2 Dataset Details
 
