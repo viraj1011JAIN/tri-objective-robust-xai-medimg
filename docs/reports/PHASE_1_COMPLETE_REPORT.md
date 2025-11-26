@@ -619,10 +619,6 @@ dependencies:
 - Custom test markers (rq1/rq2/rq3)
 - Pre-commit hooks (8 active)
 
-✅ **IEEE-Compliant Documentation**
-- 2,165-line README
-- Sphinx documentation framework
-- CITATION.cff for academic citation
 
 ✅ **Reproducibility Framework**
 - Seed management system
