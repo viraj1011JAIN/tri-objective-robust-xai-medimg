@@ -37,7 +37,7 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -222,26 +222,39 @@ class OrthogonalityResults:
         # Save summary JSON
         summary_data = {
             "dataset": self.config.dataset,
-            "is_orthogonal": self.is_orthogonal,
+            "is_orthogonal": bool(self.is_orthogonal),
             "summary": self.summary,
             "model_results": {
                 name: {
                     "clean_accuracy": {
-                        "mean": results.get_mean("clean_accuracy"),
-                        "std": results.get_std("clean_accuracy"),
+                        "mean": float(results.get_mean("clean_accuracy")),
+                        "std": float(results.get_std("clean_accuracy")),
                     },
                     "robust_accuracy": {
-                        "mean": results.get_mean("robust_accuracy"),
-                        "std": results.get_std("robust_accuracy"),
+                        "mean": float(results.get_mean("robust_accuracy")),
+                        "std": float(results.get_std("robust_accuracy")),
                     },
                     "cross_site_auroc": {
-                        "mean": results.get_mean("cross_site_auroc"),
-                        "std": results.get_std("cross_site_auroc"),
+                        "mean": float(results.get_mean("cross_site_auroc")),
+                        "std": float(results.get_std("cross_site_auroc")),
                     },
                 }
                 for name, results in self.model_results.items()
             },
-            "statistical_tests": [asdict(test) for test in self.statistical_tests],
+            "statistical_tests": [
+                {
+                    "test_name": test.test_name,
+                    "metric": test.metric,
+                    "model_a": test.model_a,
+                    "model_b": test.model_b,
+                    "statistic": float(test.statistic),
+                    "p_value": float(test.p_value),
+                    "is_significant": bool(test.is_significant),
+                    "effect_size": float(test.effect_size),
+                    "interpretation": test.interpretation,
+                }
+                for test in self.statistical_tests
+            ],
         }
 
         with open(output_dir / "orthogonality_results.json", "w") as f:
@@ -378,7 +391,7 @@ class OrthogonalityAnalyzer:
         diff = values_a - values_b
         effect_size = float(np.mean(diff) / np.std(diff, ddof=1))
 
-        is_significant = p_value < self.config.significance_level
+        is_significant = bool(p_value < self.config.significance_level)
 
         # Interpretation
         if is_significant:

@@ -186,7 +186,11 @@ class BaselineTrainer(BaseTrainer):
         metrics:
             Dictionary with per-batch metrics (currently accuracy only).
         """
-        images, labels, _ = batch
+        # Handle both 2-tuple and 3-tuple batch formats
+        if len(batch) == 2:
+            images, labels = batch
+        else:
+            images, labels, _ = batch
         images = images.to(self.device, non_blocking=True)
         labels = labels.to(self.device, non_blocking=True)
 
@@ -225,7 +229,11 @@ class BaselineTrainer(BaseTrainer):
         metrics:
             Dictionary with per-batch metrics (currently accuracy only).
         """
-        images, labels, _ = batch
+        # Handle both 2-tuple and 3-tuple batch formats
+        if len(batch) == 2:
+            images, labels = batch
+        else:
+            images, labels, _ = batch
         images = images.to(self.device, non_blocking=True)
         labels = labels.to(self.device, non_blocking=True)
 

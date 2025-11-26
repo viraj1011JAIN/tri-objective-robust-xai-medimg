@@ -598,12 +598,11 @@ class TestTrainingStep:
         batch = next(iter(train_loader_multiclass))
         metrics = trainer.training_step(batch, batch_idx=0)
 
+        # Check new API metrics (Phase 7.2)
         assert "loss" in metrics
         assert "task_loss" in metrics
         assert "robustness_loss" in metrics
         assert "explanation_loss" in metrics
-        assert "ssim_loss" in metrics
-        assert "tcav_loss" in metrics
         assert "temperature" in metrics
         assert "accuracy" in metrics
         assert 0.0 <= metrics["accuracy"] <= 1.0
@@ -694,7 +693,7 @@ class TestTrainingStep:
         metrics = trainer.training_step(batch, batch_idx=0)
 
         assert "loss" in metrics
-        assert metrics["tcav_loss"] == 0.0  # No TCAV without embeddings
+        assert metrics["explanation_loss"] == 0.0  # No explanation without CAVs
 
     def test_training_step_with_heatmaps(
         self, simple_model, train_loader_multiclass, device
@@ -719,8 +718,7 @@ class TestTrainingStep:
         metrics = trainer.training_step(batch, batch_idx=0)
 
         assert "loss" in metrics
-        # SSIM loss should be non-zero with heatmaps
-        assert "ssim_loss" in metrics
+        assert "explanation_loss" in metrics  # Check explanation loss
 
     def test_training_step_without_gradient_clipping(
         self, simple_model, train_loader_multiclass, device

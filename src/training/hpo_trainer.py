@@ -203,7 +203,7 @@ class HPOTrainer:
                 n_startup_trials=sampler_config.n_startup_trials,
                 seed=sampler_config.seed,
             )
-        elif sampler_config.sampler_type.value == "cmaes":
+        elif sampler_config.sampler_type.value == "cma_es":
             from optuna.samplers import CmaEsSampler
 
             return CmaEsSampler(

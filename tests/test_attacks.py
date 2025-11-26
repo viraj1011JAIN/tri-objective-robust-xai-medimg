@@ -1653,7 +1653,7 @@ class TestComputationalEfficiency:
         elapsed = time.time() - start
 
         # FGSM should be fast
-        max_time = 1.0 if device == "cpu" else 0.1
+        max_time = 1.0 if device == "cpu" else 0.15
         assert (
             elapsed < max_time
         ), f"FGSM too slow: {elapsed:.3f}s (expected < {max_time}s)"

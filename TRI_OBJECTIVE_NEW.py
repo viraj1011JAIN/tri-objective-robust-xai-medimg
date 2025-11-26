@@ -166,6 +166,7 @@ class TriObjectiveConfig:
     gamma: float = 0.5
     use_ms_ssim: bool = False
     enable_grad_cam: bool = True
+    target_layer: str = "layer4"
 
     # Training parameters
     gradient_accumulation_steps: int = 1
@@ -234,6 +235,7 @@ class TriObjectiveConfig:
             "gamma": self.gamma,
             "use_ms_ssim": self.use_ms_ssim,
             "enable_grad_cam": self.enable_grad_cam,
+            "target_layer": self.target_layer,
             "gradient_accumulation_steps": self.gradient_accumulation_steps,
             "numerical_stability_eps": self.numerical_stability_eps,
             "enable_sanity_checks": self.enable_sanity_checks,
@@ -508,13 +510,7 @@ class TRADESLoss(nn.Module):
             x_adv = torch.clamp(images + delta, 0.0, 1.0)
 
             # Forward pass
-            model_output = model(x_adv)
-
-            # Handle dict vs tensor output
-            if isinstance(model_output, dict):
-                adv_logits = model_output.get("logits", model_output.get("out"))
-            else:
-                adv_logits = model_output
+            adv_logits = model(x_adv)
 
             # KL divergence loss for attack (maximize w.r.t. delta)
             loss = F.kl_div(
@@ -584,18 +580,7 @@ class TRADESLoss(nn.Module):
         model.train(was_training)
 
         # Adversarial logits (with gradients)
-        outputs_adv = model(images_adv)
-
-        # Handle both tensor and dict outputs
-        if isinstance(outputs_adv, dict):
-            logits_adv = outputs_adv.get("logits", outputs_adv.get("out"))
-            if logits_adv is None:
-                raise ValueError(
-                    f"Model dict output must contain 'logits' or 'out' key. "
-                    f"Got keys: {list(outputs_adv.keys())}"
-                )
-        else:
-            logits_adv = outputs_adv
+        logits_adv = model(images_adv)
 
         # KL divergence for robustness
         # KL(p_adv || p_clean) measures prediction consistency
@@ -780,6 +765,7 @@ class TriObjectiveLoss(BaseLoss):
                     medical_cavs=medical_cavs,
                     gamma=self.config.gamma,
                     use_ms_ssim=self.config.use_ms_ssim,
+                    target_layer=self.config.target_layer,
                 )
             )
             logger.info(
@@ -864,13 +850,7 @@ class TriObjectiveLoss(BaseLoss):
 
         # 1. Task Loss (with temperature scaling)
         # Forward pass on clean images
-        model_output = self.model(images)
-
-        # Handle dict vs tensor output
-        if isinstance(model_output, dict):
-            logits_clean = model_output.get("logits", model_output.get("out"))
-        else:
-            logits_clean = model_output
+        logits_clean = self.model(images)
 
         # Apply temperature scaling for calibration
         logits_scaled = logits_clean / self.temperature
@@ -1143,6 +1123,7 @@ def create_tri_objective_loss(
     pgd_num_steps: int = 7,
     gamma: float = 0.5,
     use_ms_ssim: bool = False,
+    target_layer: str = "layer4",
     **kwargs: Any,
 ) -> TriObjectiveLoss:
     """Factory function to create TriObjectiveLoss with sensible defaults.
@@ -1251,6 +1232,7 @@ def create_tri_objective_loss(
         pgd_num_steps=pgd_num_steps,
         gamma=gamma,
         use_ms_ssim=use_ms_ssim,
+        target_layer=target_layer,
         **kwargs,
     )
 

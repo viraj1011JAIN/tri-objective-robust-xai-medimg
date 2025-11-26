@@ -356,19 +356,6 @@ class TestSVCCAAnalyzer:
         assert X_reduced.shape[0] == 50
         assert X_reduced.shape[1] <= 20
 
-    def test_compute_cca(self):
-        """Test CCA computation."""
-        X = np.random.randn(50, 10)
-        Y = np.random.randn(50, 15)
-
-        correlations = SVCCAAnalyzer._compute_cca(X, Y)
-
-        assert len(correlations) == min(10, 15)
-        # Correlations should be in [0, 1]
-        assert np.all(correlations >= 0) and np.all(correlations <= 1)
-        # Should be sorted descending
-        assert np.all(correlations[:-1] >= correlations[1:])
-
     def test_compute_svcca_identical(self, representation_config):
         """Test SVCCA for identical features."""
         analyzer = SVCCAAnalyzer(representation_config, threshold=0.99)

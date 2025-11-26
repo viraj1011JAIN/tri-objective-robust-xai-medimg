@@ -31,7 +31,6 @@ from torch.utils.data import DataLoader, TensorDataset
 from src.training.base_trainer import TrainingConfig
 from src.training.baseline_trainer import BaselineTrainer
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -372,6 +371,36 @@ class TestTrainingStep:
         assert not torch.isnan(loss)
         assert not torch.isinf(loss)
 
+    def test_training_step_with_three_tuple_batch(
+        self, simple_model, optimizer, config, device
+    ):
+        """Test training step with 3-tuple batch (images, labels, metadata)."""
+        torch.manual_seed(42)
+        images = torch.randn(32, 3, 32, 32)
+        labels = torch.randint(0, 7, (32,))
+        metadata = torch.arange(32)  # Dummy metadata
+        dataset = TensorDataset(images, labels, metadata)
+        loader = DataLoader(dataset, batch_size=16, shuffle=False)
+
+        trainer = BaselineTrainer(
+            model=simple_model,
+            train_loader=loader,
+            val_loader=None,
+            optimizer=optimizer,
+            config=config,
+            num_classes=7,
+            device=device,
+        )
+
+        batch = next(iter(loader))
+        assert len(batch) == 3  # Verify 3-tuple format
+
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
+
+        assert isinstance(loss, torch.Tensor)
+        assert loss.ndim == 0
+        assert "accuracy" in metrics
+
 
 # ---------------------------------------------------------------------------
 # Validation Step Tests
@@ -425,6 +454,36 @@ class TestValidationStep:
 
         assert len(trainer.val_predictions) == 1
         assert len(trainer.val_targets) == 1
+
+    def test_validation_step_with_three_tuple_batch(
+        self, simple_model, optimizer, config, device
+    ):
+        """Test validation step with 3-tuple batch (images, labels, metadata)."""
+        torch.manual_seed(123)
+        images = torch.randn(32, 3, 32, 32)
+        labels = torch.randint(0, 7, (32,))
+        metadata = torch.arange(32)  # Dummy metadata
+        dataset = TensorDataset(images, labels, metadata)
+        val_loader = DataLoader(dataset, batch_size=16, shuffle=False)
+
+        trainer = BaselineTrainer(
+            model=simple_model,
+            train_loader=val_loader,  # Use same loader for simplicity
+            val_loader=val_loader,
+            optimizer=optimizer,
+            config=config,
+            num_classes=7,
+            device=device,
+        )
+
+        batch = next(iter(val_loader))
+        assert len(batch) == 3  # Verify 3-tuple format
+
+        loss, metrics = trainer.validation_step(batch, batch_idx=0)
+
+        assert isinstance(loss, torch.Tensor)
+        assert loss.ndim == 0
+        assert "accuracy" in metrics
 
 
 # ---------------------------------------------------------------------------
@@ -761,9 +820,7 @@ class TestIntegration:
         for param in trainer.criterion.parameters():
             assert param.device == device
 
-    def test_empty_predictions_handling(
-        self, simple_model, optimizer, config, device
-    ):
+    def test_empty_predictions_handling(self, simple_model, optimizer, config, device):
         """Test handling of empty predictions lists."""
         # Create empty loader
         empty_images = torch.empty(0, 3, 32, 32)

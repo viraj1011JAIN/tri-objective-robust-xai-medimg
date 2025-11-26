@@ -42,6 +42,16 @@ from __future__ import annotations
 from .base_loss import BaseLoss
 from .calibration_loss import CalibrationLoss, LabelSmoothingLoss, TemperatureScaling
 
+# Phase 7.1: Explanation loss for tri-objective training
+from .explanation_loss import (
+    ExplanationLoss,
+    ExplanationLossConfig,
+    SSIMKernelType,
+    SSIMStabilityLoss,
+    TCavConceptLoss,
+    create_explanation_loss,
+)
+
 # Phase 5.1: Robust losses for adversarial training
 from .robust_loss import (
     AdversarialTrainingLoss,
@@ -56,6 +66,17 @@ from .task_loss import (
     FocalLoss,
     MultiLabelBCELoss,
     TaskLoss,
+)
+
+# Phase 7.2: Tri-objective loss integrating task, robustness, and explanation
+from .tri_objective import LossMetrics
+from .tri_objective import TRADESLoss as TriObjectiveTRADESLoss
+from .tri_objective import (
+    TriObjectiveConfig,
+    TriObjectiveLoss,
+    benchmark_computational_overhead,
+    create_tri_objective_loss,
+    verify_gradient_flow,
 )
 
 __all__ = [
@@ -77,7 +98,22 @@ __all__ = [
     "trades_loss",
     "mart_loss",
     "adversarial_training_loss",
+    # Explanation Losses (Phase 7.1)
+    "ExplanationLoss",
+    "ExplanationLossConfig",
+    "SSIMStabilityLoss",
+    "SSIMKernelType",
+    "TCavConceptLoss",
+    "create_explanation_loss",
+    # Tri-Objective Loss (Phase 7.2)
+    "TriObjectiveLoss",
+    "TriObjectiveConfig",
+    "TriObjectiveTRADESLoss",
+    "LossMetrics",
+    "create_tri_objective_loss",
+    "verify_gradient_flow",
+    "benchmark_computational_overhead",
 ]
 
 # Simple semantic version for the loss subsystem; useful in logs / reports.
-__version__: str = "1.1.0"  # Updated for Phase 5.1
+__version__: str = "1.3.0"  # Updated for Phase 7.2

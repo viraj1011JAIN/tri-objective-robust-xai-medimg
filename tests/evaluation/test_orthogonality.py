@@ -15,10 +15,14 @@ import json
 import tempfile
 from pathlib import Path
 
-import numpy as np
-import pytest
+import matplotlib
 
-from src.evaluation.orthogonality import (
+matplotlib.use("Agg")  # Use non-interactive backend  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pytest  # noqa: E402
+
+from src.evaluation.orthogonality import (  # noqa: E402
     ModelResults,
     OrthogonalityAnalyzer,
     OrthogonalityConfig,

@@ -198,16 +198,33 @@ class TriObjectiveTrainer(BaseTrainer):
         self.num_classes = self._infer_num_classes()
         self.task_type = config.__dict__.get("task_type", "multi_class")
 
-        # Initialize tri-objective loss
-        self.criterion = TriObjectiveLoss(
-            num_classes=self.num_classes,
-            task_type=self.task_type,
+        # Create TriObjectiveConfig from trainer config
+        from ..losses.tri_objective import TriObjectiveConfig as LossConfig
+
+        # Calculate gamma from lambda_ssim and lambda_tcav
+        gamma = (
+            config.lambda_tcav / config.lambda_ssim if config.lambda_ssim > 0 else 0.5
+        )
+
+        loss_config = LossConfig(
             lambda_rob=config.lambda_rob,
             lambda_expl=config.lambda_expl,
-            lambda_ssim=config.lambda_ssim,
-            lambda_tcav=config.lambda_tcav,
             temperature=config.temperature,
             trades_beta=config.trades_beta,
+            pgd_epsilon=config.pgd_epsilon,
+            pgd_num_steps=config.pgd_num_steps,
+            pgd_step_size=config.pgd_step_size,
+            gamma=gamma,
+        )
+
+        # Initialize tri-objective loss with new API
+        self.criterion = TriObjectiveLoss(
+            model=self.model,
+            num_classes=self.num_classes,
+            task_type=self.task_type,
+            artifact_cavs=None,  # Will be set later if needed
+            medical_cavs=None,  # Will be set later if needed
+            config=loss_config,
         ).to(device)
 
         # Initialize PGD attack
@@ -398,17 +415,13 @@ class TriObjectiveTrainer(BaseTrainer):
             heatmap_clean = self._generate_heatmaps(images, labels)
             heatmap_adv = self._generate_heatmaps(images_adv, labels)
 
-        # 6. Compute tri-objective loss
-        loss_outputs = self.criterion(
-            logits_clean=logits_clean,
-            logits_adv=logits_adv,
+        # 6. Compute tri-objective loss (new API)
+        # The new TriObjectiveLoss handles adversarial generation internally
+        loss, loss_metrics = self.criterion(
+            images=images,
             labels=labels,
-            heatmap_clean=heatmap_clean,
-            heatmap_adv=heatmap_adv,
-            embeddings=embeddings,
+            return_metrics=True,
         )
-
-        loss = loss_outputs["loss"]
 
         # 7. Backward pass
         self.optimizer.zero_grad()
@@ -425,6 +438,13 @@ class TriObjectiveTrainer(BaseTrainer):
 
         # 8. Compute accuracy
         with torch.no_grad():
+            model_output = self.model(images)
+            # Handle dict vs tensor output
+            if isinstance(model_output, dict):
+                logits_clean = model_output.get("logits", model_output.get("out"))
+            else:
+                logits_clean = model_output
+
             if self.task_type == "multi_class":
                 preds = torch.argmax(logits_clean, dim=1)
                 correct = (preds == labels).sum().item()
@@ -437,15 +457,13 @@ class TriObjectiveTrainer(BaseTrainer):
                 total = batch_size * self.num_classes
                 accuracy = correct / total
 
-        # 9. Return metrics
+        # 9. Return metrics (convert LossMetrics to dict)
         metrics = {
             "loss": loss.item(),
-            "task_loss": loss_outputs["task"].item(),
-            "robustness_loss": loss_outputs["robustness"].item(),
-            "explanation_loss": loss_outputs["explanation"].item(),
-            "ssim_loss": loss_outputs["ssim"].item(),
-            "tcav_loss": loss_outputs["tcav"].item(),
-            "temperature": loss_outputs["temperature"].item(),
+            "task_loss": loss_metrics.loss_task,
+            "robustness_loss": loss_metrics.loss_rob,
+            "explanation_loss": loss_metrics.loss_expl,
+            "temperature": loss_metrics.temperature,
             "accuracy": accuracy,
         }
 

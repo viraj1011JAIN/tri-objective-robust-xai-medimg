@@ -163,7 +163,7 @@ class HPOAnalyzer:
             ),
             "best_value": self.study.best_value,
             "best_params": self.study.best_params,
-            "best_trial_number": self.best_trial.number,
+            "best_trial_number": self.best_trial.number if self.best_trial else None,
         }
 
         # Add parameter statistics
