@@ -59,7 +59,9 @@ class ISICDataset(BaseMedicalDataset):
     ) -> None:
         self.root = Path(root)
         self.csv_path = (
-            Path(csv_path) if csv_path is not None else self.root / "metadata.csv"
+            Path(csv_path)
+            if csv_path is not None
+            else self.root / "metadata_processed.csv"
         )
         self.split_column = split_column
         self.image_column = image_column
