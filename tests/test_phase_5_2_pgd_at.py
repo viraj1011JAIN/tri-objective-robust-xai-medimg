@@ -437,7 +437,7 @@ def test_phase_5_2_file_structure():
         "scripts/training/train_pgd_at.py",
         "scripts/evaluation/evaluate_pgd_at.py",
         "configs/experiments/pgd_at_isic.yaml",
-        "PHASE_5.2_README.md",
+        "QUICKSTART_PHASE_5.2.md",
         "PHASE_5.2_COMMANDS.ps1",
     ]
 

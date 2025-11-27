@@ -6,9 +6,7 @@ import logging
 from pathlib import Path
 from typing import Sequence
 
-from src.train.triobj_training import (  # and TrainingConfig if you need it
-    TriObjectiveTrainer,
-)
+from src.training.tri_objective_trainer import TriObjectiveTrainer
 from src.utils.config import (
     ExperimentConfig,
     get_config_hash,

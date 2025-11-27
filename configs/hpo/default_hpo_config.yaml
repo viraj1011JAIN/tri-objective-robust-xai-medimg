@@ -1,0 +1,371 @@
+# =============================================================================
+# Tri-Objective Hyperparameter Optimization Configuration
+# =============================================================================
+#
+# Configuration for Optuna-based hyperparameter optimization of the
+# tri-objective training framework.
+#
+# Blueprint specification:
+# - Search space: λ_rob ∈ [0.1, 0.5], λ_expl ∈ [0.05, 0.2]
+# - Objective: Weighted (0.3×clean + 0.4×robust + 0.2×SSIM + 0.1×cross_site)
+# - 50 trials with pruning
+#
+# Author: Viraj Pankaj Jain
+# Institution: University of Glasgow
+# Project: Tri-Objective Robust XAI for Medical Imaging
+# =============================================================================
+
+# =============================================================================
+# HPO Configuration
+# =============================================================================
+hpo:
+  # Number of optimization trials
+  n_trials: 50
+
+  # Maximum optimization time in seconds (null for no limit)
+  timeout: null
+
+  # Study name for Optuna
+  study_name: "tri_objective_hpo_isic2018"
+
+  # Storage URL (null for in-memory, or use SQLite/PostgreSQL)
+  # Example: "sqlite:///results/hpo/optuna.db"
+  storage: null
+
+  # Whether to load existing study if available
+  load_if_exists: true
+
+  # Optimization direction
+  direction: "maximize"
+
+  # Number of parallel jobs (-1 for all cores)
+  n_jobs: 1
+
+  # Show progress bar during optimization
+  show_progress_bar: true
+
+  # Run garbage collection after each trial
+  gc_after_trial: true
+
+  # Random seed for reproducibility
+  seed: 42
+
+# =============================================================================
+# Sampler Configuration
+# =============================================================================
+sampler:
+  # Sampler type: tpe, cmaes, random, grid, nsgaii
+  name: "tpe"
+
+  # TPE-specific parameters
+  tpe:
+    # Number of startup trials before using TPE
+    n_startup_trials: 5
+
+    # Use multivariate TPE
+    multivariate: true
+
+    # Constant liar for parallel optimization
+    constant_liar: false
+
+# =============================================================================
+# Pruner Configuration
+# =============================================================================
+pruner:
+  # Pruner type: median, percentile, hyperband, successive_halving,
+  #              threshold, patience, combined, nop
+  name: "median"
+
+  # Number of trials before pruning starts
+  n_startup_trials: 5
+
+  # Number of steps (epochs) before pruning within a trial
+  n_warmup_steps: 10
+
+  # Interval between pruning checks
+  interval_steps: 1
+
+  # Additional parameters for specific pruners
+  params:
+    # For percentile pruner
+    percentile: 25.0
+
+    # For threshold pruner
+    threshold: 0.3
+
+    # For patience pruner
+    patience: 10
+    min_delta: 0.001
+
+# =============================================================================
+# Search Space Configuration
+# =============================================================================
+search_space:
+  # ==========================================================================
+  # Tri-Objective Loss Weights
+  # ==========================================================================
+  # L_total = L_task + λ_rob × L_rob + λ_expl × L_expl
+
+  lambda_rob:
+    # Weight for robustness loss (TRADES)
+    low: 0.1
+    high: 0.5
+    step: 0.05
+    default: 0.3
+    description: "Weight for robustness loss component"
+
+  lambda_expl:
+    # Weight for explanation loss (SSIM + TCAV)
+    low: 0.05
+    high: 0.2
+    step: 0.01
+    default: 0.1
+    description: "Weight for explanation loss component"
+
+  gamma:
+    # Weight for TCAV within explanation loss
+    # L_expl = L_stab + γ × L_concept
+    low: 0.2
+    high: 0.8
+    step: 0.1
+    default: 0.5
+    description: "Weight for TCAV concept regularization"
+
+  # ==========================================================================
+  # TRADES Parameters (Optional - can be fixed)
+  # ==========================================================================
+
+  beta:
+    # TRADES trade-off parameter
+    low: 3.0
+    high: 10.0
+    step: 0.5
+    default: 6.0
+    enabled: false  # Set to true to include in search
+    description: "TRADES trade-off parameter"
+
+  epsilon:
+    # Perturbation budget
+    choices: [0.0157, 0.0235, 0.0314]  # 4/255, 6/255, 8/255
+    default: 0.0314  # 8/255
+    enabled: false
+    description: "Maximum perturbation magnitude (L-infinity)"
+
+  pgd_steps:
+    # Number of PGD attack steps
+    choices: [5, 7, 10]
+    default: 7
+    enabled: false
+    description: "PGD attack steps during training"
+
+  # ==========================================================================
+  # Explanation Parameters (Optional)
+  # ==========================================================================
+
+  artifact_threshold:
+    # Threshold for artifact TCAV penalty
+    low: 0.2
+    high: 0.4
+    step: 0.05
+    default: 0.3
+    enabled: false
+    description: "Artifact TCAV penalty threshold"
+
+  medical_threshold:
+    # Threshold for medical TCAV reward
+    low: 0.4
+    high: 0.6
+    step: 0.05
+    default: 0.5
+    enabled: false
+    description: "Medical TCAV reward threshold"
+
+  medical_weight:
+    # Weight for medical concept encouragement
+    low: 0.3
+    high: 0.7
+    step: 0.1
+    default: 0.5
+    enabled: false
+    description: "Medical concept encouragement weight"
+
+  # ==========================================================================
+  # Training Parameters (Optional)
+  # ==========================================================================
+
+  learning_rate:
+    # Initial learning rate
+    low: 0.0001
+    high: 0.01
+    log_scale: true
+    default: 0.01
+    enabled: false
+    description: "Initial learning rate"
+
+  weight_decay:
+    # L2 regularization
+    low: 0.00001
+    high: 0.001
+    log_scale: true
+    default: 0.0005
+    enabled: false
+    description: "L2 regularization weight"
+
+  batch_size:
+    # Training batch size
+    choices: [16, 32, 64]
+    default: 32
+    enabled: false
+    description: "Training batch size"
+
+# =============================================================================
+# Objective Configuration
+# =============================================================================
+objective:
+  # Objective type: weighted, pareto
+  type: "weighted"
+
+  # Metric weights for weighted objective (must sum to 1.0)
+  weights:
+    clean_accuracy:
+      weight: 0.3
+      direction: "maximize"
+      min_value: 0.0
+      max_value: 1.0
+
+    robust_accuracy:
+      weight: 0.4
+      direction: "maximize"
+      min_value: 0.0
+      max_value: 1.0
+
+    ssim:
+      weight: 0.2
+      direction: "maximize"
+      min_value: 0.0
+      max_value: 1.0
+
+    cross_site_auroc:
+      weight: 0.1
+      direction: "maximize"
+      min_value: 0.5  # Random baseline
+      max_value: 1.0
+
+# =============================================================================
+# Training Configuration (For each HPO trial)
+# =============================================================================
+training:
+  # Dataset configuration
+  dataset:
+    name: "isic2018"
+    data_root: "data/processed"
+    image_size: 224
+    num_classes: 7
+
+  # Model configuration
+  model:
+    architecture: "resnet50"
+    pretrained: true
+    freeze_backbone: false
+
+  # Training loop
+  num_epochs: 30  # Reduced for HPO (full training uses 50)
+  batch_size: 32
+  eval_batch_size: 64
+  num_workers: 4
+
+  # Optimizer
+  optimizer:
+    name: "sgd"
+    learning_rate: 0.01
+    momentum: 0.9
+    weight_decay: 0.0005
+    nesterov: true
+
+  # Scheduler
+  scheduler:
+    name: "cosine"
+    warmup_epochs: 5
+    min_lr: 0.000001
+
+  # Robustness training
+  robustness:
+    epsilon: 0.0314  # 8/255
+    pgd_steps: 7
+    step_size: null  # Auto: epsilon/4
+
+  # Explanation
+  explanation:
+    perturbation_epsilon: 0.0078  # 2/255
+    target_layer: "layer4"
+
+  # Checkpointing
+  checkpoint:
+    save_every: 10
+    save_best: true
+    metric: "objective"
+
+# =============================================================================
+# Output Configuration
+# =============================================================================
+output:
+  # Base output directory
+  base_dir: "results/hpo"
+
+  # Study-specific directory (templated)
+  study_dir: "${output.base_dir}/${hpo.study_name}"
+
+  # Save trial results
+  save_trials: true
+
+  # Save best model
+  save_best_model: true
+
+  # Visualization
+  plots:
+    optimization_history: true
+    param_importances: true
+    parallel_coordinate: true
+    slice_plot: true
+
+  # Export formats
+  export:
+    csv: true
+    json: true
+    yaml: true
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+
+  # Log to file (templated)
+  log_file: "${output.study_dir}/hpo.log"
+
+  # MLflow tracking
+  mlflow:
+    enabled: true
+    experiment_name: "tri_objective_hpo"
+    tracking_uri: "mlruns"
+
+  # Console output
+  console:
+    show_progress: true
+    show_trial_results: true
+
+# =============================================================================
+# Hardware Configuration
+# =============================================================================
+hardware:
+  # GPU settings
+  device: "cuda"  # cuda, cpu, or auto
+  gpu_ids: [0]
+
+  # Memory optimization
+  mixed_precision: true
+  gradient_checkpointing: false
+
+  # Distributed (for multi-GPU)
+  distributed: false

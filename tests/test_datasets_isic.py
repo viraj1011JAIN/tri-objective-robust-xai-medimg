@@ -39,8 +39,13 @@ def test_isic_dataset_splits_and_labels(tmp_path: Path) -> None:
     t_train = get_isic_transforms(split="train", image_size=32)
     t_val = get_isic_transforms(split="val", image_size=32)
 
-    ds_train = ISICDataset(root=root, split="train", transforms=t_train)
-    ds_val = ISICDataset(root=root, split="val", transforms=t_val)
+    metadata_path = root / "metadata.csv"
+    ds_train = ISICDataset(
+        root=root, split="train", transforms=t_train, csv_path=metadata_path
+    )
+    ds_val = ISICDataset(
+        root=root, split="val", transforms=t_val, csv_path=metadata_path
+    )
 
     assert len(ds_train) == 1
     assert len(ds_val) == 1
@@ -61,7 +66,10 @@ def test_isic_dataset_splits_and_labels(tmp_path: Path) -> None:
 
 def test_isic_class_statistics(tmp_path: Path) -> None:
     root = _create_dummy_isic_root(tmp_path)
-    ds_train = ISICDataset(root=root, split="train", transforms=None)
+    metadata_path = root / "metadata.csv"
+    ds_train = ISICDataset(
+        root=root, split="train", transforms=None, csv_path=metadata_path
+    )
 
     stats = ds_train.compute_class_statistics()
     assert stats["dataset"] == "ISIC"

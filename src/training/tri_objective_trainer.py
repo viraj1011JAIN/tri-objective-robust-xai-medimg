@@ -369,8 +369,8 @@ class TriObjectiveTrainer(BaseTrainer):
 
         Parameters
         ----------
-        batch : Tuple[Tensor, Tensor]
-            (images, labels)
+        batch : Tuple[Tensor, Tensor] or Tuple[Tensor, Tensor, Dict]
+            (images, labels) or (images, labels, meta)
         batch_idx : int
             Batch index
 
@@ -379,7 +379,11 @@ class TriObjectiveTrainer(BaseTrainer):
         metrics : Dict[str, float]
             Training metrics for this batch
         """
-        images, labels = batch
+        # Handle both (images, labels) and (images, labels, meta)
+        if len(batch) == 3:
+            images, labels, _ = batch
+        else:
+            images, labels = batch
         images = images.to(self.device)
         labels = labels.to(self.device)
 
@@ -423,20 +427,11 @@ class TriObjectiveTrainer(BaseTrainer):
             return_metrics=True,
         )
 
-        # 7. Backward pass
-        self.optimizer.zero_grad()
-        loss.backward()
+        # NOTE: BaseTrainer handles backward pass, optimizer step,
+        # and gradient clipping. Do NOT do backward() here -
+        # return loss tensor for BaseTrainer to handle
 
-        # Gradient clipping
-        if self.config.gradient_clip_val > 0:
-            torch.nn.utils.clip_grad_norm_(
-                self.model.parameters(),
-                self.config.gradient_clip_val,
-            )
-
-        self.optimizer.step()
-
-        # 8. Compute accuracy
+        # 7. Compute accuracy
         with torch.no_grad():
             model_output = self.model(images)
             # Handle dict vs tensor output
@@ -457,9 +452,8 @@ class TriObjectiveTrainer(BaseTrainer):
                 total = batch_size * self.num_classes
                 accuracy = correct / total
 
-        # 9. Return metrics (convert LossMetrics to dict)
+        # 8. Return (loss_tensor, metrics) - BaseTrainer signature
         metrics = {
-            "loss": loss.item(),
             "task_loss": loss_metrics.loss_task,
             "robustness_loss": loss_metrics.loss_rob,
             "explanation_loss": loss_metrics.loss_expl,
@@ -467,7 +461,7 @@ class TriObjectiveTrainer(BaseTrainer):
             "accuracy": accuracy,
         }
 
-        return metrics
+        return loss, metrics
 
     def validation_step(
         self,
@@ -479,8 +473,8 @@ class TriObjectiveTrainer(BaseTrainer):
 
         Parameters
         ----------
-        batch : Tuple[Tensor, Tensor]
-            (images, labels)
+        batch : Tuple[Tensor, Tensor] or Tuple[Tensor, Tensor, Dict]
+            (images, labels) or (images, labels, meta)
         batch_idx : int
             Batch index
 
@@ -489,7 +483,11 @@ class TriObjectiveTrainer(BaseTrainer):
         metrics : Dict[str, float]
             Validation metrics for this batch
         """
-        images, labels = batch
+        # Handle both (images, labels) and (images, labels, meta)
+        if len(batch) == 3:
+            images, labels, _ = batch
+        else:
+            images, labels = batch
         images = images.to(self.device)
         labels = labels.to(self.device)
 
@@ -522,11 +520,10 @@ class TriObjectiveTrainer(BaseTrainer):
                 loss = F.binary_cross_entropy_with_logits(logits, labels.float())
 
         metrics = {
-            "loss": loss.item(),
             "accuracy": accuracy,
         }
 
-        return metrics
+        return loss, metrics
 
     def on_train_epoch_end(self, epoch: int, metrics: Dict[str, float]) -> None:
         """

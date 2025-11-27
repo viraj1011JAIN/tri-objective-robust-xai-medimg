@@ -596,10 +596,11 @@ class TestTrainingStep:
         )
 
         batch = next(iter(train_loader_multiclass))
-        metrics = trainer.training_step(batch, batch_idx=0)
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
 
-        # Check new API metrics (Phase 7.2)
-        assert "loss" in metrics
+        # Check BaseTrainer API - training_step returns (loss, metrics)
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
         assert "task_loss" in metrics
         assert "robustness_loss" in metrics
         assert "explanation_loss" in metrics
@@ -643,9 +644,10 @@ class TestTrainingStep:
         )
 
         batch = next(iter(train_loader_multilabel))
-        metrics = trainer.training_step(batch, batch_idx=0)
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
         assert "accuracy" in metrics
         assert 0.0 <= metrics["accuracy"] <= 1.0
 
@@ -665,9 +667,10 @@ class TestTrainingStep:
         )
 
         batch = next(iter(train_loader_multiclass))
-        metrics = trainer.training_step(batch, batch_idx=0)
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
         assert "accuracy" in metrics
 
     def test_training_step_without_embeddings(
@@ -690,10 +693,11 @@ class TestTrainingStep:
         )
 
         batch = next(iter(train_loader_multiclass))
-        metrics = trainer.training_step(batch, batch_idx=0)
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
-        assert metrics["explanation_loss"] == 0.0  # No explanation without CAVs
+        assert loss is not None
+        # No explanation loss without CAVs
+        assert metrics["explanation_loss"] == 0.0
 
     def test_training_step_with_heatmaps(
         self, simple_model, train_loader_multiclass, device
@@ -715,10 +719,11 @@ class TestTrainingStep:
         )
 
         batch = next(iter(train_loader_multiclass))
-        metrics = trainer.training_step(batch, batch_idx=0)
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
-        assert "explanation_loss" in metrics  # Check explanation loss
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
+        assert "explanation_loss" in metrics
 
     def test_training_step_without_gradient_clipping(
         self, simple_model, train_loader_multiclass, device
@@ -740,9 +745,10 @@ class TestTrainingStep:
         )
 
         batch = next(iter(train_loader_multiclass))
-        metrics = trainer.training_step(batch, batch_idx=0)
+        loss, metrics = trainer.training_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
 
 
 # ---------------------------------------------------------------------------
@@ -770,12 +776,12 @@ class TestValidationStep:
         )
 
         batch = next(iter(val_loader_multiclass))
-        metrics = trainer.validation_step(batch, batch_idx=0)
+        loss, metrics = trainer.validation_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
         assert "accuracy" in metrics
         assert 0.0 <= metrics["accuracy"] <= 1.0
-        assert isinstance(metrics["loss"], float)
 
     def test_validation_step_multilabel(
         self, val_loader_multilabel, train_loader_multilabel, device
@@ -816,9 +822,10 @@ class TestValidationStep:
         )
 
         batch = next(iter(val_loader_multilabel))
-        metrics = trainer.validation_step(batch, batch_idx=0)
+        loss, metrics = trainer.validation_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
         assert "accuracy" in metrics
         assert 0.0 <= metrics["accuracy"] <= 1.0
 
@@ -843,9 +850,10 @@ class TestValidationStep:
         )
 
         batch = next(iter(val_loader_multiclass))
-        metrics = trainer.validation_step(batch, batch_idx=0)
+        loss, metrics = trainer.validation_step(batch, batch_idx=0)
 
-        assert "loss" in metrics
+        assert loss is not None
+        assert isinstance(loss, torch.Tensor)
         assert "accuracy" in metrics
 
 
@@ -1116,12 +1124,14 @@ class TestIntegration:
         )
 
         # Run a few training steps
+        train_losses = []
         for batch_idx, batch in enumerate(train_loader_multiclass):
             if batch_idx >= 2:
                 break
-            metrics = trainer.training_step(batch, batch_idx=batch_idx)
-            assert "loss" in metrics
-            assert metrics["loss"] >= 0
+            loss, metrics = trainer.training_step(batch, batch_idx=batch_idx)
+            assert loss is not None
+            assert isinstance(loss, torch.Tensor)
+            train_losses.append(loss.item())
 
     def test_full_validation_flow(
         self, simple_model, train_loader_multiclass, val_loader_multiclass, device
@@ -1143,8 +1153,8 @@ class TestIntegration:
         for batch_idx, batch in enumerate(val_loader_multiclass):
             if batch_idx >= 2:
                 break
-            metrics = trainer.validation_step(batch, batch_idx=batch_idx)
-            assert "loss" in metrics
+            loss, metrics = trainer.validation_step(batch, batch_idx=batch_idx)
+            assert loss is not None
             assert "accuracy" in metrics
 
 
