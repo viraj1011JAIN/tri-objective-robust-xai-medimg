@@ -572,7 +572,7 @@ class ModelRegistry:
         if not ckpt_path.is_file():
             raise FileNotFoundError(f"Checkpoint file not found: {ckpt_path}")
 
-        checkpoint = torch.load(ckpt_path, map_location=map_location)
+        checkpoint = torch.load(ckpt_path, map_location=map_location, weights_only=False)
 
         # Restore model state
         if (

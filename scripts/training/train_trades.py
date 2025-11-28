@@ -720,7 +720,7 @@ def main():
     # Resume from checkpoint if specified
     if args.resume:
         logger.info(f"Resuming from checkpoint: {args.resume}")
-        checkpoint = torch.load(args.resume, map_location=device)
+        checkpoint = torch.load(args.resume, map_location=device, weights_only=False)
         model.load_state_dict(checkpoint["model_state_dict"])
 
     # Initialize trainer

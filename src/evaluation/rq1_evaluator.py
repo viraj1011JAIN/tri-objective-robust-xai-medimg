@@ -1087,7 +1087,11 @@ class RQ1Evaluator:
         """Load model from checkpoint."""
         # Implementation depends on your model loading logic
         # For now, return a placeholder
-        state_dict = torch.load(checkpoint.path, map_location=self.config.device)
+        state_dict = torch.load(
+            checkpoint.path,
+            map_location=self.config.device,
+            weights_only=False,  # Allow custom classes in checkpoint
+        )
 
         # Create model (you'll need to adapt this to your model architecture)
         from src.models import create_model  # Adjust import

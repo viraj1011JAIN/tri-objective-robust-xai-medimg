@@ -1040,7 +1040,7 @@ def main() -> None:
     # Resume from checkpoint if provided
     if args.resume:
         logger.info(f"Resuming from checkpoint: {args.resume}")
-        checkpoint = torch.load(args.resume, map_location=config.training.device)
+        checkpoint = torch.load(args.resume, map_location=config.training.device, weights_only=False)
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         if checkpoint["scheduler_state_dict"]:

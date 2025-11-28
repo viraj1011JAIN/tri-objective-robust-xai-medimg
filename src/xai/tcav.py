@@ -451,7 +451,7 @@ class TCAV:
         cav_path = self.config.cav_dir / f"{concept}_{layer}.pt"
         if cav_path.exists():
             logger.info(f"Loading existing CAV from {cav_path}")
-            state = torch.load(cav_path)
+            state = torch.load(cav_path, weights_only=False)
             cav = state["cav"]
             metrics = state["metrics"]
 
@@ -701,7 +701,7 @@ class TCAV:
         if not path.exists():
             raise FileNotFoundError(f"State file not found: {path}")
 
-        state = torch.load(path)
+        state = torch.load(path, weights_only=False)
         self.cavs = state["cavs"]
         self.cav_metrics = state["cav_metrics"]
 
