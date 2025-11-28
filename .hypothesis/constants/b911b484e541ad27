@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\training\tri_objective_trainer.py
+# hypothesis_version: 6.148.3
+
+[0.0001, 0.01, 0.2, 0.3, 0.5, 0.7, 1.5, 2.0, 6.0, 8.0, 255.0, 100, 224, 'accuracy', 'avgpool', 'cuda', 'embeddings', 'explanation_loss', 'get_embeddings', 'layer4', 'logits', 'multi_class', 'out', 'robustness_loss', 'task_loss', 'task_type', 'temperature']

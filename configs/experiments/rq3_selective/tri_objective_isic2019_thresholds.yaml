@@ -1,0 +1,33 @@
+model: tri
+dataset: objective_isic2019
+thresholds:
+  confidence:
+    metric: softmax_max
+    value: 0.55
+  stability:
+    metric: ssim
+    value: 0.4
+performance:
+  baseline_accuracy: 0.727
+  selective_accuracy: 0.9122085048010974
+  coverage: 0.729
+  improvement_pp: 18.52085048010974
+  confidence_interval:
+    lower: 0.8905537980696154
+    upper: 0.9321730758850715
+    level: 0.95
+statistics:
+  n_selected: 729
+  n_total: 1000
+  precision: 0.9122085048010974
+  recall: 0.9147180192572214
+  f1_score: 0.9134615384615384
+tuning_config:
+  objective: max_accuracy_at_coverage
+  target_coverage: 0.9
+metadata:
+  baseline_accuracy: 0.727
+  conf_score_mean: 0.7208165954934462
+  conf_score_std: 0.19186001549497128
+  stab_score_mean: 0.5590054644678928
+  stab_score_std: 0.14755085305912985

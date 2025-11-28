@@ -1,0 +1,33 @@
+model: baseline
+dataset: isic2019
+thresholds:
+  confidence:
+    metric: softmax_max
+    value: 0.55
+  stability:
+    metric: ssim
+    value: 0.4
+performance:
+  baseline_accuracy: 0.771
+  selective_accuracy: 0.9326287978863936
+  coverage: 0.757
+  improvement_pp: 16.162879788639362
+  confidence_interval:
+    lower: 0.9156469013308134
+    upper: 0.9504582842381945
+    level: 0.95
+statistics:
+  n_selected: 757
+  n_total: 1000
+  precision: 0.9326287978863936
+  recall: 0.9156939040207522
+  f1_score: 0.9240837696335078
+tuning_config:
+  objective: max_accuracy_at_coverage
+  target_coverage: 0.9
+metadata:
+  baseline_accuracy: 0.771
+  conf_score_mean: 0.7449365553486188
+  conf_score_std: 0.18624828934334897
+  stab_score_mean: 0.561514306900508
+  stab_score_std: 0.16118805715351162

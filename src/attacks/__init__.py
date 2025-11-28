@@ -36,16 +36,17 @@ Date: January 2025
 
 from __future__ import annotations
 
+from .auto_attack import AutoAttack, AutoAttackConfig, autoattack
+
 # Base classes
-from .base import BaseAttack, AttackConfig, AttackResult
+from .base import AttackConfig, AttackResult, BaseAttack
+from .cw import CarliniWagner, CWConfig, cw_attack
 
 # Attack implementations
-from .fgsm import FGSM, fgsm_attack
-from .pgd import PGD, pgd_attack
-from .cw import CarliniWagner, cw_attack
-from .auto_attack import AutoAttack, autoattack
+from .fgsm import FGSM, FGSMConfig, fgsm_attack
+from .pgd import PGD, PGDConfig, pgd_attack
 
-__version__ = "0.4.1"
+__version__ = "0.4.2"
 
 __all__ = [
     # Base
@@ -54,14 +55,18 @@ __all__ = [
     "AttackResult",
     # FGSM
     "FGSM",
+    "FGSMConfig",
     "fgsm_attack",
     # PGD
     "PGD",
+    "PGDConfig",
     "pgd_attack",
     # C&W
     "CarliniWagner",
+    "CWConfig",
     "cw_attack",
     # AutoAttack
     "AutoAttack",
+    "AutoAttackConfig",
     "autoattack",
 ]

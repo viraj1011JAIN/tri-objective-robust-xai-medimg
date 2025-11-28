@@ -1,0 +1,19 @@
+{
+  "total_samples": 200,
+  "baseline_accuracy": 0.915,
+  "multi_signal_accuracy_90": 0.9337016574585635,
+  "accuracy_gain_90": 0.018701657458563448,
+  "target_met": false,
+  "actual_coverage": 0.9081632653061225,
+  "mean_conf_softmax": 0.6590506532788276,
+  "mean_conf_entropy": 0.09966539152108254,
+  "mean_attn_max": 0.01104114177171141,
+  "mean_multi_signal": 0.39984684867598114,
+  "high_attn_fraction": 0.4,
+  "high_conf_fraction": 1.0,
+  "q1_samples": 52,
+  "q1_accuracy": 0.9807692307692307,
+  "q2_samples": 28,
+  "q3_samples": 62,
+  "q4_samples": 58
+}

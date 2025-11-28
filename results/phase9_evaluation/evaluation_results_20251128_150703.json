@@ -1,0 +1,276 @@
+{
+  "pairwise_comparisons": {
+    "TriObjective_vs_Baseline": {
+      "accuracy": {
+        "mean_difference": -0.038987922467699,
+        "cohens_d": -1.8539573588228468,
+        "hedges_g": -1.7756211323937126,
+        "effect_interpretation": "large",
+        "p_value": 0.0013149446697132139,
+        "significant": "True",
+        "difference_95_ci": [
+          -0.05518765566535272,
+          -0.022242279519766695
+        ],
+        "winner": "Baseline"
+      },
+      "robustness": {
+        "mean_difference": 0.0976139840049367,
+        "cohens_d": 2.6825368087744446,
+        "hedges_g": 2.569190183051581,
+        "effect_interpretation": "large",
+        "p_value": 0.00043963875262656454,
+        "significant": "True",
+        "difference_95_ci": [
+          0.06890393614024895,
+          0.12532380095123455
+        ],
+        "winner": "TriObjective"
+      },
+      "interpretability": {
+        "mean_difference": 0.14658405708142908,
+        "cohens_d": 2.7906911103308363,
+        "hedges_g": 2.6727745845422097,
+        "effect_interpretation": "large",
+        "p_value": 0.0005828399431792743,
+        "significant": "True",
+        "difference_95_ci": [
+          0.10160199040062903,
+          0.18856864116680516
+        ],
+        "winner": "TriObjective"
+      }
+    },
+    "TriObjective_vs_Adversarial": {
+      "accuracy": {
+        "mean_difference": 0.04026707557491194,
+        "cohens_d": 2.2470957667846014,
+        "hedges_g": 2.152148058328914,
+        "effect_interpretation": "large",
+        "p_value": 0.0005828399431792743,
+        "significant": "True",
+        "difference_95_ci": [
+          0.025901500393028312,
+          0.05501098026580442
+        ],
+        "winner": "TriObjective"
+      },
+      "robustness": {
+        "mean_difference": -0.048356631026828856,
+        "cohens_d": -1.4403581648204011,
+        "hedges_g": -1.3794979606730604,
+        "effect_interpretation": "large",
+        "p_value": 0.009108496398030963,
+        "significant": "True",
+        "difference_95_ci": [
+          -0.07737327388395719,
+          -0.019194593664912666
+        ],
+        "winner": "Adversarial"
+      },
+      "interpretability": {
+        "mean_difference": 0.2406187657447575,
+        "cohens_d": 6.403327532820907,
+        "hedges_g": 6.132764397631292,
+        "effect_interpretation": "large",
+        "p_value": 0.00018267179110955002,
+        "significant": "True",
+        "difference_95_ci": [
+          0.2124287377844075,
+          0.2714989017762708
+        ],
+        "winner": "TriObjective"
+      }
+    },
+    "Baseline_vs_Adversarial": {
+      "accuracy": {
+        "mean_difference": 0.07925499804261094,
+        "cohens_d": 4.2403786097232565,
+        "hedges_g": 4.061207682551852,
+        "effect_interpretation": "large",
+        "p_value": 0.00018267179110955002,
+        "significant": "True",
+        "difference_95_ci": [
+          0.06345244925371307,
+          0.09551345896799382
+        ],
+        "winner": "Baseline"
+      },
+      "robustness": {
+        "mean_difference": -0.14597061503176556,
+        "cohens_d": -4.38162803691999,
+        "hedges_g": -4.196488824092385,
+        "effect_interpretation": "large",
+        "p_value": 0.00018267179110955002,
+        "significant": "True",
+        "difference_95_ci": [
+          -0.171966379323283,
+          -0.11644540518794162
+        ],
+        "winner": "Adversarial"
+      },
+      "interpretability": {
+        "mean_difference": 0.09403470866332841,
+        "cohens_d": 1.6187211555412526,
+        "hedges_g": 1.5503244869972561,
+        "effect_interpretation": "large",
+        "p_value": 0.004586392080253494,
+        "significant": "True",
+        "difference_95_ci": [
+          0.04483189391340208,
+          0.14145274839973623
+        ],
+        "winner": "Baseline"
+      }
+    }
+  },
+  "statistical_summary": {
+    "TriObjective": {
+      "accuracy": {
+        "mean": 0.8444539108832636,
+        "std": 0.01930328129460534,
+        "median": 0.8435316243715023,
+        "iqr": 0.017166217300619513,
+        "ci_95": [
+          0.8159211650191138,
+          0.8805102462510496
+        ],
+        "n_samples": 10
+      },
+      "robustness": {
+        "mean": 0.6700170395898746,
+        "std": 0.03474590633028958,
+        "median": 0.6683569238687043,
+        "iqr": 0.030899191141115057,
+        "ci_95": [
+          0.6186580970344049,
+          0.7349184432518892
+        ],
+        "n_samples": 10
+      },
+      "interpretability": {
+        "mean": 0.7279776571143104,
+        "std": 0.026771584947110315,
+        "median": 0.7331069480159671,
+        "iqr": 0.04869975863289633,
+        "ci_95": [
+          0.6878919587773445,
+          0.7607408913414757
+        ],
+        "n_samples": 10
+      }
+    },
+    "Baseline": {
+      "accuracy": {
+        "mean": 0.8834418333509626,
+        "std": 0.020577177908834846,
+        "median": 0.8855891129489579,
+        "iqr": 0.02843000923183603,
+        "ci_95": [
+          0.8575041852476298,
+          0.916997149491301
+        ],
+        "n_samples": 10
+      },
+      "robustness": {
+        "mean": 0.5724030555849379,
+        "std": 0.034295296514724745,
+        "median": 0.57598185491493,
+        "iqr": 0.047383348719726825,
+        "ci_95": [
+          0.5291736420793831,
+          0.6283285824855017
+        ],
+        "n_samples": 10
+      },
+      "interpretability": {
+        "mean": 0.5813936000328813,
+        "std": 0.06518789826283636,
+        "median": 0.5815438848909801,
+        "iqr": 0.08315540849628533,
+        "ci_95": [
+          0.4909448275794616,
+          0.6972352918930587
+        ],
+        "n_samples": 10
+      }
+    },
+    "Adversarial": {
+      "accuracy": {
+        "mean": 0.8041868353083517,
+        "std": 0.014331279472616067,
+        "median": 0.8052968839523781,
+        "iqr": 0.0169687969616632,
+        "ci_95": [
+          0.7825820259614954,
+          0.8259596638772738
+        ],
+        "n_samples": 10
+      },
+      "robustness": {
+        "mean": 0.7183736706167034,
+        "std": 0.02866255894523212,
+        "median": 0.7205937679047563,
+        "iqr": 0.033937593923326514,
+        "ci_95": [
+          0.675164051922991,
+          0.7619193277545478
+        ],
+        "n_samples": 10
+      },
+      "interpretability": {
+        "mean": 0.4873588913695529,
+        "std": 0.04271952125738944,
+        "median": 0.48958120055056176,
+        "iqr": 0.047779931825490785,
+        "ci_95": [
+          0.4150488215880605,
+          0.5492712352909314
+        ],
+        "n_samples": 10
+      }
+    }
+  },
+  "pareto_analysis": {
+    "pareto_optimal_models": [
+      "TriObjective",
+      "Baseline",
+      "Adversarial"
+    ],
+    "pareto_indices": [
+      0,
+      1,
+      2
+    ],
+    "n_pareto_optimal": 3,
+    "dominance_ratio": 1.0,
+    "objective_matrix": [
+      [
+        0.8444539108832636,
+        0.6700170395898746,
+        0.7279776571143104
+      ],
+      [
+        0.8834418333509626,
+        0.5724030555849379,
+        0.5813936000328813
+      ],
+      [
+        0.8041868353083517,
+        0.7183736706167034,
+        0.4873588913695529
+      ]
+    ]
+  },
+  "recommendations": [
+    "Large significant difference in accuracy for TriObjective_vs_Baseline: d = -1.854, p = 0.0013",
+    "Large significant difference in robustness for TriObjective_vs_Baseline: d = 2.683, p = 0.0004",
+    "Large significant difference in interpretability for TriObjective_vs_Baseline: d = 2.791, p = 0.0006",
+    "Large significant difference in accuracy for TriObjective_vs_Adversarial: d = 2.247, p = 0.0006",
+    "Large significant difference in robustness for TriObjective_vs_Adversarial: d = -1.440, p = 0.0091",
+    "Large significant difference in interpretability for TriObjective_vs_Adversarial: d = 6.403, p = 0.0002",
+    "Large significant difference in accuracy for Baseline_vs_Adversarial: d = 4.240, p = 0.0002",
+    "Large significant difference in robustness for Baseline_vs_Adversarial: d = -4.382, p = 0.0002",
+    "Large significant difference in interpretability for Baseline_vs_Adversarial: d = 1.619, p = 0.0046"
+  ]
+}

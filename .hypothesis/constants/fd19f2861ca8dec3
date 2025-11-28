@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\validation\stability_scorer.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-08, 0.75, 1.0, 2.0, 255.0, 'BaseStabilityScorer', 'DEFAULT_EPSILON', 'L2StabilityScorer', 'MS-SSIM', 'SSIM', 'SSIMStabilityScorer', 'StabilityMethod', 'StabilityScore', 'StabilityScorer', '__call__', 'all_metrics', 'batch_score', 'cosine', 'cosine_similarity', 'cpu', 'cuda', 'epsilon', 'explanation_shape', 'instability', 'l2', 'l2_distance', 'layer4', 'max', 'max_stability', 'mean', 'mean_stability', 'median', 'median_stability', 'metadata', 'method', 'method_variant', 'min', 'min_stability', 'ms_ssim', 'normalized_l2', 'perturbation_norm', 'spearman', 'spearman_rho', 'ssim', 'stability', 'stable_fraction', 'std', 'std_stability', 'window_size']

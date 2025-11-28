@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\training\train_baseline.py
+# hypothesis_version: 6.148.3
+
+[1e-05, 0.001, 0.2, 0.8, 1.0, 224, 256, 512, '--checkpoint-dir', '--config', '--device', '--log-dir', '--results-dir', '--seed', '=', 'Results saved to %s', '__main__', 'baseline', 'batch_size', 'best_epoch', 'best_val_loss', 'checkpoints/baseline', 'chest_x_ray', 'chest_xray', 'chestxray14', 'cpu', 'cuda', 'dataset', 'device', 'eval_every_n_epochs', 'experiment', 'final_val_loss', 'gradient_clip_val', 'history', 'isic', 'isic2018', 'isic_2018', 'learning_rate', 'log_every_n_steps', 'logs/baseline', 'lr', 'max_epochs', 'model', 'name', 'nih_chestxray14', 'num_classes', 'pretrained', 'resnet50', 'results/baseline', 'seed', 'train', 'train.log', 'training', 'utf-8', 'val', 'val_loss', 'w', 'weight_decay']

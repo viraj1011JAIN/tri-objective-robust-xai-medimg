@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\concept_bank.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.05, 0.1, 0.15, 0.2, 0.3, 0.35, 0.4, 0.5, 0.65, 0.7, 0.8, 0.85, 0.9, 1.0, 2.0, 100.0, 500.0, 100, 150, 180, 200, 224, 240, 255, 256, 1000, 5000, 10000, '\nArtifact Concepts:', '\nMedical Concepts:', '*.jpg', '*.png', '=', 'CONCEPT BANK SUMMARY', 'absent', 'add', 'artifact_concepts', 'artifacts', 'asymmetry', 'black_borders', 'blank_regions', 'blue_white_veil', 'blue_whitish_veil', 'borders', 'cardiac_silhouette', 'chest_xray', 'concepts', 'config', 'costophrenic_angle', 'derm', 'dermoscopy', 'dots', 'dots_and_globules', 'dvc', 'extracted', 'globules', 'hair', 'image_id', 'ink_marks', 'lung_opacity', 'medical', 'medical_concepts', 'metadata.json', 'modality', 'patch_size', 'patient_markers', 'pigment_network', 'random', 'random_patches', 'regression', 'rib_shadows', 'ruler', 'seed', 'statistics', 'streaks', 'text_overlay', 'total_patches', 'w']

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\utils\reproducibility.py
+# hypothesis_version: 6.148.3
+
+[12345, ':4096:8', 'PYTHONHASHSEED', 'ReproducibilityState', 'benchmark', 'cpu', 'cuda', 'cuda_available', 'cuda_device_count', 'cudnn', 'cudnn_benchmark', 'cudnn_deterministic', 'deterministic', 'env_PYTHONHASHSEED', 'get_seed_worker', 'hostname', 'make_torch_generator', 'mlflow', 'platform', 'processor', 'python_version', 'seed', 'seed_worker', 'set_deterministic', 'set_global_seed', 'set_seed', 'torch_version']

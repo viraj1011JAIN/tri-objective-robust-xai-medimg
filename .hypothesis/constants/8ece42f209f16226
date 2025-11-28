@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\baseline_explanation_quality.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-08, 0.224, 0.225, 0.229, 0.406, 0.456, 0.485, 0.5, 1.0, 1.96, 2.0, 255.0, 150, 255, '-', '=', 'Clean Grad-CAM', 'Clean Image', 'SSIM', 'Samples', 'ci_high', 'ci_low', 'conv2', 'cosine_similarity', 'cpu', 'cuda', 'deletion_ad', 'deletion_auc', 'faithfulness_adv', 'faithfulness_clean', 'features', 'heatmap_adv', 'heatmap_clean', 'heatmaps_adv', 'heatmaps_clean', 'image_adv', 'image_clean', 'images_adv', 'inf', 'insertion_ai', 'insertion_auc', 'l2_distance', 'label', 'layer4', 'mean', 'ms_ssim', 'n', 'num_samples', 'off', 'pointing_acc', 'spearman', 'ssim', 'stability', 'std', 'tight']

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\losses\calibration_loss.py
+# hypothesis_version: 6.148.3
+
+[0.1, 1.0, 1.5, 'CalibrationLoss', 'LabelSmoothingLoss', 'class_weights', 'mean', 'sum']

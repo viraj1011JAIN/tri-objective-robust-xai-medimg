@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\models\vit.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.5, 1.0, 224, 768, 'ViTB16Classifier', 'attention_rollout', 'cls', 'cls_token', 'conv_proj', 'heads', 'hidden_dim', 'mean', 'patch_map', 'patch_size', 'patch_tokens', 'tokens']

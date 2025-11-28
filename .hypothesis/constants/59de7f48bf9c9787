@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\evaluation\tradeoff_analysis.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-10, 0.1, '--output', '--results_dir', 'PGD-AT', 'TRADES', 'Trade-off Analysis', '__main__', 'all_points', 'clean_accuracy', 'hypervolume', 'index', 'knee_point', 'maximize', 'method', 'methods', 'num_methods', 'num_objectives', 'num_points', 'objectives', 'pareto', 'pgd_at', 'points', 'r', 'robust_accuracy', 'trades', 'values', 'w']

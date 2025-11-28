@@ -1,0 +1,33 @@
+model: trades
+dataset: isic2019
+thresholds:
+  confidence:
+    metric: softmax_max
+    value: 0.55
+  stability:
+    metric: ssim
+    value: 0.4
+performance:
+  baseline_accuracy: 0.746
+  selective_accuracy: 0.931129476584022
+  coverage: 0.726
+  improvement_pp: 18.5129476584022
+  confidence_interval:
+    lower: 0.91268758526603
+    upper: 0.9490657271314429
+    level: 0.95
+statistics:
+  n_selected: 726
+  n_total: 1000
+  precision: 0.931129476584022
+  recall: 0.9061662198391421
+  f1_score: 0.9184782608695652
+tuning_config:
+  objective: max_accuracy_at_coverage
+  target_coverage: 0.9
+metadata:
+  baseline_accuracy: 0.746
+  conf_score_mean: 0.7354603474814787
+  conf_score_std: 0.18253424542496421
+  stab_score_mean: 0.5181083578145151
+  stab_score_std: 0.15075061560654435

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\attacks\cw.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-06, 0.001, 0.01, 1.0, 1000000000.0, 10000000000.0, 100, 1000, 'C&W-L2', 'cpu', 'cuda', 'inf']

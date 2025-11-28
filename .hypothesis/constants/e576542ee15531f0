@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\evaluation\orthogonality.py
+# hypothesis_version: 6.148.3
+
+[0.05, 0.3, 0.7, 100, 123, 300, 456, '%.4f', 'Clean Acc (%)', 'Cross-Site AUROC', 'Model', 'Robust Acc (%)', '_', 'baseline', 'blue', 'clean_accuracy', 'comparison_table.csv', 'comparison_table.tex', 'cross_site_auroc', 'dataset', 'effect_size', 'gray', 'green', 'higher', 'interpretation', 'is_orthogonal', 'is_significant', 'isic2018', 'lower', 'mean', 'metric', 'metrics.json', 'model_a', 'model_b', 'model_results', 'p_value', 'paired_t_test', 'pdf', 'pgd_at', 'red', 'robust_accuracy', 'statistic', 'statistical_tests', 'std', 'summary', 'test_name', 'tight', 'trades', 'w', 'y']

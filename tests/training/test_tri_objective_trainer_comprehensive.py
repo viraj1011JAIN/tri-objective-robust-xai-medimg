@@ -612,10 +612,14 @@ class TestIntegration:
         base_config,
     ):
         """Test trainer is compatible with multi-GPU setup."""
-        if not torch.cuda.is_available() or torch.cuda.device_count() < 2:
-            pytest.skip("Multi-GPU not available")
+        # Test DataParallel compatibility even with single GPU/CPU
+        # DataParallel should work with single device as well
+        if torch.cuda.is_available():
+            device_count = torch.cuda.device_count()
+        else:
+            device_count = 1  # CPU mode
 
-        # Wrap model in DataParallel
+        # Wrap model in DataParallel - works even with single device
         model = nn.DataParallel(simple_cnn_model)
         optimizer = torch.optim.Adam(model.parameters())
 

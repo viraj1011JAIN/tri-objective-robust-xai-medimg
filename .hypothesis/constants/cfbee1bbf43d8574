@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\losses\explanation_loss.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-08, 0.01, 0.03, 0.0448, 0.1333, 0.2363, 0.2856, 0.3, 0.3001, 0.5, 1.0, 1.5, 2.0, 10.0, 255.0, 224, 256, 1000, 2048, '.', 'ExplanationLoss', 'SSIMKernelType', 'SSIMStabilityLoss', 'TCavConceptLoss', 'artifact_tcav_mean', 'bilinear', 'combined_grad_flow', 'concept_grad_flow', 'concept_time_ms', 'cpu', 'cuda', 'gaussian', 'inf', 'loss_concept', 'loss_stability', 'loss_total', 'mean', 'medical_tcav_mean', 'none', 'ssim_grad_flow', 'ssim_score', 'ssim_time_ms', 'sum', 'tcav_ratio', 'total_time_ms', 'uniform', 'verify_gradient_flow']

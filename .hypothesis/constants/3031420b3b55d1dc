@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\models\resnet.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1.0, 'ResNet50Classifier', 'avg', 'conv1', 'layer1', 'layer2', 'layer3', 'layer4', 'max']

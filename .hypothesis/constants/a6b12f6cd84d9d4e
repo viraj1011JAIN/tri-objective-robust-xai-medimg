@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\faithfulness.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.15, 0.3, 0.5, 1.0, 100, 150, '% Pixels Deleted', '% Pixels Inserted', 'Deletion', 'Insertion', 'Prediction Score', 'bicubic', 'bilinear', 'blur', 'cuda', 'deletion_ad', 'deletion_auc', 'g-', 'green', 'insertion_ai', 'insertion_auc', 'mean', 'nearest', 'noise', 'pointing_acc', 'r-', 'red', 'tight', 'zero']

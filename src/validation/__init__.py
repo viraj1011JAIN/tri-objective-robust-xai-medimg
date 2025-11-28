@@ -22,6 +22,24 @@ from src.validation.confidence_scorer import (
     compute_confidence_metrics,
 )
 
+# Import stability scoring (Phase 8.2)
+from src.validation.stability_scorer import (
+    SSIMStabilityScorer,
+    StabilityMethod,
+    StabilityScore,
+    StabilityScorer,
+)
+
+# Import threshold tuning (Phase 8.4)
+from src.validation.threshold_tuner import (
+    ThresholdConfig,
+    ThresholdTuner,
+    TuningObjective,
+    TuningResult,
+    compare_strategies,
+    tune_thresholds_for_dataset,
+)
+
 # Conditional imports for Phase 7.7 components (may not exist yet)
 try:
     from src.validation.tri_objective_validator import (

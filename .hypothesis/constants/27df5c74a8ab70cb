@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\training\adversarial_trainer.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1.0, 4.0, 255, 'AdversarialTrainer', 'Robust Accuracy', 'Robust Validation', 'adv_acc', 'at', 'ce_loss', 'clean_acc', 'clean_loss', 'cuda', 'loss', 'mart', 'robust_acc', 'robust_loss', 'step_update', 'sum', 'trades', 'validate_robust']

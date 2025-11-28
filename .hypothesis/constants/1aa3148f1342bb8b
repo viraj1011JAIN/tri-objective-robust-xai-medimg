@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\datasets\derm7pt.py
+# hypothesis_version: 6.148.3
+
+[0.0, 'Derm7pt', 'class', 'concept_names', 'concepts', 'diagnosis', 'file', 'filename', 'image', 'image_id', 'image_path', 'label', 'labels', 'metadata.csv', 'num_concepts', 'raw_label', 'split', 'target', 'y']

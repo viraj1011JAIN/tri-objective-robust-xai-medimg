@@ -1,0 +1,33 @@
+model: trades
+dataset: isic2018_test
+thresholds:
+  confidence:
+    metric: softmax_max
+    value: 0.55
+  stability:
+    metric: ssim
+    value: 0.4
+performance:
+  baseline_accuracy: 0.756
+  selective_accuracy: 0.9386331938633193
+  coverage: 0.717
+  improvement_pp: 18.263319386331933
+  confidence_interval:
+    lower: 0.9203281853281853
+    upper: 0.9559233247635966
+    level: 0.95
+statistics:
+  n_selected: 717
+  n_total: 1000
+  precision: 0.9386331938633193
+  recall: 0.8902116402116402
+  f1_score: 0.9137813985064495
+tuning_config:
+  objective: max_accuracy_at_coverage
+  target_coverage: 0.9
+metadata:
+  baseline_accuracy: 0.756
+  conf_score_mean: 0.7296753276612973
+  conf_score_std: 0.1868034882798758
+  stab_score_mean: 0.510817073859498
+  stab_score_std: 0.14875654644925515

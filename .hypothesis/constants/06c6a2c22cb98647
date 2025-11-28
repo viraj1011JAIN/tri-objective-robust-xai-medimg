@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\attacks\base.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-12, 1.0, 8.0, 255.0, 'BaseAttack', 'attack_count', 'attack_name', 'avg_time', 'batch_size', 'clip_max', 'clip_min', 'cpu', 'cuda', 'device', 'epsilon', 'inf', 'iterations', 'logits', 'mean', 'mean_l2_dist', 'mean_linf_dist', 'random_seed', 'success_count', 'success_rate', 'targeted', 'time_elapsed', 'total_time', 'verbose']

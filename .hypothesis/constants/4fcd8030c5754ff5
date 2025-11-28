@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\data\ready_check.py
+# hypothesis_version: 6.148.3
+
+['--dataset', '--fail-on-error', '--metadata-name', '--output-json', '--root', '--verbose', '-v', '__main__', 'count', 'data_ready', 'error', 'image_id', 'image_path', 'label', 'metadata.csv', 'ok', 'output_json', 'split', 'store_true', 'train', 'utf-8', 'w', 'warning']

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\utils\dummy_data.py
+# hypothesis_version: 6.148.3
+
+[1.0, 100, 224, 1000, '=', 'All tests passed! ✓', 'Labels not binary', 'Labels out of range', '__main__', 'multi_class', 'multi_label']

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\datasets\transforms.py
+# hypothesis_version: 6.148.3
+
+[0.05, 0.1, 0.2, 0.224, 0.225, 0.229, 0.406, 0.456, 0.485, 0.5, 0.75, 0.8, 0.9, 1.0, 1.3333, 224, 'IMAGENET_MEAN', 'IMAGENET_STD', 'build_transforms', 'chest_xray', 'cxr', 'derm', 'derm7pt', 'get_isic_transforms', 'get_test_transforms', 'get_train_transforms', 'get_val_transforms', 'isic', 'isic_2018', 'isic_2019', 'isic_2020', 'nih_cxr', 'padchest', 'test', 'train', 'val']

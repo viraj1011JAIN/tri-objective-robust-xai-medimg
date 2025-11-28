@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\attacks\auto_attack.py
+# hypothesis_version: 6.148.3
+
+[1e-12, 8.0, 255.0, 100, 'AutoAttack', 'L2', 'Linf', 'apgd-ce', 'apgd-dlr', 'cpu', 'cuda', 'custom', 'inf', 'standard']

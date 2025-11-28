@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\losses\task_loss.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.25, 1.0, 2.0, 'FocalLoss', 'MultiLabelBCELoss', 'TaskLoss', 'class_weights', 'mean', 'multi_class', 'multi_label', 'none', 'pos_weight', 'sum']

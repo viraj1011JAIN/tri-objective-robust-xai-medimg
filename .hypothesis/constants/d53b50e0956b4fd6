@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\evaluation\multilabel_metrics.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-08, 0.02, 0.3, 0.4, 0.5, 0.95, 1.0, 2.5, 100, 300, 1000, '--', ':', 'AUROC', 'Blues', 'False Positive Rate', 'Neg', 'Per-Class AUROC', 'Pos', 'Predicted', 'True', 'True Positive Rate', 'auroc', 'auroc_by_class', 'auroc_macro', 'auroc_micro', 'auroc_per_class', 'auroc_weighted', 'bold', 'center', 'class_names', 'confusion_matrices', 'coverage_error', 'd', 'deeppink', 'f1', 'f1_macro', 'f1_per_class', 'gray', 'hamming_loss', 'j_statistic', 'k--', 'lower right', 'macro', 'micro', 'navy', 'num_classes', 'off', 'per_class_cm', 'per_class_metrics', 'precision', 'precision_macro', 'precision_per_class', 'ranking_loss', 'recall', 'recall_macro', 'recall_per_class', 'subset_accuracy', 'support', 'support_per_class', 'tight', 'weighted', 'x']

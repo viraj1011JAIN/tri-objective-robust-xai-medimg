@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\losses\robust_loss.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1.0, 3.0, 'MARTLoss', 'TRADESLoss', 'mart_loss', 'mean', 'none', 'sum', 'trades_loss']

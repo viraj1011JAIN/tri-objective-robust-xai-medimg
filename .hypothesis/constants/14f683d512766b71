@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\datasets\isic.py
+# hypothesis_version: 6.148.3
+
+['ISIC', 'class', 'diagnosis', 'file', 'filename', 'image', 'image_id', 'image_path', 'label', 'labels', 'raw_label', 'split', 'target', 'y']

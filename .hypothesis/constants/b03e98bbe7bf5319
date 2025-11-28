@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\evaluation\multilabel_calibration.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.3, 0.5, 0.7, 1.0, 2.5, 100, 300, '--', 'Frequency', 'Insufficient data', 'Model', 'Perfect', 'True probability', 'black', 'bold', 'brier_score_macro', 'center', 'ece_macro', 'ece_per_class', 'ece_weighted', 'error', 'gray', 'lower right', 'mce_macro', 'mce_per_class', 'mean_predicted_value', 'o', 'off', 'quantile', 'tight', 'uniform', 'y']

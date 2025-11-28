@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\api\main.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.2, 0.224, 0.225, 0.229, 0.3, 0.406, 0.456, 0.485, 0.7, 0.8, 1.0, 2.0, 4.0, 8.0, 255.0, 224, 255, 500, 503, 8000, '*', '/', '/docs', '/model/info', '/model/load', '/predict', '/redoc', '/robustness/evaluate', '0.0.0.0', '1.0.0', '=', 'API status', 'Class probabilities', 'Compute device', 'Confidence score', 'Grad-CAM explanation', 'Image file', 'Model architecture', 'Model not loaded', 'Number of classes', 'Number of parameters', 'Predicted class name', 'RGB', 'ResNet-50', '__main__', 'adv_confidence', 'attack_type', 'cpu', 'cuda', 'epsilon', 'fgsm', 'grad_cam', 'healthy', 'heatmap_shape', 'info', 'lambda_expl', 'lambda_rob', 'layer', 'layer4', 'logits', 'main:app', 'message', 'method', 'multi_class', 'note', 'pgd', 'pgd_epsilon', 'pgd_steps', 'shutdown', 'startup', 'status', 'success']

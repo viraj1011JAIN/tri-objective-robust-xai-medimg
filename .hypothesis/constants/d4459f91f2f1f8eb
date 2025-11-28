@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\baseline_tcav_evaluation.py
+# hypothesis_version: 6.148.3
+
+[0.01, 0.05, 0.1, 0.3, 0.35, 0.4, 0.5, 0.55, 0.6, 0.65, 0.7, 0.9, 2.0, 100.0, 300, '#2ecc71', '#e74c3c', 'Artifact', 'Mean TCAV Score', 'Medical', 'Network Layer', 'TCAV Score', 'artifact', 'artifact_layer_means', 'artifact_mean', 'artifact_scores', 'artifact_std', 'bold', 'bottom', 'center', 'cohens_d', 'cpu', 'cuda', 'green', 'layer_differences', 'medical', 'medical_layer_means', 'medical_mean', 'medical_scores', 'medical_std', 'monospace', 'nan', 'num_images', 'off', 'p_value', 'random', 'red', 'significant', 't_statistic', 'target_class', 'tight', 'top', 'upper right', 'whitegrid', 'y']

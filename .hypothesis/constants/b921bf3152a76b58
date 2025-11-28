@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\utils\metrics.py
+# hypothesis_version: 6.148.3
+
+[0.0, 100, 'accuracy', 'auroc', 'balanced_accuracy', 'clean_acc', 'cohen_kappa', 'confusion_matrix', 'f1_macro', 'macro', 'ovr', 'precision', 'recall', 'robust_acc', 'robustness_gap', 'robustness_ratio']

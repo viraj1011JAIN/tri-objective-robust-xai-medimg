@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\losses\base_loss.py
+# hypothesis_version: 6.148.3
+
+[0.0, '-inf', 'BaseLoss', 'inf', 'max_loss', 'mean', 'mean_loss', 'min_loss', 'name', 'none', 'num_calls', 'sum']

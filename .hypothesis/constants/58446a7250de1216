@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\datasets\base_dataset.py
+# hypothesis_version: 6.148.3
+
+[1.0, '.', '.bmp', '.gif', '.jpeg', '.jpg', '.png', '.tiff', '.webp', 'BaseDataset', 'BaseMedicalDataset', 'DATASET_NAME', 'RGB', 'Sample', 'Split', 'class_counts', 'class_names', 'class_weights', 'dataset', 'image', 'images', 'is_valid', 'missing_files', 'num_classes', 'num_missing_files', 'num_samples', 'path', 'positive_rates', 'split', 'test', 'testing', 'train', 'training', 'val', 'valid', 'validation']

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\attacks\pgd.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1.0, 4.0, 8.0, 255.0, 'PGD', 'cpu', 'cuda', 'logits']

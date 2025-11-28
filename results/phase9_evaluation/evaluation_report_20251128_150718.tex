@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{booktabs}
+\usepackage{amsmath}
+\begin{document}
+
+\title{Tri-Objective Model Evaluation Report}
+\date{2025-11-28 15:07:18}
+\maketitle
+
+\section{Statistical Summary}
+
+\begin{table}[h]
+\centering
+\caption{Model Performance Summary}
+\begin{tabular}{llcc}
+\toprule
+Model & Objective & Mean $\pm$ Std & 95\% CI \\
+\midrule
+TriObjective & accuracy & $0.8445 \pm 0.0193$ & $[0.8159, 0.8805]$ \\
+TriObjective & robustness & $0.6700 \pm 0.0347$ & $[0.6187, 0.7349]$ \\
+TriObjective & interpretability & $0.7280 \pm 0.0268$ & $[0.6879, 0.7607]$ \\
+Baseline & accuracy & $0.8834 \pm 0.0206$ & $[0.8575, 0.9170]$ \\
+Baseline & robustness & $0.5724 \pm 0.0343$ & $[0.5292, 0.6283]$ \\
+Baseline & interpretability & $0.5814 \pm 0.0652$ & $[0.4909, 0.6972]$ \\
+Adversarial & accuracy & $0.8042 \pm 0.0143$ & $[0.7826, 0.8260]$ \\
+Adversarial & robustness & $0.7184 \pm 0.0287$ & $[0.6752, 0.7619]$ \\
+Adversarial & interpretability & $0.4874 \pm 0.0427$ & $[0.4150, 0.5493]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Pairwise Comparisons}
+
+\subsection{TriObjective vs vs vs Baseline}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Objective & $\Delta$ Mean & Cohen's $d$ & $p$-value & Significant \\
+\midrule
+accuracy & -0.0390 & -1.854 & 0.0013 & Yes \\
+robustness & +0.0976 & 2.683 & 0.0004 & Yes \\
+interpretability & +0.1466 & 2.791 & 0.0006 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{TriObjective vs vs vs Adversarial}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Objective & $\Delta$ Mean & Cohen's $d$ & $p$-value & Significant \\
+\midrule
+accuracy & +0.0403 & 2.247 & 0.0006 & Yes \\
+robustness & -0.0484 & -1.440 & 0.0091 & Yes \\
+interpretability & +0.2406 & 6.403 & 0.0002 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Baseline vs vs vs Adversarial}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lcccc}
+\toprule
+Objective & $\Delta$ Mean & Cohen's $d$ & $p$-value & Significant \\
+\midrule
+accuracy & +0.0793 & 4.240 & 0.0002 & Yes \\
+robustness & -0.1460 & -4.382 & 0.0002 & Yes \\
+interpretability & +0.0940 & 1.619 & 0.0046 & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

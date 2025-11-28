@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\representation_analysis.py
+# hypothesis_version: 6.148.3
+
+[1e-10, 0.3, 0.5, 0.7, 0.99, 1.0, 2.0, 300, 1000, '--', 'CKA Similarity', 'Domain Gap', 'Good (>0.7)', 'Large (>0.5)', 'Moderate (<0.3)', 'Moderate (>0.5)', 'bold', 'bottom', 'center', 'cpu', 'cuda', 'green', 'linear', 'max_gap', 'max_gap_layer', 'max_similarity', 'mean_gap', 'mean_similarity', 'min_similarity', 'orange', 'rbf', 'red', 'right', 'std_gap', 'std_similarity', 'tight', 'y']

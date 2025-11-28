@@ -1,0 +1,17 @@
+
+\begin{table}[htbp]
+\centering
+\caption{Selective Prediction Results at 90\% Coverage}
+\label{tab:phase83_results}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Strategy} & \textbf{Accuracy} & \textbf{$\Delta$ vs Baseline} & \textbf{Target Met?} \\
+\midrule
+Baseline (100\%) & 91.50% & --- & --- \\
+Softmax Confidence & 93.37% & +1.9pp & \xmark \\
+Entropy Confidence & 93.37% & +1.9pp & \xmark \\
+Attention Max & 92.82% & +1.3pp & \xmark \\
+\textbf{Multi-Signal Fusion} & \textbf{93.37%} & \textbf{+1.9pp} & \xmark \\
+\bottomrule
+\end{tabular}
+\end{table}

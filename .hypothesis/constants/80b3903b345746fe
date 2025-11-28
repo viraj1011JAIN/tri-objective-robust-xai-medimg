@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\models\build.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.1, 0.2, ', ', 'MODEL_REGISTRY', 'architecture', 'avg', 'build_classifier', 'build_model', 'dropout', 'efficientnet_b0', 'get_default_config', 'get_model_info', 'global_pool', 'in_channels', 'max', 'model', 'name', 'num_classes', 'patch_size', 'pretrained', 'register_model', 'resnet50', 'vit_b16']

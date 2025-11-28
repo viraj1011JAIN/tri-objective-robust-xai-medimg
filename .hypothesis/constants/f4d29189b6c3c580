@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\validation\confidence_scorer.py
+# hypothesis_version: 6.148.3
+
+[0.0, 1e-10, 1.0, 1.5, 'ConfidenceMethod', 'ConfidenceScore', 'ConfidenceScorer', 'EntropyScorer', 'MCDropoutScorer', 'SoftmaxMaxScorer', 'accuracy', 'correct_confidence', 'cuda', 'entropy', 'incorrect_confidence', 'is_fitted', 'log_temperature', 'max_entropy', 'mc_dropout', 'mean_confidence', 'mean_uncertainty', 'method', 'normalized_entropy', 'normalized_variance', 'num_samples', 'softmax_max', 'std_confidence', 'temperature', 'temperature_scaled', 'variance']

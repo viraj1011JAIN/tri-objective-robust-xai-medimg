@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\evaluation\comparison.py
+# hypothesis_version: 6.148.3
+
+[0.01, 0.99, 100, 123, 456, 10000, '+', '--baseline_results', '--output', '--seeds', '--trades_results', 'Loading results...', '__main__', 'adjusted_alpha', 'alpha', 'auroc', 'baseline_mean', 'baseline_std', 'bootstrap_ci', 'ci_lower', 'ci_upper', 'clean_accuracy', 'cohens_d', 'confidence_level', 'ece', 'hedges_g', 'mean_diff', 'median_diff', 'num_comparisons', 'num_significant', 'p_value', 'r', 'robust_accuracy', 'significant', 't_statistic', 'trades_mean', 'trades_std', 'ttest', 'w', 'w_statistic', 'wilcoxon']

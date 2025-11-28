@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\stability_metrics.py
+# hypothesis_version: 6.148.3
+
+[1e-08, 0.01, 0.03, 0.0448, 0.1333, 0.2363, 0.2856, 0.3001, 1.0, 1.5, 'cosine_similarity', 'l2_distance', 'mean', 'ms_ssim', 'none', 'spearman', 'ssim', 'sum', 'window']

@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\datasets\chest_xray.py
+# hypothesis_version: 6.148.3
+
+[1.0, 'ChestXRay', 'dataset', 'image_path', 'labels', 'nan', 'none', 'raw_labels', 'split', '|']

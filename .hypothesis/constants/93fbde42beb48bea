@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\training\hpo_trainer.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.8, 25.0, 255, 'batchmean', 'beta', 'categorical', 'checkpoints/hpo', 'choices', 'cma_es', 'cpu', 'cuda', 'epsilon', 'float', 'high', 'hyperband', 'int', 'learning_rate', 'log', 'low', 'median', 'metrics', 'model_state_dict', 'nsgaii', 'percentile', 'random', 'timestamp', 'tpe', 'trial_number', 'trial_params', 'type']
