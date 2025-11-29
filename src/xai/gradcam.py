@@ -436,7 +436,7 @@ class GradCAM:
         image: Union[Tensor, np.ndarray, Image.Image],
         heatmap: np.ndarray,
         alpha: float = 0.5,
-        colormap: int = cv2.COLORMAP_JET,
+        colormap: Optional[int] = None,
         return_pil: bool = False,
     ) -> Union[np.ndarray, Image.Image]:
         """Create overlay visualization of heatmap on image.
@@ -445,12 +445,16 @@ class GradCAM:
             image: Input image (Tensor, numpy array, or PIL Image)
             heatmap: Grad-CAM heatmap (H, W) in [0, 1]
             alpha: Blending factor (0=image only, 1=heatmap only)
-            colormap: OpenCV colormap constant
+            colormap: OpenCV colormap constant (default: cv2.COLORMAP_JET)
             return_pil: Return PIL Image instead of numpy array
 
         Returns:
             Overlay image as numpy array (H, W, 3) or PIL Image
         """
+        # Default colormap
+        if colormap is None:
+            colormap = cv2.COLORMAP_JET
+
         # Convert image to numpy (H, W, 3) uint8
         if isinstance(image, Tensor):
             img_np = self._tensor_to_numpy_image(image)

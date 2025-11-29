@@ -634,29 +634,31 @@ class RQ1Evaluator:
 
         start_time = time.time()
 
-        with torch.no_grad():
-            for batch in dataloader:
-                images, labels = batch[0].to(self.config.device), batch[1].to(
-                    self.config.device
-                )
+        for batch in dataloader:
+            images, labels = batch[0].to(self.config.device), batch[1].to(
+                self.config.device
+            )
 
-                # Clean predictions
+            # Clean predictions (no grad needed)
+            with torch.no_grad():
                 clean_outputs = model(images)
                 clean_pred = clean_outputs.argmax(dim=1)
                 clean_correct += (clean_pred == labels).sum().item()
                 clean_probs.append(torch.softmax(clean_outputs, dim=1).cpu())
 
-                # Generate adversarial examples
-                adv_images = attack.generate(model, images, labels)
+            # Generate adversarial examples (needs grad)
+            # Attack methods handle their own gradient context
+            adv_images = attack.generate(model, images, labels)
 
-                # Adversarial predictions
+            # Adversarial predictions (no grad needed)
+            with torch.no_grad():
                 adv_outputs = model(adv_images)
                 adv_pred = adv_outputs.argmax(dim=1)
                 robust_correct += (adv_pred == labels).sum().item()
                 robust_probs.append(torch.softmax(adv_outputs, dim=1).cpu())
 
-                all_labels.append(labels.cpu())
-                total_samples += labels.size(0)
+            all_labels.append(labels.cpu())
+            total_samples += labels.size(0)
 
         time_elapsed = time.time() - start_time
 
@@ -1085,23 +1087,31 @@ class RQ1Evaluator:
 
     def _load_model(self, checkpoint: ModelCheckpoint) -> nn.Module:
         """Load model from checkpoint."""
-        # Implementation depends on your model loading logic
-        # For now, return a placeholder
-        state_dict = torch.load(
+        from src.models import build_model
+
+        # Load checkpoint
+        ckpt = torch.load(
             checkpoint.path,
             map_location=self.config.device,
             weights_only=False,  # Allow custom classes in checkpoint
         )
 
-        # Create model (you'll need to adapt this to your model architecture)
-        from src.models import create_model  # Adjust import
-
-        model = create_model(
+        # Create model architecture
+        model = build_model(
             architecture="resnet50",
             num_classes=self.config.num_classes,
             pretrained=False,
         )
-        model.load_state_dict(state_dict)
+
+        # Load state dict - checkpoint contains 'model_state_dict' key
+        if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
+            model.load_state_dict(ckpt["model_state_dict"])
+        elif isinstance(ckpt, dict) and "state_dict" in ckpt:
+            model.load_state_dict(ckpt["state_dict"])
+        else:
+            # Assume it's a raw state dict
+            model.load_state_dict(ckpt)
+
         model.to(self.config.device)
         model.eval()
 
