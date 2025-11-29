@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\models\model_registry.py
+# hypothesis_version: 6.148.3
+
+['.tmp', 'ModelRecord', 'ModelRegistry', '__class__', '_step_count', 'architecture', 'config', 'epoch', 'extra_state', 'get_model_info', 'index.json', 'last_epoch', 'metrics', 'model_info', 'model_key', 'model_state', 'models', 'optimizer_state', 'r', 'scheduler_state', 'schema_version', 'state', 'step', 'updated_at', 'utf-8', 'version', 'w']

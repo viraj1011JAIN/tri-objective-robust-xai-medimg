@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\tcav.py
+# hypothesis_version: 6.148.3
+
+[0.001, 0.01, 0.05, 0.2, 0.7, 100.0, 224, 1000, '*.jpg', '*.png', 'RGB', 'Training CAVs', 'cav', 'cav_metrics', 'cavs', 'cpu', 'cuda', 'hinge', 'l2', 'metrics', 'min_cav_accuracy', 'n_concept', 'n_random', 'target_layers', 'train_accuracy', 'val_accuracy']

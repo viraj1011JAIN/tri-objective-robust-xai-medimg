@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\gradcam.py
+# hypothesis_version: 6.148.3
+
+[1e-08, 0.224, 0.225, 0.229, 0.406, 0.456, 0.485, 0.5, 1.0, 255, '.', 'bicubic', 'bilinear', 'blocks.11.norm1', 'cpu', 'cuda', 'densenet', 'efficientnet', 'features.18', 'features.30', 'features.8', 'features.norm5', 'gradcam', 'gradcam++', 'layer4', 'max', 'mean', 'mobilenet', 'nearest', 'resnet', 'vgg', 'vision_transformer', 'vit', 'weighted']
