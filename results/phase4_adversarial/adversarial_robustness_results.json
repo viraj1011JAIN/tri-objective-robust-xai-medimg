@@ -1,0 +1,257 @@
+{
+  "metadata": {
+    "evaluation_date": "2025-11-30T03:33:05.447954",
+    "seeds": [
+      42,
+      123,
+      456
+    ],
+    "epsilons": [
+      0.00784313725490196,
+      0.01568627450980392,
+      0.03137254901960784
+    ],
+    "attacks": {
+      "fgsm": true,
+      "pgd": true,
+      "pgd_steps": 40,
+      "cw": true,
+      "cw_iterations": 200
+    },
+    "dataset": "ISIC 2018",
+    "model": "ResNet-50",
+    "num_classes": 7
+  },
+  "clean_accuracy": {
+    "42": {
+      "accuracy": 0.8293650793650794,
+      "balanced_accuracy": 0.6753970923605568,
+      "f1_macro": 0.7242663611495853,
+      "auroc": 0.9614535034617269
+    },
+    "123": {
+      "accuracy": 0.8306878306878307,
+      "balanced_accuracy": 0.6857119155534246,
+      "f1_macro": 0.7252078025387435,
+      "auroc": 0.9625270094682516
+    },
+    "456": {
+      "accuracy": 0.826058201058201,
+      "balanced_accuracy": 0.6518626042776603,
+      "f1_macro": 0.6993243816339406,
+      "auroc": 0.9633951371535466
+    }
+  },
+  "adversarial_results": [
+    {
+      "Seed": 456,
+      "Attack": "FGSM",
+      "Epsilon": "2/255",
+      "Epsilon_Val": 0.00784313725490196,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 1.6534391534391533,
+      "Acc_Drop": 80.95238095238095,
+      "Attack_Success": 98.34656084656085
+    },
+    {
+      "Seed": 456,
+      "Attack": "FGSM",
+      "Epsilon": "4/255",
+      "Epsilon_Val": 0.01568627450980392,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 3.373015873015873,
+      "Acc_Drop": 79.23280423280423,
+      "Attack_Success": 96.62698412698413
+    },
+    {
+      "Seed": 456,
+      "Attack": "FGSM",
+      "Epsilon": "8/255",
+      "Epsilon_Val": 0.03137254901960784,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 17.59259259259259,
+      "Acc_Drop": 65.0132275132275,
+      "Attack_Success": 82.4074074074074
+    },
+    {
+      "Seed": 456,
+      "Attack": "PGD-40",
+      "Epsilon": "2/255",
+      "Epsilon_Val": 0.00784313725490196,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.6058201058201,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 456,
+      "Attack": "PGD-40",
+      "Epsilon": "4/255",
+      "Epsilon_Val": 0.01568627450980392,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.6058201058201,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 456,
+      "Attack": "PGD-40",
+      "Epsilon": "8/255",
+      "Epsilon_Val": 0.03137254901960784,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.6058201058201,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 456,
+      "Attack": "C&W-L2",
+      "Epsilon": "L2",
+      "Epsilon_Val": 0.0,
+      "Clean_Acc": 82.6058201058201,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.6058201058201,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 42,
+      "Attack": "FGSM",
+      "Epsilon": "2/255",
+      "Epsilon_Val": 0.00784313725490196,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 1.1904761904761905,
+      "Acc_Drop": 81.74603174603176,
+      "Attack_Success": 98.80952380952381
+    },
+    {
+      "Seed": 42,
+      "Attack": "FGSM",
+      "Epsilon": "4/255",
+      "Epsilon_Val": 0.01568627450980392,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 1.3227513227513228,
+      "Acc_Drop": 81.61375661375662,
+      "Attack_Success": 98.67724867724868
+    },
+    {
+      "Seed": 42,
+      "Attack": "FGSM",
+      "Epsilon": "8/255",
+      "Epsilon_Val": 0.03137254901960784,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 6.746031746031746,
+      "Acc_Drop": 76.1904761904762,
+      "Attack_Success": 93.25396825396825
+    },
+    {
+      "Seed": 42,
+      "Attack": "PGD-40",
+      "Epsilon": "2/255",
+      "Epsilon_Val": 0.00784313725490196,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.93650793650794,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 42,
+      "Attack": "PGD-40",
+      "Epsilon": "4/255",
+      "Epsilon_Val": 0.01568627450980392,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.93650793650794,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 42,
+      "Attack": "PGD-40",
+      "Epsilon": "8/255",
+      "Epsilon_Val": 0.03137254901960784,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.93650793650794,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 42,
+      "Attack": "C&W-L2",
+      "Epsilon": "L2",
+      "Epsilon_Val": 0.0,
+      "Clean_Acc": 82.93650793650794,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 82.93650793650794,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 123,
+      "Attack": "FGSM",
+      "Epsilon": "2/255",
+      "Epsilon_Val": 0.00784313725490196,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 1.455026455026455,
+      "Acc_Drop": 81.61375661375662,
+      "Attack_Success": 98.54497354497354
+    },
+    {
+      "Seed": 123,
+      "Attack": "FGSM",
+      "Epsilon": "4/255",
+      "Epsilon_Val": 0.01568627450980392,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 2.447089947089947,
+      "Acc_Drop": 80.62169312169313,
+      "Attack_Success": 97.55291005291005
+    },
+    {
+      "Seed": 123,
+      "Attack": "FGSM",
+      "Epsilon": "8/255",
+      "Epsilon_Val": 0.03137254901960784,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 11.64021164021164,
+      "Acc_Drop": 71.42857142857143,
+      "Attack_Success": 88.35978835978835
+    },
+    {
+      "Seed": 123,
+      "Attack": "PGD-40",
+      "Epsilon": "2/255",
+      "Epsilon_Val": 0.00784313725490196,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 83.06878306878306,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 123,
+      "Attack": "PGD-40",
+      "Epsilon": "4/255",
+      "Epsilon_Val": 0.01568627450980392,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 83.06878306878306,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 123,
+      "Attack": "PGD-40",
+      "Epsilon": "8/255",
+      "Epsilon_Val": 0.03137254901960784,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 83.06878306878306,
+      "Attack_Success": 100.0
+    },
+    {
+      "Seed": 123,
+      "Attack": "C&W-L2",
+      "Epsilon": "L2",
+      "Epsilon_Val": 0.0,
+      "Clean_Acc": 83.06878306878306,
+      "Robust_Acc": 0.0,
+      "Acc_Drop": 83.06878306878306,
+      "Attack_Success": 100.0
+    }
+  ]
+}

@@ -1,0 +1,376 @@
+{
+  "metadata": {
+    "experiment": "Phase 4 Adversarial Robustness Evaluation",
+    "model": "ResNet-50 (ImageNet pretrained)",
+    "dataset": "ISIC 2018 Dermoscopy",
+    "num_classes": 7,
+    "class_names": [
+      "AKIEC",
+      "BCC",
+      "BKL",
+      "DF",
+      "MEL",
+      "NV",
+      "VASC"
+    ],
+    "seeds_evaluated": [
+      42,
+      123,
+      456
+    ],
+    "attacks_evaluated": [
+      "FGSM",
+      "PGD-40",
+      "Carlini-Wagner L2"
+    ],
+    "epsilons": [
+      0.00784313725490196,
+      0.01568627450980392,
+      0.03137254901960784
+    ],
+    "timestamp": "2025-11-30T00:47:10.356704"
+  },
+  "summary": {
+    "clean_accuracy": {
+      "mean": 82.82627865961199,
+      "std": 0.20444485219347333,
+      "per_seed": {
+        "42": 82.93650793650794,
+        "123": 83.0026455026455,
+        "456": 82.53968253968253
+      }
+    },
+    "robust_accuracy_fgsm_8": {
+      "mean": 11.926807760141093,
+      "std": 4.266542314274112
+    },
+    "robust_accuracy_pgd_8": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "robust_accuracy_cw": {
+      "mean": 0.0,
+      "std": 0.0
+    }
+  },
+  "detailed_results": {
+    "42": {
+      "clean": {
+        "accuracy": 82.93650793650794,
+        "balanced_accuracy": 67.53970923605567,
+        "f1_macro": 72.42663611495853,
+        "auroc": 96.14475995129622
+      },
+      "fgsm_2/255": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 1.1243386243386242,
+        "accuracy_drop": 81.81216931216932,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 1.87018701870187,
+          "VASC": 0.0
+        }
+      },
+      "fgsm_4/255": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 1.3227513227513228,
+        "accuracy_drop": 81.6137566137566,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.9216589861751152,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 1.9801980198019802,
+          "VASC": 0.0
+        }
+      },
+      "fgsm_8/255": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 6.746031746031746,
+        "accuracy_drop": 76.19047619047619,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 11.52073732718894,
+          "DF": 2.272727272727273,
+          "MEL": 0.0,
+          "NV": 8.360836083608362,
+          "VASC": 0.0
+        }
+      },
+      "pgd_2/255": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.93650793650794,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "pgd_4/255": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.93650793650794,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "pgd_8/255": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.93650793650794,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "cw": {
+        "clean_accuracy": 82.93650793650794,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.93650793650794,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      }
+    },
+    "123": {
+      "clean": {
+        "accuracy": 83.0026455026455,
+        "balanced_accuracy": 68.55547569804244,
+        "f1_macro": 72.48591985593441,
+        "auroc": 96.25315146983105
+      },
+      "fgsm_2/255": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 1.5873015873015872,
+        "accuracy_drop": 81.41534391534393,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 2.6402640264026402,
+          "VASC": 0.0
+        }
+      },
+      "fgsm_4/255": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 2.7116402116402116,
+        "accuracy_drop": 80.29100529100529,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 4.51045104510451,
+          "VASC": 0.0
+        }
+      },
+      "fgsm_8/255": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 11.838624338624339,
+        "accuracy_drop": 71.16402116402116,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 7.834101382488479,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 17.82178217821782,
+          "VASC": 0.0
+        }
+      },
+      "pgd_2/255": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 83.0026455026455,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "pgd_4/255": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 83.0026455026455,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "pgd_8/255": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 83.0026455026455,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "cw": {
+        "clean_accuracy": 83.0026455026455,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 83.0026455026455,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      }
+    },
+    "456": {
+      "clean": {
+        "accuracy": 82.53968253968253,
+        "balanced_accuracy": 65.03265059673684,
+        "f1_macro": 69.80292597015108,
+        "auroc": 96.33829421395373
+      },
+      "fgsm_2/255": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 1.6534391534391533,
+        "accuracy_drop": 80.88624338624338,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 2.7502750275027505,
+          "VASC": 0.0
+        }
+      },
+      "fgsm_4/255": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 3.2407407407407405,
+        "accuracy_drop": 79.2989417989418,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 5.39053905390539,
+          "VASC": 0.0
+        }
+      },
+      "fgsm_8/255": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 17.195767195767196,
+        "accuracy_drop": 65.34391534391534,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 6.451612903225806,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 27.062706270627064,
+          "VASC": 0.0
+        }
+      },
+      "pgd_2/255": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.53968253968253,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "pgd_4/255": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.53968253968253,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "pgd_8/255": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.53968253968253,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      },
+      "cw": {
+        "clean_accuracy": 82.53968253968253,
+        "robust_accuracy": 0.0,
+        "accuracy_drop": 82.53968253968253,
+        "per_class_robust_acc": {
+          "AKIEC": 0.0,
+          "BCC": 0.0,
+          "BKL": 0.0,
+          "DF": 0.0,
+          "MEL": 0.0,
+          "NV": 0.0,
+          "VASC": 0.0
+        }
+      }
+    }
+  }
+}

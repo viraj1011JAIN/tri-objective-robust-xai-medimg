@@ -1,0 +1,73 @@
+{
+  "per_seed": {
+    "42": {
+      "loss": 0.5566001509232495,
+      "accuracy": 82.93650793650794,
+      "balanced_accuracy": 67.53970923605567,
+      "f1_macro": 72.42663611495853,
+      "auroc": 96.14528649609528
+    },
+    "123": {
+      "loss": 0.7126860577593405,
+      "accuracy": 83.06878306878306,
+      "balanced_accuracy": 68.57119155534247,
+      "f1_macro": 72.52078025387435,
+      "auroc": 96.2535871703622
+    },
+    "456": {
+      "loss": 0.688370962306936,
+      "accuracy": 82.6058201058201,
+      "balanced_accuracy": 65.1161927855422,
+      "f1_macro": 69.8799198930883,
+      "auroc": 96.33869450793104
+    }
+  },
+  "aggregated": {
+    "accuracy": {
+      "mean": 82.87037037037037,
+      "std": 0.19470372280264236
+    },
+    "balanced_accuracy": {
+      "mean": 67.0756978589801,
+      "std": 1.4481560789205958
+    },
+    "auroc": {
+      "mean": 96.2458560581295,
+      "std": 0.07914750925889762
+    },
+    "f1_macro": {
+      "mean": 71.60911208730705,
+      "std": 1.2233274331737913
+    }
+  },
+  "config": {
+    "data_root": "/content/drive/MyDrive/data/data/isic_2018",
+    "checkpoint_dir": "/content/drive/MyDrive/checkpoints/baseline",
+    "results_dir": "/content/drive/MyDrive/results/phase3",
+    "model_name": "resnet50",
+    "num_classes": 7,
+    "pretrained": true,
+    "epochs": 30,
+    "batch_size": 128,
+    "learning_rate": 0.0003,
+    "weight_decay": 0.0001,
+    "num_workers": 4,
+    "pin_memory": true,
+    "use_amp": true,
+    "image_size": 224,
+    "seeds": [
+      42,
+      123,
+      456
+    ],
+    "class_names": [
+      "AKIEC",
+      "BCC",
+      "BKL",
+      "DF",
+      "MEL",
+      "NV",
+      "VASC"
+    ]
+  }
+}

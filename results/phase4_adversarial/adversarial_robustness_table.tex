@@ -1,0 +1,22 @@
+\begin{table}[htbp]
+\centering
+\caption{Adversarial Robustness Evaluation: Baseline ResNet-50 on ISIC 2018}
+\label{tab:adversarial_robustness}
+\begin{tabular}{llcccc}
+\toprule
+Attack & $\epsilon$ & Clean Acc (\%) & Robust Acc (\%) & Acc Drop (pp) & ASR (\%) \\
+\midrule
+FGSM & 2/255 & 82.9 $\pm$ 0.2 & 1.4 $\pm$ 0.2 & 81.4 $\pm$ 0.4 & 98.6 $\pm$ 0.2 \\
+FGSM & 4/255 & 82.9 $\pm$ 0.2 & 2.4 $\pm$ 1.0 & 80.5 $\pm$ 1.2 & 97.6 $\pm$ 1.0 \\
+FGSM & 8/255 & 82.9 $\pm$ 0.2 & 12.0 $\pm$ 5.4 & 70.9 $\pm$ 5.6 & 88.0 $\pm$ 5.4 \\
+PGD-40 & 2/255 & 82.9 $\pm$ 0.2 & 0.0 $\pm$ 0.0 & 82.9 $\pm$ 0.2 & 100.0 $\pm$ 0.0 \\
+PGD-40 & 4/255 & 82.9 $\pm$ 0.2 & 0.0 $\pm$ 0.0 & 82.9 $\pm$ 0.2 & 100.0 $\pm$ 0.0 \\
+PGD-40 & 8/255 & 82.9 $\pm$ 0.2 & 0.0 $\pm$ 0.0 & 82.9 $\pm$ 0.2 & 100.0 $\pm$ 0.0 \\
+C&W-L2 & L2 & 82.9 $\pm$ 0.2 & 0.0 $\pm$ 0.0 & 82.9 $\pm$ 0.2 & 100.0 $\pm$ 0.0 \\
+\bottomrule
+\end{tabular}
+\begin{tablenotes}
+\small
+\item Note: Values are mean $\pm$ std across seeds (42, 123, 456). ASR = Attack Success Rate.
+\end{tablenotes}
+\end{table}
