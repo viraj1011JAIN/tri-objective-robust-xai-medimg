@@ -1,0 +1,14 @@
+{
+  "best_params": {
+    "beta": 6.800883220223354,
+    "learning_rate": 0.0005912861404072944,
+    "epsilon_idx": 2,
+    "warmup_epochs": 1
+  },
+  "best_value": 0.5330339321357286,
+  "best_clean_acc": 0.6986027944111777,
+  "best_robust_acc": 0.4620758483033932,
+  "n_trials": 2,
+  "n_completed": 2,
+  "n_pruned": 0
+}

@@ -1,0 +1,32 @@
+{
+  "comparisons": [
+    {
+      "comparison": "PGD-AT vs Baseline (Robust)",
+      "t_stat": 0.8992295705757757,
+      "p_value": 0.4193700530947455,
+      "cohens_d": 0.7342178698442281,
+      "interpretation": "medium"
+    },
+    {
+      "comparison": "TRADES vs Baseline (Robust)",
+      "t_stat": 0.8254278021700232,
+      "p_value": 0.45551232713671336,
+      "cohens_d": 0.6739589782745113,
+      "interpretation": "medium"
+    },
+    {
+      "comparison": "PGD-AT vs TRADES (Robust)",
+      "t_stat": 0.14411921546594705,
+      "p_value": 0.8923757721343966,
+      "cohens_d": 0.11767284667393202,
+      "interpretation": "negligible"
+    },
+    {
+      "comparison": "PGD-AT vs TRADES (Clean)",
+      "t_stat": 0.2513553700175783,
+      "p_value": 0.8139243354300667,
+      "cohens_d": 0.20523080021717613,
+      "interpretation": "small"
+    }
+  ]
+}
