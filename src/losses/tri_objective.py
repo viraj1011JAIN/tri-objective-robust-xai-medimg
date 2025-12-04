@@ -162,6 +162,11 @@ class TriObjectiveConfig:
     pgd_num_steps: int = 7
     pgd_step_size: float = 2.0 / 255.0
 
+    # Clip bounds for normalized images (ImageNet normalization)
+    # min = (0 - mean) / std ≈ -2.12, max = (1 - mean) / std ≈ 2.64
+    clip_min: float = -2.12
+    clip_max: float = 2.64
+
     # Explanation loss parameters
     gamma: float = 0.5
     use_ms_ssim: bool = False
@@ -430,6 +435,8 @@ class TRADESLoss(nn.Module):
         num_steps: int = 7,
         step_size: Optional[float] = None,
         random_start: bool = True,
+        clip_min: float = -2.12,  # ImageNet normalized min: (0-0.485)/0.229
+        clip_max: float = 2.64,  # ImageNet normalized max: (1-0.406)/0.225
     ):
         """Initialize TRADES loss.
 
@@ -445,6 +452,12 @@ class TRADESLoss(nn.Module):
             Step size per iteration (default: epsilon/4)
         random_start : bool
             Use random initialization (default: True)
+        clip_min : float
+            Minimum value for clipping adversarial examples.
+            For ImageNet-normalized images: (0 - mean) / std ≈ -2.12
+        clip_max : float
+            Maximum value for clipping adversarial examples.
+            For ImageNet-normalized images: (1 - mean) / std ≈ 2.64
         """
         super().__init__()
 
@@ -460,10 +473,13 @@ class TRADESLoss(nn.Module):
         self.num_steps = num_steps
         self.step_size = step_size if step_size is not None else epsilon / 4
         self.random_start = random_start
+        self.clip_min = clip_min
+        self.clip_max = clip_max
 
         logger.debug(
             f"TRADESLoss initialized: β={beta}, ε={epsilon:.4f}, "
-            f"steps={num_steps}, step_size={self.step_size:.4f}"
+            f"steps={num_steps}, step_size={self.step_size:.4f}, "
+            f"clip_range=[{clip_min:.2f}, {clip_max:.2f}]"
         )
 
     def _generate_adversarial(
@@ -504,8 +520,8 @@ class TRADESLoss(nn.Module):
 
         # PGD iterations
         for step in range(self.num_steps):
-            # Generate adversarial example
-            x_adv = torch.clamp(images + delta, 0.0, 1.0)
+            # Generate adversarial example (use proper clip bounds for normalized images)
+            x_adv = torch.clamp(images + delta, self.clip_min, self.clip_max)
 
             # Forward pass
             model_output = model(x_adv)
@@ -535,8 +551,8 @@ class TRADESLoss(nn.Module):
             # Detach and re-enable gradients for next iteration
             delta = delta.detach().requires_grad_(True)
 
-        # Final adversarial examples (ensure valid image range)
-        x_adv = torch.clamp(images + delta.detach(), 0.0, 1.0)
+        # Final adversarial examples (use proper clip bounds for normalized images)
+        x_adv = torch.clamp(images + delta.detach(), self.clip_min, self.clip_max)
 
         return x_adv
 
@@ -769,6 +785,8 @@ class TriObjectiveLoss(BaseLoss):
             num_steps=self.config.pgd_num_steps,
             step_size=self.config.pgd_step_size,
             random_start=True,
+            clip_min=self.config.clip_min,
+            clip_max=self.config.clip_max,
         )
 
         # Explanation loss (Phase 7.1 module with 95% coverage)
@@ -1022,10 +1040,11 @@ class TriObjectiveLoss(BaseLoss):
         if torch.isinf(images).any():
             raise ValueError("images contains Inf values")
 
-        # Check value range
-        if images.min() < 0 or images.max() > 1:
+        # Check value range (for ImageNet-normalized images: ~[-2.12, 2.64])
+        # Only warn if values are extreme (likely data loading issue)
+        if images.min() < -3.0 or images.max() > 3.0:
             logger.warning(
-                f"images values outside [0, 1] range: "
+                f"images values outside expected normalized range: "
                 f"min={images.min().item():.4f}, "
                 f"max={images.max().item():.4f}"
             )
