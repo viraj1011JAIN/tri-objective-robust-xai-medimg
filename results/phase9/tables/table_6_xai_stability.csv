@@ -1,0 +1,4 @@
+,Mean SSIM
+Baseline,0.0997 ± 0.0183
+TRADES,0.5176 ± 0.0353
+Tri-Objective,0.4901 ± 0.0086

@@ -1,0 +1,4 @@
+Comparison,Group 1 Mean (%),Group 1 SD (%),Group 2 Mean (%),Group 2 SD (%),Mean Diff (pp),95% CI Low (pp),95% CI High (pp),t-statistic,p-value,Cohen's d,Effect Size,Significant (α=0.05)
+TRADES vs Baseline,55.31,5.54,0.29,0.38,+55.03,+41.36,+68.69,17.328,0.0033,+10.005,Large,Yes
+Tri-Objective vs TRADES,1.43,0.71,55.31,5.54,-53.88,-69.36,-38.40,-14.979,0.0044,-8.648,Large,Yes
+Tri-Objective vs Baseline,1.43,0.71,0.29,0.38,+1.15,-1.16,+3.45,2.143,0.1654,+1.237,Large,No

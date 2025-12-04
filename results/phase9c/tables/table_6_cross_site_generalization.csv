@@ -1,0 +1,4 @@
+Approach,ISIC2018 Acc (%),ISIC2018 AUROC (%),ISIC2019 AUROC (%),ISIC2020 AUROC (%),Drop 2018→2019 (pp),Drop 2018→2020 (pp)
+Baseline (ERM),N/A,N/A,N/A,N/A,N/A,N/A
+TRADES,N/A,N/A,N/A,N/A,N/A,N/A
+Tri-Objective,N/A,N/A,N/A,N/A,N/A,N/A

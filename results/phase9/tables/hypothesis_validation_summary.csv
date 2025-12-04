@@ -1,0 +1,5 @@
+Hypothesis,Description,Threshold,Result,Status
+H1a,TRADES robust accuracy ≥ 25%,25%,55.3%,✅ PASSED
+H1b,Tri-obj maintains ≥ 90% of TRADES robustness,90%,2.6%,❌ FAILED
+H2a,Explanation SSIM ≥ 0.4,0.4,0.490,✅ PASSED
+H3a,Selective prediction ≥ +4pp @ 90%,+4pp,+4.2pp,✅ PASSED

@@ -1,8 +1,8 @@
 {
   "experiment_info": {
     "phase": "Phase 5: Adversarial Training",
-    "date": "2025-11-30T20:38:27.863837",
-    "epochs": 5,
+    "date": "2025-12-02T17:54:13.441686",
+    "epochs": 30,
     "methods": [
       "pgd-at",
       "trades"
@@ -18,72 +18,42 @@
   "adversarial_config": {
     "epsilon": 0.03137254901960784,
     "alpha": 0.00784313725490196,
-    "pgd_steps_train": 7,
-    "pgd_steps_eval": 20,
+    "pgd_steps_train": 5,
+    "pgd_steps_eval": 10,
     "trades_beta": 6.0
   },
   "method_statistics": {
-    "pgd-at": {
-      "clean_accuracy": {
-        "mean": 47.10578842315369,
-        "std": 24.873935644595853,
-        "ci_95": 28.14750794281717
-      },
-      "robust_accuracy": {
-        "mean": 4.424484364604125,
-        "std": 6.974850862987068,
-        "ci_95": 7.892786765674031
-      }
-    },
     "trades": {
       "clean_accuracy": {
-        "mean": 42.34863606121091,
-        "std": 21.35106643028261,
-        "ci_95": 24.161006143978124
+        "mean": 66.36726546906188,
+        "std": 1.6489732177503351,
+        "ci_95": 1.8659888570630934
       },
       "robust_accuracy": {
-        "mean": 3.6593479707252166,
-        "std": 5.992457883804499,
-        "ci_95": 6.781104457751164
+        "mean": 24.25149700598803,
+        "std": 5.0376963928638565,
+        "ci_95": 5.700690122290487
       }
     }
   },
   "per_run_results": [
     {
-      "method": "pgd-at",
-      "seed": 42,
-      "clean_accuracy": 0.18463073852295409,
-      "robust_accuracy": 0.001996007984031936
-    },
-    {
-      "method": "pgd-at",
-      "seed": 123,
-      "clean_accuracy": 0.5958083832335329,
-      "robust_accuracy": 0.124750499001996
-    },
-    {
-      "method": "pgd-at",
-      "seed": 456,
-      "clean_accuracy": 0.6327345309381237,
-      "robust_accuracy": 0.005988023952095809
-    },
-    {
       "method": "trades",
       "seed": 42,
-      "clean_accuracy": 0.18463073852295409,
-      "robust_accuracy": 0.001996007984031936
+      "clean_accuracy": 0.6526946107784432,
+      "robust_accuracy": 0.1966067864271457
     },
     {
       "method": "trades",
       "seed": 123,
-      "clean_accuracy": 0.5958083832335329,
-      "robust_accuracy": 0.10578842315369262
+      "clean_accuracy": 0.6826347305389222,
+      "robust_accuracy": 0.2964071856287425
     },
     {
       "method": "trades",
       "seed": 456,
-      "clean_accuracy": 0.49001996007984033,
-      "robust_accuracy": 0.001996007984031936
+      "clean_accuracy": 0.655688622754491,
+      "robust_accuracy": 0.2345309381237525
     }
   ]
 }

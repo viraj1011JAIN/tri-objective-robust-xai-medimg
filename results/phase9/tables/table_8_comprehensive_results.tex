@@ -1,0 +1,13 @@
+\begin{table}
+\caption{Comprehensive comparison of training approaches on ISIC 2018. Robustness evaluated under PGD-20 attack with $\epsilon=8/255$. Results show mean ± std across three random seeds.}
+\label{tab:comprehensive_results}
+\begin{tabular}{llllll}
+\toprule
+ & Clean Acc (%) & Robust Acc (%) & XAI Stability (SSIM) & Acc@90% (%) & ECE \\
+\midrule
+Baseline (ERM) & 83.1 ± 1.2 & 0.3 ± 0.4 & 0.100 ± 0.018 & 87.8 ± 1.3 & 0.1020 ± 0.0163 \\
+TRADES & 61.9 ± 0.7 & 55.3 ± 5.5 & 0.518 ± 0.035 & 3.2 ± 0.3 & 0.3823 ± 0.0207 \\
+Tri-Objective (Ours) & 75.9 ± 0.4 & 1.4 ± 0.7 & 0.490 ± 0.009 & 80.1 ± 0.4 & 0.0425 ± 0.0067 \\
+\bottomrule
+\end{tabular}
+\end{table}

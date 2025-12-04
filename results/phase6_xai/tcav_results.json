@@ -1,0 +1,29 @@
+{
+  "medical_concepts": {
+    "asymmetry": {
+      "tcav_score": 1.0,
+      "mean_sensitivity": 306.7825900939607,
+      "std_sensitivity": 5.684341886080802e-14
+    }
+  },
+  "artifact_concepts": {
+    "ruler": {
+      "tcav_score": 1.0,
+      "mean_sensitivity": 0.29799977027984603,
+      "std_sensitivity": 0.0
+    }
+  },
+  "aggregate": {
+    "medical_tcav_mean": 1.0,
+    "artifact_tcav_mean": 1.0
+  },
+  "h4_validation": {
+    "status": "PENDING",
+    "message": "Real concept bank required for validation",
+    "concept_bank_ready": false
+  },
+  "cav_accuracies": {
+    "asymmetry": 1.0,
+    "ruler": 0.6
+  }
+}

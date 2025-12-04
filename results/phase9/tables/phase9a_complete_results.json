@@ -1,0 +1,302 @@
+{
+  "evaluation_config": {
+    "model": "resnet50",
+    "num_classes": 7,
+    "seeds": [
+      42,
+      123,
+      456
+    ],
+    "epsilon": 0.03137254901960784,
+    "pgd_steps": 20,
+    "evaluation_date": "2025-12-03T15:27:18.255327"
+  },
+  "robustness": [
+    {
+      "approach": "baseline",
+      "seed": 42,
+      "clean_accuracy": 0.8273809523809523,
+      "robust_accuracy": 0.0006613756613756613,
+      "attack_success_rate": 0.9992006394884093,
+      "robustness_gap": 0.8267195767195766,
+      "total_samples": 1512
+    },
+    {
+      "approach": "baseline",
+      "seed": 123,
+      "clean_accuracy": 0.843915343915344,
+      "robust_accuracy": 0.0006613756613756613,
+      "attack_success_rate": 0.9992163009404389,
+      "robustness_gap": 0.8432539682539683,
+      "total_samples": 1512
+    },
+    {
+      "approach": "baseline",
+      "seed": 456,
+      "clean_accuracy": 0.8207671957671958,
+      "robust_accuracy": 0.007275132275132275,
+      "attack_success_rate": 0.9911361804995971,
+      "robustness_gap": 0.8134920634920635,
+      "total_samples": 1512
+    },
+    {
+      "approach": "trades",
+      "seed": 42,
+      "clean_accuracy": 0.6144179894179894,
+      "robust_accuracy": 0.49404761904761907,
+      "attack_success_rate": 0.1959095801937567,
+      "robustness_gap": 0.12037037037037035,
+      "total_samples": 1512
+    },
+    {
+      "approach": "trades",
+      "seed": 123,
+      "clean_accuracy": 0.626984126984127,
+      "robust_accuracy": 0.6038359788359788,
+      "attack_success_rate": 0.03691983122362874,
+      "robustness_gap": 0.02314814814814814,
+      "total_samples": 1512
+    },
+    {
+      "approach": "trades",
+      "seed": 456,
+      "clean_accuracy": 0.6157407407407407,
+      "robust_accuracy": 0.5615079365079365,
+      "attack_success_rate": 0.08807733619763691,
+      "robustness_gap": 0.05423280423280419,
+      "total_samples": 1512
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 42,
+      "clean_accuracy": 0.7625661375661376,
+      "robust_accuracy": 0.022486772486772486,
+      "attack_success_rate": 0.9705117085862967,
+      "robustness_gap": 0.7400793650793651,
+      "total_samples": 1512
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 123,
+      "clean_accuracy": 0.753968253968254,
+      "robust_accuracy": 0.009259259259259259,
+      "attack_success_rate": 0.987719298245614,
+      "robustness_gap": 0.7447089947089947,
+      "total_samples": 1512
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 456,
+      "clean_accuracy": 0.7599206349206349,
+      "robust_accuracy": 0.011243386243386243,
+      "attack_success_rate": 0.9852045256744996,
+      "robustness_gap": 0.7486772486772486,
+      "total_samples": 1512
+    }
+  ],
+  "xai_stability": [
+    {
+      "approach": "baseline",
+      "seed": 42,
+      "ssim_mean": 0.09540481372087938,
+      "ssim_std": 0.14022080608802914,
+      "ssim_median": 0.04187568421717025,
+      "ssim_min": 0.0010020303644490685,
+      "ssim_max": 0.8353135333238071,
+      "n_samples": 100
+    },
+    {
+      "approach": "baseline",
+      "seed": 123,
+      "ssim_mean": 0.08397662254003675,
+      "ssim_std": 0.10246628613613058,
+      "ssim_median": 0.04435342712313523,
+      "ssim_min": 0.0008325926437632991,
+      "ssim_max": 0.444783138977971,
+      "n_samples": 100
+    },
+    {
+      "approach": "baseline",
+      "seed": 456,
+      "ssim_mean": 0.119749029012962,
+      "ssim_std": 0.17884204491227756,
+      "ssim_median": 0.03689540564706813,
+      "ssim_min": 0.0008827167088664247,
+      "ssim_max": 0.7585775604532103,
+      "n_samples": 100
+    },
+    {
+      "approach": "trades",
+      "seed": 42,
+      "ssim_mean": 0.5544145614751593,
+      "ssim_std": 0.14330550257616415,
+      "ssim_median": 0.5618445009806263,
+      "ssim_min": 0.09397386554272699,
+      "ssim_max": 0.7977989694181877,
+      "n_samples": 100
+    },
+    {
+      "approach": "trades",
+      "seed": 123,
+      "ssim_mean": 0.4840189777623421,
+      "ssim_std": 0.1541282535375789,
+      "ssim_median": 0.49272156164347825,
+      "ssim_min": 0.10262628318613563,
+      "ssim_max": 0.7566389528104381,
+      "n_samples": 100
+    },
+    {
+      "approach": "trades",
+      "seed": 456,
+      "ssim_mean": 0.5143692817487208,
+      "ssim_std": 0.14411033148923497,
+      "ssim_median": 0.5300163312181718,
+      "ssim_min": 0.12719799961461148,
+      "ssim_max": 0.7730637217157148,
+      "n_samples": 100
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 42,
+      "ssim_mean": 0.48110533375700987,
+      "ssim_std": 0.20172197594509517,
+      "ssim_median": 0.5036322247949223,
+      "ssim_min": 0.06341703840245493,
+      "ssim_max": 0.8667267040206036,
+      "n_samples": 100
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 123,
+      "ssim_mean": 0.4910031465459815,
+      "ssim_std": 0.19796707999234447,
+      "ssim_median": 0.4821501174193469,
+      "ssim_min": 0.037753788193662804,
+      "ssim_max": 0.9261930370777745,
+      "n_samples": 100
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 456,
+      "ssim_mean": 0.4981570621096533,
+      "ssim_std": 0.21647551896338574,
+      "ssim_median": 0.48508650408048715,
+      "ssim_min": 0.135507632293539,
+      "ssim_max": 0.9298931529943142,
+      "n_samples": 100
+    }
+  ],
+  "selective_prediction": [
+    {
+      "approach": "baseline",
+      "seed": 42,
+      "full_accuracy": 0.8273809523809523,
+      "accuracy_at_90": 0.8736223365172667,
+      "improvement_at_90": 0.0462413841363144,
+      "ece": 0.12032651434105539,
+      "aurc": 0.04626236587838761
+    },
+    {
+      "approach": "baseline",
+      "seed": 123,
+      "full_accuracy": 0.843915343915344,
+      "accuracy_at_90": 0.8919911829537105,
+      "improvement_at_90": 0.04807583903836654,
+      "ece": 0.09634263789843003,
+      "aurc": 0.04072694428261137
+    },
+    {
+      "approach": "baseline",
+      "seed": 456,
+      "full_accuracy": 0.8207671957671958,
+      "accuracy_at_90": 0.8677443056576047,
+      "improvement_at_90": 0.04697710989040893,
+      "ece": 0.08927312363234774,
+      "aurc": 0.04452053375722964
+    },
+    {
+      "approach": "trades",
+      "seed": 42,
+      "full_accuracy": 0.03042328042328042,
+      "accuracy_at_90": 0.028655400440852314,
+      "improvement_at_90": -0.0017678799824281076,
+      "ece": 0.3817164922261207,
+      "aurc": 0.9836650516012051
+    },
+    {
+      "approach": "trades",
+      "seed": 123,
+      "full_accuracy": 0.03571428571428571,
+      "accuracy_at_90": 0.03306392358559882,
+      "improvement_at_90": -0.002650362128686891,
+      "ece": 0.403288814894579,
+      "aurc": 0.9823750173915441
+    },
+    {
+      "approach": "trades",
+      "seed": 456,
+      "full_accuracy": 0.037037037037037035,
+      "accuracy_at_90": 0.03526818515797208,
+      "improvement_at_90": -0.0017688518790649546,
+      "ece": 0.3619902223723118,
+      "aurc": 0.979493341877506
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 42,
+      "full_accuracy": 0.7625661375661376,
+      "accuracy_at_90": 0.8038207200587804,
+      "improvement_at_90": 0.0412545824926428,
+      "ece": 0.04754878517496524,
+      "aurc": 0.10855619868101628
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 123,
+      "full_accuracy": 0.753968253968254,
+      "accuracy_at_90": 0.7964731814842028,
+      "improvement_at_90": 0.04250492751594881,
+      "ece": 0.045000768941703906,
+      "aurc": 0.08007953583353758
+    },
+    {
+      "approach": "tri_objective",
+      "seed": 456,
+      "full_accuracy": 0.7599206349206349,
+      "accuracy_at_90": 0.8016164584864071,
+      "improvement_at_90": 0.04169582356577217,
+      "ece": 0.03480414620467593,
+      "aurc": 0.08977222598608925
+    }
+  ],
+  "hypothesis_validation": [
+    {
+      "Hypothesis": "H1a",
+      "Description": "TRADES robust accuracy \u2265 25%",
+      "Threshold": "25%",
+      "Result": "55.3%",
+      "Status": "\u2705 PASSED"
+    },
+    {
+      "Hypothesis": "H1b",
+      "Description": "Tri-obj maintains \u2265 90% of TRADES robustness",
+      "Threshold": "90%",
+      "Result": "2.6%",
+      "Status": "\u274c FAILED"
+    },
+    {
+      "Hypothesis": "H2a",
+      "Description": "Explanation SSIM \u2265 0.4",
+      "Threshold": "0.4",
+      "Result": "0.490",
+      "Status": "\u2705 PASSED"
+    },
+    {
+      "Hypothesis": "H3a",
+      "Description": "Selective prediction \u2265 +4pp @ 90%",
+      "Threshold": "+4pp",
+      "Result": "+4.2pp",
+      "Status": "\u2705 PASSED"
+    }
+  ]
+}

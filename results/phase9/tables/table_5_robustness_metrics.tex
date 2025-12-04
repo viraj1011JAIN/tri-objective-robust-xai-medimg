@@ -1,0 +1,14 @@
+\begin{table}
+\caption{Robustness evaluation results on ISIC 2018 test set under PGD-20 attack ($\epsilon = 8/255$). Results show mean ± std across three random seeds.}
+\label{tab:robustness_metrics}
+\begin{tabular}{lllll}
+\toprule
+ & Clean Accuracy (%) & Robust Accuracy (%) & Attack Success Rate (%) & Robustness Gap (%) \\
+approach &  &  &  &  \\
+\midrule
+Baseline (ERM) & 83.1 ± 1.2 & 0.3 ± 0.4 & 99.7 ± 0.5 & 82.8 ± 1.5 \\
+TRADES & 61.9 ± 0.7 & 55.3 ± 5.5 & 10.7 ± 8.1 & 6.6 ± 5.0 \\
+Tri-Objective (Ours) & 75.9 ± 0.4 & 1.4 ± 0.7 & 98.1 ± 0.9 & 74.5 ± 0.4 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,6 +1,5 @@
 """
-Production-Level DVC Data Registry for External Datasets
-Tracks datasets at/content/drive/MyDrive/data without moving/copying them.
+# register_dvc_data.py
 """
 
 import hashlib

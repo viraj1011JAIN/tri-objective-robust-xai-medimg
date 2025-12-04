@@ -1,0 +1,259 @@
+{
+  "metadata": {
+    "timestamp": "2025-12-01T05:15:22.961956",
+    "environment": "colab",
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "pytorch_version": "2.9.0+cu126",
+    "phase": 6,
+    "title": "Explainability Implementation"
+  },
+  "config": {
+    "model_arch": "resnet50",
+    "num_classes": 7,
+    "batch_size": 16,
+    "num_workers": 2,
+    "seeds": [
+      42,
+      123,
+      456
+    ],
+    "target_layers": [
+      "layer4"
+    ],
+    "multi_layer_targets": [
+      "layer2",
+      "layer3",
+      "layer4"
+    ],
+    "fgsm_epsilon": 0.00784313725490196,
+    "pgd_epsilon": 0.03137254901960784,
+    "pgd_steps": 10,
+    "pgd_alpha": 0.00784313725490196,
+    "h2_ssim_threshold": 0.75,
+    "baseline_ssim_range": [
+      0.55,
+      0.6
+    ],
+    "artifact_tcav_range": [
+      0.4,
+      0.5
+    ],
+    "medical_tcav_range": [
+      0.55,
+      0.65
+    ],
+    "num_eval_samples": 200,
+    "num_viz_samples": 15,
+    "faithfulness_steps": 50
+  },
+  "sections_completed": {
+    "6.1 Grad-CAM Implementation": true,
+    "6.2 Stability Metrics": true,
+    "6.3 Faithfulness Metrics": true,
+    "6.4 Baseline Quality": true,
+    "6.5 Concept Bank": false,
+    "6.6 TCAV Training": true,
+    "6.7 TCAV Sensitivity": true,
+    "6.8 CKA Analysis": true
+  },
+  "baseline_xai": {
+    "stability": {
+      "ssim_mean": 0.9998863786038044,
+      "ssim_std": 4.400066492075259e-05,
+      "spearman_mean": 0.9998944487542856,
+      "spearman_std": 2.0807114297773526e-05,
+      "l2_mean": 0.0035439794380815147,
+      "l2_std": 0.000995415987917342,
+      "cosine_mean": 0.9999900337867171,
+      "cosine_std": 5.362702314075062e-06
+    },
+    "faithfulness": {
+      "deletion_auc_mean": 0.8073752873084123,
+      "deletion_auc_std": 1.1102230246251565e-16,
+      "insertion_auc_mean": 0.905004465550769,
+      "insertion_auc_std": 3.3306690738754696e-16
+    },
+    "h2_validation": {
+      "status": "INCONCLUSIVE",
+      "ssim_observed": 0.9998863786038044,
+      "ssim_threshold": 0.75,
+      "conclusion": "Unexpectedly high baseline stability"
+    },
+    "config": {
+      "n_samples": 196,
+      "fgsm_epsilon": 0.00784313725490196,
+      "faithfulness_steps": 50
+    }
+  },
+  "tcav": {
+    "medical_concepts": {
+      "asymmetry": {
+        "tcav_score": 1.0,
+        "mean_sensitivity": 306.7825900939607,
+        "std_sensitivity": 5.684341886080802e-14
+      }
+    },
+    "artifact_concepts": {
+      "ruler": {
+        "tcav_score": 1.0,
+        "mean_sensitivity": 0.29799977027984603,
+        "std_sensitivity": 0.0
+      }
+    },
+    "aggregate": {
+      "medical_tcav_mean": 1.0,
+      "artifact_tcav_mean": 1.0
+    },
+    "h4_validation": {
+      "status": "PENDING",
+      "message": "Real concept bank required for validation",
+      "concept_bank_ready": false
+    },
+    "cav_accuracies": {
+      "asymmetry": 1.0,
+      "ruler": 0.6
+    }
+  },
+  "cka": {
+    "same_layer_cka": {
+      "layer1": -1.3840611933800699e-35,
+      "layer2": -5.721076182210631e-32,
+      "layer3": -1.4587998952436877e-27,
+      "layer4": -1.7655831511961757e-25
+    },
+    "representation_shift": {
+      "layer1": {
+        "l2_mean": 0.06974942982196808,
+        "l2_std": 0.004265372175723314,
+        "cos_mean": 0.999692976474762,
+        "cos_std": 2.8345197279122658e-05
+      },
+      "layer2": {
+        "l2_mean": 0.3784063160419464,
+        "l2_std": 0.04585373029112816,
+        "cos_mean": 0.999889075756073,
+        "cos_std": 1.5813522622920573e-05
+      },
+      "layer3": {
+        "l2_mean": 4.281520366668701,
+        "l2_std": 0.7978928089141846,
+        "cos_mean": 0.9999805092811584,
+        "cos_std": 2.737471731961705e-06
+      },
+      "layer4": {
+        "l2_mean": 12.826950073242188,
+        "l2_std": 2.646019220352173,
+        "cos_mean": 0.9999805688858032,
+        "cos_std": 2.071399194392143e-06
+      }
+    },
+    "cka_matrices": {
+      "clean_self": [
+        [
+          9.200091041937827e-71,
+          -2.3791615325554293e-70,
+          1.3095727633339958e-68,
+          -3.043372253769117e-67
+        ],
+        [
+          -2.3791615325554293e-70,
+          1.046625791778124e-67,
+          -4.462514755108586e-66,
+          2.19958511639197e-65
+        ],
+        [
+          1.3095727633339958e-68,
+          -4.462514755108586e-66,
+          1.985422399061904e-63,
+          3.672715441823255e-63
+        ],
+        [
+          -3.043372253769117e-67,
+          2.19958511639197e-65,
+          3.672715441823255e-63,
+          5.755188802316518e-61
+        ]
+      ],
+      "adv_self": [
+        [
+          0.9999984863545935,
+          0.9995446695545067,
+          0.9988074180321828,
+          0.9953940487409766
+        ],
+        [
+          0.9995446695545067,
+          0.9999999992756264,
+          0.9993509663835491,
+          0.9973180226659474
+        ],
+        [
+          0.9988074180321828,
+          0.9993509663835491,
+          0.9999999999999837,
+          0.9968545967584904
+        ],
+        [
+          0.9953940487409766,
+          0.9973180226659474,
+          0.9968545967584904,
+          0.9999999999999997
+        ]
+      ],
+      "cross": [
+        [
+          -1.3840611933800699e-35,
+          -6.455758497749219e-34,
+          -1.373330253917606e-31,
+          -1.2148263151552685e-30
+        ],
+        [
+          -1.263932774596295e-33,
+          -5.721076182210631e-32,
+          -1.1297771184188193e-29,
+          -1.3908377030369534e-28
+        ],
+        [
+          -1.5943753588169353e-31,
+          -7.20244332035945e-30,
+          -1.4587998952436877e-27,
+          -1.796410421518928e-26
+        ],
+        [
+          -1.6762100158496266e-30,
+          -7.887291969942749e-29,
+          -1.7436551581556004e-26,
+          -1.7655831511961757e-25
+        ]
+      ]
+    },
+    "n_samples": 112,
+    "most_affected_layer": "layer4",
+    "min_cka_value": -1.7655831511961757e-25
+  },
+  "hypotheses": {
+    "H2": {
+      "baseline_ssim": 0.9998863786038044,
+      "target": 0.75,
+      "status": "baseline_established"
+    },
+    "H3": {
+      "baseline_deletion_auc": 0.8073752873084123,
+      "baseline_insertion_auc": 0.905004465550769,
+      "status": "baseline_established"
+    },
+    "H4": {
+      "artifact_tcav": 1.0,
+      "medical_tcav": 1.0,
+      "target_artifact": [
+        0.4,
+        0.5
+      ],
+      "target_medical": [
+        0.55,
+        0.65
+      ],
+      "status": "PENDING"
+    }
+  }
+}

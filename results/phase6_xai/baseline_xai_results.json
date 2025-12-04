@@ -1,0 +1,29 @@
+{
+  "stability": {
+    "ssim_mean": 0.9998863786038044,
+    "ssim_std": 4.400066492075259e-05,
+    "spearman_mean": 0.9998944487542856,
+    "spearman_std": 2.0807114297773526e-05,
+    "l2_mean": 0.0035439794380815147,
+    "l2_std": 0.000995415987917342,
+    "cosine_mean": 0.9999900337867171,
+    "cosine_std": 5.362702314075062e-06
+  },
+  "faithfulness": {
+    "deletion_auc_mean": 0.8073752873084123,
+    "deletion_auc_std": 1.1102230246251565e-16,
+    "insertion_auc_mean": 0.905004465550769,
+    "insertion_auc_std": 3.3306690738754696e-16
+  },
+  "h2_validation": {
+    "status": "INCONCLUSIVE",
+    "ssim_observed": 0.9998863786038044,
+    "ssim_threshold": 0.75,
+    "conclusion": "Unexpectedly high baseline stability"
+  },
+  "config": {
+    "n_samples": 196,
+    "fgsm_epsilon": 0.00784313725490196,
+    "faithfulness_steps": 50
+  }
+}

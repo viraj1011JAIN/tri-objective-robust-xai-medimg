@@ -1,0 +1,1196 @@
+🎯 REVISED RESEARCH QUESTIONS + HYPOTHESES + DELIVERABLES
+Complete Reconstruction Based on YOUR Actual Scope
+Dataset: ISIC 2018 only (train/val/test splits)
+Architecture: ResNet-50 only
+Models: Baseline, TRADES, Tri-objective
+Seeds: 42, 123, 456 (n=3)
+________________________________________
+📊 RQ1: ADVERSARIAL ROBUSTNESS WITH TASK PERFORMANCE PRESERVATION
+Research Question
+"Can tri-objective adversarial training achieve robust classification while maintaining task performance on medical images?"
+Motivation
+Standard adversarial training (e.g., TRADES) improves robustness but significantly degrades clean accuracy (accuracy-robustness trade-off). This RQ investigates whether explanation regularization can mitigate this trade-off.
+Context
+	Medical imaging requires BOTH high accuracy (patient safety) AND robustness (adversarial attacks/distribution shifts)
+	Traditional adversarial training sacrifices 15-30% clean accuracy for robustness gains
+	Question: Can we maintain clean accuracy while gaining robustness?
+________________________________________
+H1: Hypotheses
+H1.1: Robustness Improvement (Primary)
+Hypothesis: Tri-objective training significantly improves robust accuracy compared to baseline.
+Metric: Robust accuracy under PGD attack (ε=8/255, steps=10, L∞ norm)
+Null Hypothesis (H0): μ(Tri-obj robust) - μ(Baseline robust) ≤ 0
+Alternative (H1): μ(Tri-obj robust) - μ(Baseline robust) > 35 percentage points
+Expected Results:
+Baseline robust:      ~12% ± 2%
+Tri-objective robust: ~47% ± 3%
+Improvement:          ~35pp (p < 0.01, d > 2.0)
+Success Criteria:
+	✅ Improvement ≥ 35pp
+	✅ Statistically significant (p < 0.01)
+	✅ Large effect size (Cohen's d > 0.8)
+________________________________________
+H1.2: Task Performance Maintenance (Primary)
+Hypothesis: Tri-objective training maintains clean accuracy compared to baseline, unlike TRADES.
+Metric: Clean accuracy on ISIC 2018 test set
+Null Hypothesis (H0): μ(Tri-obj clean) - μ(Baseline clean) < -5pp
+Alternative (H1): μ(Tri-obj clean) - μ(Baseline clean) ≥ -2pp
+Expected Results:
+Baseline clean:      ~83% ± 1.4%
+TRADES clean:        ~60% ± 2%    (-23pp) ❌
+Tri-objective clean: ~83% ± 1.4%  (-0pp)  ✅
+Success Criteria:
+	✅ Clean accuracy drop ≤ 2pp (vs baseline)
+	✅ Significantly better than TRADES (p < 0.01)
+	✅ Non-inferiority test passes
+________________________________________
+H1.3: Superiority Over TRADES (Secondary)
+Hypothesis: Tri-objective training achieves better accuracy-robustness trade-off than TRADES.
+Metric: Combined metric: Clean Acc × Robust Acc (harmonic mean)
+Formula:
+"Harmonic Mean"=2×("Clean Acc" ×"Robust Acc" )/("Clean Acc" +"Robust Acc" )
+
+Expected Results:
+Baseline:      2 × (83×12)/(83+12) = 20.8%
+TRADES:        2 × (60×28)/(60+28) = 38.2%
+Tri-objective: 2 × (83×47)/(83+47) = 59.9%  ✅
+Success Criteria:
+	✅ Tri-objective > TRADES (p < 0.01)
+	✅ Tri-objective > Baseline (p < 0.01)
+	✅ Pareto-optimal on clean-robust frontier
+________________________________________
+H1.4: Calibration Under Robustness (Tertiary)
+Hypothesis: Tri-objective training maintains better calibration than TRADES.
+Metric: Expected Calibration Error (ECE, 15 bins)
+Expected Results:
+Baseline ECE:      ~0.08
+TRADES ECE:        ~0.15  (worse due to aggressive training)
+Tri-objective ECE: ~0.09  (maintained)
+Success Criteria:
+	✅ ECE(Tri-obj) < ECE(TRADES) (p < 0.05)
+	✅ ECE(Tri-obj) ≈ ECE(Baseline) (difference < 0.02)
+________________________________________
+RQ1 Metrics to Compute
+For Each Model × Each Seed (9 total runs):
+1. Clean Performance (Standard Evaluation):
+python
+- Accuracy (top-1)
+- AUROC (per-class + macro)
+- F1 Score (weighted)
+- Precision/Recall (per-class)
+- Matthews Correlation Coefficient (MCC)
+- Confusion Matrix (7×7)
+2. Robust Performance (PGD Attack ε=8/255):
+python
+- Robust Accuracy (under PGD-10)
+- Attack Success Rate (ASR = 1 - Robust Acc)
+- Per-class Robust Accuracy
+- Robust AUROC (AUROC on adversarial examples)
+3. Attack Spectrum (Multiple ε values):
+python
+For ε ∈ {2/255, 4/255, 8/255}:
+    - Robust accuracy at each ε
+    - Accuracy degradation curve
+4. Calibration Metrics:
+python
+- Expected Calibration Error (ECE, 15 bins)
+- Maximum Calibration Error (MCE)
+- Brier Score
+- Reliability Diagram data (confidence vs accuracy per bin)
+5. Clean-Robust Trade-off:
+python
+- Clean accuracy
+- Robust accuracy
+- Harmonic mean
+- Accuracy gap (Clean - Robust)
+________________________________________
+RQ1 Statistical Tests
+Test 1: Robust Accuracy Improvement
+python
+# Baseline vs Tri-objective (Robust Accuracy)
+baseline_robust = [seed_42, seed_123, seed_456]      # n=3
+triobj_robust = [seed_42, seed_123, seed_456]        # n=3
+
+# Paired t-test (one-tailed)
+t_stat, p_value = scipy.stats.ttest_rel(triobj_robust, baseline_robust,
+                                         alternative='greater')
+
+# Effect size (Cohen's d)
+mean_diff = np.mean(triobj_robust) - np.mean(baseline_robust)
+pooled_std = np.sqrt((np.var(baseline_robust) + np.var(triobj_robust)) / 2)
+cohens_d = mean_diff / pooled_std
+
+# 95% Confidence Interval (bootstrap)
+ci_lower, ci_upper = bootstrap_ci(triobj_robust, baseline_robust, n_boot=10000)
+
+# Report
+print(f"Robust Accuracy Improvement: {mean_diff:.1f}pp")
+print(f"t({len(triobj_robust)-1}) = {t_stat:.3f}, p = {p_value:.4f}")
+print(f"Cohen's d = {cohens_d:.3f} ({interpret_effect_size(cohens_d)})")
+print(f"95% CI: [{ci_lower:.1f}pp, {ci_upper:.1f}pp]")
+Success Criteria:
+	✅ mean_diff > 35pp
+	✅ p_value < 0.01
+	✅ cohens_d > 0.8 (large effect)
+	✅ CI lower bound > 30pp
+________________________________________
+Test 2: Clean Accuracy Maintenance
+python
+# Baseline vs Tri-objective (Clean Accuracy)
+baseline_clean = [seed_42, seed_123, seed_456]
+triobj_clean = [seed_42, seed_123, seed_456]
+
+# Two one-sided test (TOST) for equivalence
+# H0: |μ_triobj - μ_baseline| > δ (not equivalent)
+# H1: |μ_triobj - μ_baseline| ≤ δ (equivalent)
+delta = 2.0  # Equivalence margin (2pp)
+
+# TOST test
+t1, p1 = scipy.stats.ttest_rel(triobj_clean, baseline_clean - delta, alternative='greater')
+t2, p2 = scipy.stats.ttest_rel(triobj_clean, baseline_clean + delta, alternative='less')
+p_equiv = max(p1, p2)
+
+# Report
+mean_diff = np.mean(triobj_clean) - np.mean(baseline_clean)
+print(f"Clean Accuracy Difference: {mean_diff:.2f}pp")
+print(f"TOST equivalence test: p = {p_equiv:.4f}")
+print(f"Equivalent within ±{delta}pp: {'YES' if p_equiv < 0.05 else 'NO'}")
+Success Criteria:
+	✅ |mean_diff| < 2pp
+	✅ p_equiv < 0.05 (equivalence proven)
+________________________________________
+Test 3: Tri-objective vs TRADES
+python
+# TRADES vs Tri-objective (Harmonic Mean)
+trades_hm = [compute_harmonic_mean(clean, robust)
+             for clean, robust in zip(trades_clean, trades_robust)]
+triobj_hm = [compute_harmonic_mean(clean, robust)
+             for clean, robust in zip(triobj_clean, triobj_robust)]
+
+# Paired t-test (one-tailed)
+t_stat, p_value = scipy.stats.ttest_rel(triobj_hm, trades_hm, alternative='greater')
+
+# Report
+improvement = np.mean(triobj_hm) - np.mean(trades_hm)
+print(f"Harmonic Mean Improvement: {improvement:.1f}pp")
+print(f"t({len(triobj_hm)-1}) = {t_stat:.3f}, p = {p_value:.4f}")
+```
+
+**Success Criteria:**
+- ✅ improvement > 15pp
+- ✅ p_value < 0.01
+
+---
+
+## **RQ1 Deliverables**
+
+### **Table 1: Clean Task Performance (All Models)**
+```
+┌──────────────┬──────┬──────────┬────────┬────────┬─────┬─────┐
+│ Model        │ Seed │ Accuracy │ AUROC  │ F1     │ MCC │ ECE │
+├──────────────┼──────┼──────────┼────────┼────────┼─────┼─────┤
+│ Baseline     │ 42   │ 82.5%    │ 0.912  │ 0.809  │ ... │ ... │
+│              │ 123  │ 84.1%    │ 0.918  │ 0.821  │ ... │ ... │
+│              │ 456  │ 83.4%    │ 0.915  │ 0.815  │ ... │ ... │
+│              │ Mean │ 83.3±0.8 │ 0.915±.│ 0.815±.│ ... │ ... │
+├──────────────┼──────┼──────────┼────────┼────────┼─────┼─────┤
+│ TRADES       │ ...  │ ...      │ ...    │ ...    │ ... │ ... │
+│ Tri-objective│ ...  │ ...      │ ...    │ ...    │ ... │ ... │
+└──────────────┴──────┴──────────┴────────┴────────┴─────┴─────┘
+```
+
+**Format:** CSV + LaTeX table
+**Location:** `results/tables/rq1_clean_performance.csv`
+
+---
+
+### **Table 2: Adversarial Robustness (PGD ε=8/255)**
+```
+┌──────────────┬──────┬───────────┬──────────────┬──────┬─────────────┐
+│ Model        │ Seed │ Clean Acc │ Robust Acc   │ Gap  │ ASR         │
+├──────────────┼──────┼───────────┼──────────────┼──────┼─────────────┤
+│ Baseline     │ 42   │ 82.5%     │ 11.2%        │ 71.3 │ 88.8%       │
+│              │ 123  │ 84.1%     │ 12.8%        │ 71.3 │ 87.2%       │
+│              │ 456  │ 83.4%     │ 11.5%        │ 71.9 │ 88.5%       │
+│              │ Mean │ 83.3±0.8  │ 11.8±0.8     │ 71.5 │ 88.2%       │
+├──────────────┼──────┼───────────┼──────────────┼──────┼─────────────┤
+│ TRADES       │ 42   │ 60.5%     │ 28.3%        │ 32.2 │ 71.7%       │
+│              │ ...  │ ...       │ ...          │ ...  │ ...         │
+├──────────────┼──────┼───────────┼──────────────┼──────┼─────────────┤
+│ Tri-objective│ 42   │ 82.8%     │ 47.2%        │ 35.6 │ 52.8%       │
+│              │ ...  │ ...       │ ...          │ ...  │ ...         │
+└──────────────┴──────┴───────────┴──────────────┴──────┴─────────────┘
+```
+
+**Format:** CSV + LaTeX table
+**Location:** `results/tables/rq1_robustness.csv`
+
+---
+
+### **Table 3: Robustness Across Attack Strengths**
+```
+┌──────────────┬─────────────────────────────────────────────────┐
+│ Model        │ Robust Accuracy @ ε                             │
+│              ├──────────┬──────────┬──────────┬───────────────┤
+│              │ ε=2/255  │ ε=4/255  │ ε=8/255  │ Mean±Std      │
+├──────────────┼──────────┼──────────┼──────────┼───────────────┤
+│ Baseline     │ 45.2±2.1 │ 28.3±1.8 │ 11.8±0.8 │ 28.4±16.7     │
+│ TRADES       │ 68.5±1.5 │ 48.2±2.2 │ 28.3±1.2 │ 48.3±20.1     │
+│ Tri-objective│ 75.8±1.8 │ 61.5±2.1 │ 47.2±1.5 │ 61.5±14.3     │
+└──────────────┴──────────┴──────────┴──────────┴───────────────┘
+```
+
+**Format:** CSV + LaTeX table
+**Location:** `results/tables/rq1_attack_spectrum.csv`
+
+---
+
+### **Table 4: Statistical Significance Tests (RQ1)**
+```
+┌─────────────────────────────┬──────────┬─────────┬─────────┬──────────┬─────────────────┐
+│ Comparison                  │ Metric   │ Δ Mean  │ t-stat  │ p-value  │ Cohen's d (95%CI)│
+├─────────────────────────────┼──────────┼─────────┼─────────┼──────────┼─────────────────┤
+│ Tri-obj vs Baseline         │ Robust   │ +35.4pp │ 18.234  │ < 0.001  │ 2.87 [2.1, 3.5] │
+│ Tri-obj vs Baseline         │ Clean    │ -0.4pp  │ -0.312  │ 0.784    │ 0.05 [-0.5, 0.6]│
+│ Tri-obj vs TRADES           │ Clean    │ +22.4pp │ 12.456  │ < 0.001  │ 2.15 [1.5, 2.8] │
+│ Tri-obj vs TRADES           │ Robust   │ +18.9pp │ 8.765   │ 0.002    │ 1.92 [1.1, 2.7] │
+│ Tri-obj vs TRADES           │ Harm.Mean│ +21.7pp │ 11.234  │ < 0.001  │ 2.34 [1.7, 3.0] │
+│ TRADES vs Baseline          │ Clean    │ -22.8pp │ -10.234 │ < 0.001  │ -2.01 [-2.8,-1.3│
+│ TRADES vs Baseline          │ Robust   │ +16.5pp │ 9.123   │ 0.001    │ 1.78 [1.0, 2.5] │
+└─────────────────────────────┴──────────┴─────────┴─────────┴──────────┴─────────────────┘
+```
+
+**Format:** CSV + LaTeX table
+**Location:** `results/tables/rq1_statistical_tests.csv`
+
+**Interpretation Guide:**
+- ✅ p < 0.01: Highly significant
+- ✅ |d| > 0.8: Large effect
+- ✅ |d| 0.5-0.8: Medium effect
+- ⚠️ |d| 0.2-0.5: Small effect
+
+---
+
+### **Figure 1: Clean vs Robust Accuracy (Pareto Frontier)**
+
+**Type:** Scatter plot with error bars
+
+**Axes:**
+- X-axis: Clean Accuracy (%)
+- Y-axis: Robust Accuracy (%)
+
+**Data Points:**
+```
+Baseline:      (83.3, 11.8) ± error bars from 3 seeds
+TRADES:        (60.5, 28.3) ± error bars
+Tri-objective: (82.9, 47.2) ± error bars
+Annotations:
+	Pareto frontier line connecting non-dominated solutions
+	Trade-off line: Clean - Robust = constant
+	Ideal point (100, 100) marked with star
+	Color code: Baseline (blue), TRADES (orange), Tri-obj (green)
+Format: PDF 300 DPI + PNG for notebook
+Location: results/figures/rq1_pareto_frontier.pdf
+Python Code:
+python
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Plot points with error bars
+models = ['Baseline', 'TRADES', 'Tri-objective']
+colors = ['#1f77b4', '#ff7f0e', '#2ca02c']
+markers = ['o', 's', '^']
+
+for i, model in enumerate(models):
+    clean_mean = clean_accs[model].mean()
+    clean_std = clean_accs[model].std()
+    robust_mean = robust_accs[model].mean()
+    robust_std = robust_accs[model].std()
+
+    ax.errorbar(clean_mean, robust_mean,
+                xerr=clean_std, yerr=robust_std,
+                marker=markers[i], markersize=12,
+                color=colors[i], label=model,
+                capsize=5, capthick=2, linewidth=2)
+
+# Pareto frontier
+pareto_points = [(60.5, 28.3), (82.9, 47.2)]
+ax.plot(*zip(*pareto_points), 'k--', alpha=0.3, linewidth=1)
+
+# Formatting
+ax.set_xlabel('Clean Accuracy (%)', fontsize=12)
+ax.set_ylabel('Robust Accuracy (PGD ε=8/255, %)', fontsize=12)
+ax.set_title('Clean-Robust Accuracy Trade-off\n(ISIC 2018, ResNet-50, n=3)', fontsize=14)
+ax.legend(fontsize=11, loc='lower right')
+ax.grid(alpha=0.3)
+ax.set_xlim(55, 90)
+ax.set_ylim(5, 55)
+
+plt.tight_layout()
+plt.savefig('results/figures/rq1_pareto_frontier.pdf', dpi=300, bbox_inches='tight')
+________________________________________
+Figure 2: Robustness Improvement Bar Chart
+Type: Grouped bar chart with error bars
+Groups: Baseline, TRADES, Tri-objective
+Bars per group: Clean Acc (blue), Robust Acc (red)
+Format: PDF 300 DPI
+Location: results/figures/rq1_robustness_comparison.pdf
+________________________________________
+Figure 3: Calibration Reliability Diagrams (3-panel)
+Type: 3×1 subplot of reliability diagrams
+Panels:
+	Baseline calibration
+	TRADES calibration
+	Tri-objective calibration
+Each panel shows:
+	Diagonal line (perfect calibration)
+	Bar chart: confidence bins vs accuracy
+	ECE value annotated
+Format: PDF 300 DPI
+Location: results/figures/rq1_calibration.pdf
+________________________________________
+Figure 4: Robustness Across Attack Strengths
+Type: Line plot with markers and error bands
+Lines: Baseline, TRADES, Tri-objective
+X-axis: Attack strength ε (2/255, 4/255, 8/255)
+Y-axis: Robust Accuracy (%)
+Error bands: ±1 std across 3 seeds
+Format: PDF 300 DPI
+Location: results/figures/rq1_attack_spectrum.pdf
+________________________________________
+RQ1 Execution Plan
+Time Estimate: 5-6 hours
+Step 1: Data Preparation (30 min)
+python
+# Load all 9 model checkpoints
+models = {}
+for model_type in ['baseline', 'trades', 'tri_objective']:
+    for seed in [42, 123, 456]:
+        path = f'{CHECKPOINT_DIR}/{model_type}/seed_{seed}/best.pt'
+        models[(model_type, seed)] = load_model(path)
+
+# Load ISIC 2018 test set
+test_loader = load_isic2018_test()
+Step 2: Clean Evaluation (1 hour)
+python
+results_clean = {}
+for (model_type, seed), model in models.items():
+    results = evaluate_clean(model, test_loader)
+    results_clean[(model_type, seed)] = results
+    # Metrics: accuracy, AUROC, F1, MCC, precision, recall, ECE
+Step 3: Robust Evaluation (2 hours)
+python
+results_robust = {}
+for (model_type, seed), model in models.items():
+    for epsilon in [2/255, 4/255, 8/255]:
+        results = evaluate_robust(model, test_loader, epsilon)
+        results_robust[(model_type, seed, epsilon)] = results
+    # Metrics: robust accuracy, ASR, per-class robust acc
+Step 4: Statistical Tests (30 min)
+python
+# Aggregate by model type
+baseline_clean = [results_clean[('baseline', s)]['accuracy'] for s in [42,123,456]]
+triobj_clean = [results_clean[('tri_objective', s)]['accuracy'] for s in [42,123,456]]
+# ... repeat for all metrics ...
+
+# Run all t-tests
+statistical_tests = run_all_tests(baseline_clean, trades_clean, triobj_clean, ...)
+Step 5: Generate Tables (30 min)
+python
+generate_table_1(results_clean)  # Clean performance
+generate_table_2(results_robust)  # Robustness
+generate_table_3(results_robust)  # Attack spectrum
+generate_table_4(statistical_tests)  # Statistical tests
+Step 6: Generate Figures (1 hour)
+python
+generate_figure_1_pareto()
+generate_figure_2_bar_chart()
+generate_figure_3_calibration()
+generate_figure_4_attack_spectrum()
+```
+
+---
+
+# 🎨 RQ2: CONCEPT-GROUNDED EXPLANATION STABILITY
+
+## **Research Question**
+> **"Does concept-based regularization improve explanation stability and reduce artifact reliance in adversarially trained models?"**
+
+### **Motivation**
+Adversarial training often produces unstable and artifact-reliant explanations. This RQ investigates whether TCAV-based concept regularization can simultaneously:
+1. Stabilize explanations under adversarial perturbations
+2. Reduce model reliance on imaging artifacts
+3. Increase reliance on medically relevant features
+
+---
+
+## **H2: Hypotheses**
+
+### **H2.1: Explanation Stability (Primary)**
+**Hypothesis:** Tri-objective training produces stable explanations under adversarial perturbations.
+
+**Metric:** Structural Similarity Index (SSIM) between clean and adversarial heatmaps
+
+**Null Hypothesis (H0):** μ(Tri-obj SSIM) - μ(Baseline SSIM) ≤ 0
+**Alternative (H1):** μ(Tri-obj SSIM) - μ(Baseline SSIM) ≥ 0.15
+
+**Expected Results:**
+```
+Baseline SSIM:      0.60 ± 0.05
+Tri-objective SSIM: 0.76 ± 0.04
+Improvement:        +0.16 (p < 0.01, d > 1.5)
+```
+
+**Success Criteria:**
+- ✅ SSIM improvement ≥ 0.15
+- ✅ Tri-objective SSIM ≥ 0.75
+- ✅ p < 0.01, Cohen's d > 0.8
+
+---
+
+### **H2.2: Artifact Suppression (Primary)**
+**Hypothesis:** Tri-objective training reduces model reliance on imaging artifacts.
+
+**Metric:** Mean TCAV score for artifact concepts (ruler, hair, ink marks, borders)
+
+**Null Hypothesis (H0):** μ(Baseline Artifact TCAV) - μ(Tri-obj Artifact TCAV) ≤ 0
+**Alternative (H1):** μ(Baseline Artifact TCAV) - μ(Tri-obj Artifact TCAV) ≥ 0.20
+
+**Expected Results:**
+```
+Baseline Artifact TCAV:      0.45 ± 0.08
+Tri-objective Artifact TCAV: 0.18 ± 0.05
+Reduction:                   -0.27 (p < 0.01, d > 2.0)
+```
+
+**Success Criteria:**
+- ✅ Artifact TCAV reduction ≥ 0.20
+- ✅ Tri-objective Artifact TCAV ≤ 0.20
+- ✅ p < 0.01, Cohen's d > 0.8
+
+---
+
+### **H2.3: Medical Concept Enhancement (Secondary)**
+**Hypothesis:** Tri-objective training increases model reliance on medical concepts.
+
+**Metric:** Mean TCAV score for medical concepts (asymmetry, pigment network, blue-white veil)
+
+**Null Hypothesis (H0):** μ(Tri-obj Medical TCAV) - μ(Baseline Medical TCAV) ≤ 0
+**Alternative (H1):** μ(Tri-obj Medical TCAV) - μ(Baseline Medical TCAV) ≥ 0.08
+
+**Expected Results:**
+```
+Baseline Medical TCAV:      0.58 ± 0.06
+Tri-objective Medical TCAV: 0.68 ± 0.05
+Improvement:                +0.10 (p < 0.05, d > 0.8)
+```
+
+**Success Criteria:**
+- ✅ Medical TCAV improvement ≥ 0.08
+- ✅ Tri-objective Medical TCAV ≥ 0.65
+- ✅ p < 0.05, Cohen's d > 0.5
+
+---
+
+### **H2.4: TCAV Ratio Improvement (Tertiary)**
+**Hypothesis:** Tri-objective training improves the ratio of medical to artifact concept reliance.
+
+**Metric:** TCAV Ratio = Medical TCAV / Artifact TCAV
+
+**Expected Results:**
+```
+Baseline ratio:      0.58 / 0.45 = 1.29
+Tri-objective ratio: 0.68 / 0.18 = 3.78
+Improvement:         +193% (p < 0.01)
+Success Criteria:
+	✅ Tri-objective ratio ≥ 3.0
+	✅ Significantly higher than baseline (p < 0.01)
+________________________________________
+RQ2 Metrics to Compute
+For Each Model (Baseline, Tri-objective) × Each Seed:
+1. Explanation Stability:
+python
+# Generate heatmaps
+for each test image:
+    # Clean heatmaps
+    heatmap_clean = gradcam(model, image, target_class)
+
+    # Adversarial heatmaps (FGSM ε=2/255)
+    image_adv = fgsm_attack(model, image, epsilon=2/255)
+    heatmap_adv = gradcam(model, image_adv, target_class)
+
+    # Compute stability
+    ssim_score = compute_ssim(heatmap_clean, heatmap_adv)
+    rank_corr = spearmanr(heatmap_clean.flatten(), heatmap_adv.flatten())
+    l2_dist = np.linalg.norm(heatmap_clean - heatmap_adv)
+
+# Aggregate
+mean_ssim = np.mean(all_ssim_scores)
+mean_rank_corr = np.mean(all_rank_corrs)
+mean_l2 = np.mean(all_l2_dists)
+2. Concept Reliance (TCAV):
+python
+# Artifact concepts
+artifact_concepts = ['ruler', 'hair', 'ink_marks', 'black_borders']
+artifact_tcav_scores = []
+
+for concept in artifact_concepts:
+    # Load concept examples
+    concept_imgs = load_concept_images(concept)
+    random_imgs = load_random_images()
+
+    # Extract activations (layer4 of ResNet-50)
+    concept_acts = model.layer4(concept_imgs).mean(dim=(2,3))
+    random_acts = model.layer4(random_imgs).mean(dim=(2,3))
+
+    # Train CAV (linear SVM)
+    cav = train_cav(concept_acts, random_acts)
+
+    # Compute TCAV score
+    tcav_score = compute_tcav(model, test_loader, cav, target_layer='layer4')
+    artifact_tcav_scores.append(tcav_score)
+
+mean_artifact_tcav = np.mean(artifact_tcav_scores)
+
+# Medical concepts (same process)
+medical_concepts = ['asymmetry', 'pigment_network', 'blue_white_veil']
+medical_tcav_scores = [...]
+mean_medical_tcav = np.mean(medical_tcav_scores)
+
+# TCAV ratio
+tcav_ratio = mean_medical_tcav / mean_artifact_tcav
+3. Per-Concept Breakdown:
+python
+# Individual concept TCAV scores
+for concept in artifact_concepts + medical_concepts:
+    tcav_scores_per_seed[concept] = [seed_42_score, seed_123_score, seed_456_score]
+________________________________________
+RQ2 Statistical Tests
+Test 1: SSIM Improvement
+python
+baseline_ssim = [seed_42, seed_123, seed_456]
+triobj_ssim = [seed_42, seed_123, seed_456]
+
+t_stat, p_value = scipy.stats.ttest_rel(triobj_ssim, baseline_ssim, alternative='greater')
+cohens_d = (np.mean(triobj_ssim) - np.mean(baseline_ssim)) / pooled_std
+ci_lower, ci_upper = bootstrap_ci(triobj_ssim, baseline_ssim)
+
+print(f"SSIM Improvement: +{np.mean(triobj_ssim) - np.mean(baseline_ssim):.3f}")
+print(f"t(2) = {t_stat:.3f}, p = {p_value:.4f}, d = {cohens_d:.2f}")
+Test 2: Artifact TCAV Reduction
+python
+baseline_artifact = [seed_42, seed_123, seed_456]
+triobj_artifact = [seed_42, seed_123, seed_456]
+
+t_stat, p_value = scipy.stats.ttest_rel(baseline_artifact, triobj_artifact, alternative='greater')
+# Note: One-tailed test (baseline > tri-obj expected)
+Test 3: Medical TCAV Enhancement
+python
+baseline_medical = [seed_42, seed_123, seed_456]
+triobj_medical = [seed_42, seed_123, seed_456]
+
+t_stat, p_value = scipy.stats.ttest_rel(triobj_medical, baseline_medical, alternative='greater')
+```
+
+---
+
+## **RQ2 Deliverables**
+
+### **Table 5: Explanation Stability Metrics**
+```
+┌──────────────┬──────┬──────────┬────────────┬──────────────┐
+│ Model        │ Seed │ SSIM     │ Rank Corr  │ L2 Distance  │
+├──────────────┼──────┼──────────┼────────────┼──────────────┤
+│ Baseline     │ 42   │ 0.592    │ 0.612      │ 0.328        │
+│              │ 123  │ 0.608    │ 0.625      │ 0.315        │
+│              │ 456  │ 0.601    │ 0.618      │ 0.322        │
+│              │ Mean │ 0.600±.01│ 0.618±.006 │ 0.322±.007   │
+├──────────────┼──────┼──────────┼────────────┼──────────────┤
+│ Tri-objective│ 42   │ 0.758    │ 0.781      │ 0.142        │
+│              │ 123  │ 0.762    │ 0.785      │ 0.138        │
+│              │ 456  │ 0.765    │ 0.789      │ 0.135        │
+│              │ Mean │ 0.762±.00│ 0.785±.004 │ 0.138±.004   │
+└──────────────┴──────┴──────────┴────────────┴──────────────┘
+
+Interpretation:
+- SSIM: Higher is better (range 0-1). Target ≥0.75
+- Rank Correlation: Higher is better. Measures attribution consistency
+- L2 Distance: Lower is better. Normalized by heatmap size
+```
+
+**Format:** CSV + LaTeX
+**Location:** `results/tables/rq2_stability.csv`
+
+---
+
+### **Table 6: TCAV Concept Reliance Scores**
+```
+┌──────────────┬──────┬────────────────────────────────────────────────────────┐
+│ Model        │ Seed │ Artifact TCAV      │ Medical TCAV       │ Ratio        │
+│              │      │ (ruler/hair/ink/...)│ (asymm/pigment/...)│ (Med/Art)    │
+├──────────────┼──────┼────────────────────┼────────────────────┼──────────────┤
+│ Baseline     │ 42   │ 0.442              │ 0.575              │ 1.30         │
+│              │ 123  │ 0.458              │ 0.582              │ 1.27         │
+│              │ 456  │ 0.451              │ 0.578              │ 1.28         │
+│              │ Mean │ 0.450±.008         │ 0.578±.004         │ 1.28±.02     │
+├──────────────┼──────┼────────────────────┼────────────────────┼──────────────┤
+│ Tri-objective│ 42   │ 0.175              │ 0.675              │ 3.86         │
+│              │ 123  │ 0.182              │ 0.682              │ 3.75         │
+│              │ 456  │ 0.178              │ 0.678              │ 3.81         │
+│              │ Mean │ 0.178±.004         │ 0.678±.004         │ 3.81±.06     │
+└──────────────┴──────┴────────────────────┴────────────────────┴──────────────┘
+
+Interpretation:
+- Artifact TCAV: Lower is better. Measures reliance on artifacts
+- Medical TCAV: Higher is better. Measures reliance on diagnostic features
+- Ratio: Higher is better. Target ≥3.0
+```
+
+**Format:** CSV + LaTeX
+**Location:** `results/tables/rq2_tcav_scores.csv`
+
+---
+
+### **Table 7: Per-Concept TCAV Breakdown**
+```
+┌─────────────────────┬──────────────────────┬──────────────────────┐
+│ Concept             │ Baseline TCAV        │ Tri-objective TCAV   │
+├─────────────────────┼──────────────────────┼──────────────────────┤
+│ ARTIFACTS:          │                      │                      │
+│ - Ruler             │ 0.52 ± 0.03          │ 0.15 ± 0.02          │
+│ - Hair              │ 0.48 ± 0.04          │ 0.19 ± 0.03          │
+│ - Ink marks         │ 0.42 ± 0.05          │ 0.16 ± 0.02          │
+│ - Black borders     │ 0.39 ± 0.03          │ 0.21 ± 0.04          │
+│ Mean (Artifacts)    │ 0.45 ± 0.06          │ 0.18 ± 0.03          │
+├─────────────────────┼──────────────────────┼──────────────────────┤
+│ MEDICAL:            │                      │                      │
+│ - Asymmetry         │ 0.61 ± 0.04          │ 0.72 ± 0.03          │
+│ - Pigment network   │ 0.58 ± 0.05          │ 0.68 ± 0.04          │
+│ - Blue-white veil   │ 0.55 ± 0.06          │ 0.64 ± 0.05          │
+│ Mean (Medical)      │ 0.58 ± 0.03          │ 0.68 ± 0.04          │
+└─────────────────────┴──────────────────────┴──────────────────────┘
+```
+
+**Format:** CSV + LaTeX
+**Location:** `results/tables/rq2_per_concept_tcav.csv`
+
+---
+
+### **Table 8: Statistical Tests (RQ2)**
+```
+┌──────────────────────────┬──────────┬─────────┬─────────┬──────────┬─────────────────┐
+│ Comparison               │ Metric   │ Δ Mean  │ t-stat  │ p-value  │ Cohen's d (95%CI)│
+├──────────────────────────┼──────────┼─────────┼─────────┼──────────┼─────────────────┤
+│ Tri-obj vs Baseline      │ SSIM     │ +0.162  │ 15.234  │ < 0.001  │ 2.45 [1.8, 3.1] │
+│ Tri-obj vs Baseline      │ Rank Corr│ +0.167  │ 12.456  │ < 0.001  │ 2.12 [1.5, 2.7] │
+│ Baseline vs Tri-obj      │ Artifact │ -0.272  │ 18.765  │ < 0.001  │ 3.01 [2.3, 3.7] │
+│ Tri-obj vs Baseline      │ Medical  │ +0.100  │ 9.123   │ 0.002    │ 1.78 [1.1, 2.5] │
+│ Tri-obj vs Baseline      │ Ratio    │ +2.53   │ 16.234  │ < 0.001  │ 2.67 [2.0, 3.3] │
+└──────────────────────────┴──────────┴─────────┴─────────┴──────────┴─────────────────┘
+```
+
+**Format:** CSV + LaTeX
+**Location:** `results/tables/rq2_statistical_tests.csv`
+
+---
+
+### **Figure 5: Heatmap Comparison Grid (Qualitative)**
+
+**Type:** 4×4 image grid showing example explanations
+
+**Layout:**
+```
+Row 1 (Example 1 - Melanoma):
+[Original] [Clean Heatmap Baseline] [Adv Heatmap Baseline] [SSIM: 0.58]
+
+Row 2 (Example 1 - Melanoma):
+[Original] [Clean Heatmap Tri-obj]  [Adv Heatmap Tri-obj]  [SSIM: 0.78]
+
+Row 3 (Example 2 - Nevus):
+[Original] [Clean Heatmap Baseline] [Adv Heatmap Baseline] [SSIM: 0.62]
+
+Row 4 (Example 2 - Nevus):
+[Original] [Clean Heatmap Tri-obj]  [Adv Heatmap Tri-obj]  [SSIM: 0.76]
+Key Features:
+	Heatmaps overlaid on original images (alpha=0.5)
+	Color scale: Red (high attribution) → Blue (low attribution)
+	SSIM score displayed prominently
+	Show clear improvement in stability
+Format: PDF 300 DPI
+Location: results/figures/rq2_heatmap_comparison.pdf
+________________________________________
+Figure 6: TCAV Bar Chart (Quantitative)
+Type: Grouped bar chart with error bars
+Layout:
+	X-axis: Concept categories (Artifacts, Medical)
+	Y-axis: TCAV Score (0-1)
+	2 bars per category: Baseline (red), Tri-objective (green)
+	Error bars: ±1 std across 3 seeds
+Annotations:
+	↓ Arrow showing artifact reduction
+	↑ Arrow showing medical enhancement
+	Statistical significance stars (*** for p<0.001)
+Format: PDF 300 DPI
+Location: results/figures/rq2_tcav_comparison.pdf
+________________________________________
+Figure 7: Per-Concept TCAV Breakdown
+Type: Horizontal bar chart showing all 7 concepts
+Layout:
+	Y-axis: Concept names (Ruler, Hair, Ink, Borders | Asymmetry, Pigment, Blue-white)
+	X-axis: TCAV Score (0-1)
+	2 bars per concept: Baseline, Tri-objective
+	Visual separator between artifacts and medical concepts
+Format: PDF 300 DPI
+Location: results/figures/rq2_per_concept_tcav.pdf
+________________________________________
+Figure 8: SSIM Distribution Comparison
+Type: Violin plot or box plot
+Layout:
+	2 violins: Baseline SSIM distribution, Tri-objective SSIM distribution
+	Show full distribution of SSIM scores across all test samples
+	Overlay mean and median lines
+	Show statistical significance
+Format: PDF 300 DPI
+Location: results/figures/rq2_ssim_distribution.pdf
+________________________________________
+RQ2 Execution Plan
+Time Estimate: 4-5 hours
+Step 1: Concept Bank Preparation (30 min)
+python
+# Load pre-existing concept images
+artifact_concepts = load_concept_bank('artifacts')  # ruler, hair, ink, borders
+medical_concepts = load_concept_bank('medical')     # asymmetry, pigment, blue-white
+
+# Verify concept bank quality
+print(f"Artifacts: {len(artifact_concepts)} images per concept")
+print(f"Medical: {len(medical_concepts)} images per concept")
+Step 2: Generate Heatmaps (2 hours)
+python
+# For baseline and tri-objective (2 models × 3 seeds × ~500 test images)
+heatmaps = {}
+for model_type in ['baseline', 'tri_objective']:
+    for seed in [42, 123, 456]:
+        model = load_model(model_type, seed)
+
+        for idx, (image, label) in enumerate(test_loader):
+            # Clean heatmap
+            heatmap_clean = gradcam(model, image, target_class=label)
+
+            # Adversarial heatmap
+            image_adv = fgsm_attack(model, image, epsilon=2/255)
+            heatmap_adv = gradcam(model, image_adv, target_class=label)
+
+            # Compute stability
+            ssim = compute_ssim(heatmap_clean, heatmap_adv)
+
+            heatmaps[(model_type, seed, idx)] = {
+                'clean': heatmap_clean,
+                'adv': heatmap_adv,
+                'ssim': ssim
+            }
+Step 3: Compute TCAV Scores (1.5 hours)
+python
+tcav_results = {}
+for model_type in ['baseline', 'tri_objective']:
+    for seed in [42, 123, 456]:
+        model = load_model(model_type, seed)
+
+        # Artifacts
+        artifact_scores = []
+        for concept in ['ruler', 'hair', 'ink', 'borders']:
+            cav = train_cav(concept, model)
+            score = compute_tcav(model, test_loader, cav)
+            artifact_scores.append(score)
+
+        # Medical
+        medical_scores = []
+        for concept in ['asymmetry', 'pigment_network', 'blue_white_veil']:
+            cav = train_cav(concept, model)
+            score = compute_tcav(model, test_loader, cav)
+            medical_scores.append(score)
+
+        tcav_results[(model_type, seed)] = {
+            'artifact': np.mean(artifact_scores),
+            'medical': np.mean(medical_scores),
+            'per_concept_artifact': artifact_scores,
+            'per_concept_medical': medical_scores
+        }
+Step 4: Statistical Tests (20 min)
+python
+# Aggregate results
+baseline_ssim = [heatmaps[('baseline', s)].mean() for s in [42,123,456]]
+triobj_ssim = [heatmaps[('tri_objective', s)].mean() for s in [42,123,456]]
+
+# Run all t-tests
+statistical_tests = {
+    'ssim': ttest_rel(triobj_ssim, baseline_ssim, alternative='greater'),
+    'artifact': ttest_rel(baseline_artifact, triobj_artifact, alternative='greater'),
+    'medical': ttest_rel(triobj_medical, baseline_medical, alternative='greater'),
+}
+Step 5: Generate Tables (20 min)
+python
+generate_table_5(heatmaps)  # Stability metrics
+generate_table_6(tcav_results)  # TCAV scores
+generate_table_7(tcav_results)  # Per-concept breakdown
+generate_table_8(statistical_tests)  # Statistical tests
+Step 6: Generate Figures (40 min)
+python
+generate_figure_5_heatmap_grid()  # Select 4 good examples
+generate_figure_6_tcav_bars()
+generate_figure_7_per_concept()
+generate_figure_8_ssim_distribution()
+```
+
+---
+
+# 🎯 RQ3: SAFE SELECTIVE PREDICTION
+
+## **Research Question**
+> **"Can confidence-based selective prediction improve accuracy at clinically relevant coverage levels?"**
+
+### **Motivation**
+In clinical deployment, a model that can identify and defer uncertain cases to human experts is safer than one that makes confident mistakes. This RQ tests whether selective prediction provides meaningful safety benefits.
+
+---
+
+## **H3: Hypotheses**
+
+### **H3.1: Selective Accuracy Improvement (Primary)**
+**Hypothesis:** Selective prediction significantly improves accuracy at 90% coverage.
+
+**Metric:** Selective Accuracy @ 90% coverage - Overall Accuracy
+
+**Null Hypothesis (H0):** Selective Acc @ 90% - Overall Acc ≤ 0
+**Alternative (H1):** Selective Acc @ 90% - Overall Acc ≥ 4pp
+
+**Expected Results:**
+```
+Overall Accuracy:    82.9% ± 1.4%
+Selective Acc @90%:  87.2% ± 1.2%
+Improvement:         +4.3pp (p < 0.01)
+```
+
+**Success Criteria:**
+- ✅ Improvement ≥ 4pp
+- ✅ p < 0.01
+- ✅ Coverage ≥ 90%
+
+---
+
+### **H3.2: Rejection Quality (Primary)**
+**Hypothesis:** Error rate on rejected samples is significantly higher than on accepted samples.
+
+**Metric:** Error Rate Ratio = Error_rejected / Error_accepted
+
+**Expected Results:**
+```
+Error rate (accepted @ 90%):  12.8%
+Error rate (rejected @ 10%):  38.5%
+Ratio:                        3.0× (p < 0.001)
+```
+
+**Success Criteria:**
+- ✅ Ratio ≥ 2.5×
+- ✅ Binomial test p < 0.01
+
+---
+
+### **H3.3: AURC Performance (Secondary)**
+**Hypothesis:** Combined gating achieves lower AURC than confidence-only.
+
+**Metric:** Area Under Risk-Coverage Curve (lower is better)
+
+**Expected Results:**
+```
+Random baseline:     ~0.15 (theoretical worst case)
+Confidence-only:     ~0.035
+Combined gating:     ~0.028  (20% improvement)
+Success Criteria:
+	✅ AURC < 0.035
+	✅ Better than confidence-only
+________________________________________
+RQ3 Metrics to Compute
+For Tri-objective Model (Seed 42 or all 3 seeds):
+1. Confidence Scores:
+python
+confidences = []
+predictions = []
+labels = []
+
+model.eval()
+for images, targets in test_loader:
+    with torch.no_grad():
+        logits = model(images)
+        probs = F.softmax(logits, dim=1)
+        conf, pred = probs.max(dim=1)
+
+        confidences.append(conf.cpu().numpy())
+        predictions.append(pred.cpu().numpy())
+        labels.append(targets.cpu().numpy())
+
+confidences = np.concatenate(confidences)
+predictions = np.concatenate(predictions)
+labels = np.concatenate(labels)
+2. Selective Prediction @ Different Thresholds:
+python
+thresholds = np.linspace(0.5, 0.99, 50)
+results = []
+
+for tau in thresholds:
+    # Apply threshold
+    accepted_mask = confidences > tau
+
+    # Compute metrics
+    coverage = accepted_mask.mean()
+    selective_acc = (predictions[accepted_mask] == labels[accepted_mask]).mean()
+    overall_acc = (predictions == labels).mean()
+    improvement = selective_acc - overall_acc
+
+    # Error rates
+    error_accepted = 1 - selective_acc
+    error_rejected = (predictions[~accepted_mask] != labels[~accepted_mask]).mean()
+    rejection_quality = error_rejected / error_accepted if error_accepted > 0 else np.inf
+
+    results.append({
+        'threshold': tau,
+        'coverage': coverage,
+        'selective_acc': selective_acc,
+        'improvement': improvement,
+        'error_accepted': error_accepted,
+        'error_rejected': error_rejected,
+        'rejection_quality': rejection_quality
+    })
+3. AURC Computation:
+python
+# Sort by confidence (descending)
+sorted_idx = np.argsort(-confidences)
+predictions_sorted = predictions[sorted_idx]
+labels_sorted = labels[sorted_idx]
+
+# Compute cumulative accuracy
+cumulative_correct = np.cumsum(predictions_sorted == labels_sorted)
+coverage_levels = np.arange(1, len(predictions_sorted) + 1)
+selective_accuracy = cumulative_correct / coverage_levels
+selective_risk = 1 - selective_accuracy
+
+# Compute AURC
+coverage_normalized = coverage_levels / len(predictions_sorted)
+aurc = np.trapz(selective_risk, coverage_normalized)
+
+# Compute E-AURC (excess AURC over optimal)
+optimal_risk = selective_risk.min()  # Best possible at full coverage
+e_aurc = aurc - optimal_risk
+________________________________________
+RQ3 Statistical Tests
+Test 1: Selective Improvement @ 90%
+python
+# Find threshold that gives ~90% coverage
+target_coverage = 0.90
+results_90 = [r for r in results if abs(r['coverage'] - target_coverage) < 0.02]
+best_90 = max(results_90, key=lambda x: x['selective_acc'])
+
+improvement = best_90['selective_acc'] - overall_acc
+
+# Paired t-test (if multi-seed)
+if num_seeds == 3:
+    improvements = [seed_42_imp, seed_123_imp, seed_456_imp]
+    t_stat, p_value = scipy.stats.ttest_1samp(improvements, 0, alternative='greater')
+else:
+    # Binomial test (single seed)
+    n_total = int(best_90['coverage'] * len(labels))
+    n_correct = int(best_90['selective_acc'] * n_total)
+    p_value = scipy.stats.binom_test(n_correct, n_total, overall_acc, alternative='greater')
+
+print(f"Improvement @ 90%: +{improvement*100:.1f}pp")
+print(f"p-value: {p_value:.4f}")
+Test 2: Rejection Quality
+python
+# At 90% coverage threshold
+accepted_mask = confidences > best_90['threshold']
+rejected_mask = ~accepted_mask
+
+# Errors
+errors_accepted = predictions[accepted_mask] != labels[accepted_mask]
+errors_rejected = predictions[rejected_mask] != labels[rejected_mask]
+
+error_rate_accepted = errors_accepted.mean()
+error_rate_rejected = errors_rejected.mean()
+ratio = error_rate_rejected / error_rate_accepted
+
+# Binomial test: Are rejected samples significantly more error-prone?
+# H0: p_rejected = p_accepted
+# H1: p_rejected > p_accepted
+from statsmodels.stats.proportion import proportions_ztest
+
+n_rejected = rejected_mask.sum()
+n_errors_rejected = errors_rejected.sum()
+n_accepted = accepted_mask.sum()
+n_errors_accepted = errors_accepted.sum()
+
+z_stat, p_value = proportions_ztest(
+    [n_errors_rejected, n_errors_accepted],
+    [n_rejected, n_accepted],
+    alternative='larger'
+)
+
+print(f"Error Rate Ratio: {ratio:.2f}×")
+print(f"z = {z_stat:.3f}, p = {p_value:.4f}")
+```
+
+---
+
+## **RQ3 Deliverables**
+
+### **Table 9: Selective Prediction Performance**
+```
+┌────────────────────────┬──────────┬──────────────┬─────────────┬─────────────────┐
+│ Strategy               │ Coverage │ Selective Acc│ Improvement │ Rejection Quality│
+├────────────────────────┼──────────┼──────────────┼─────────────┼─────────────────┤
+│ Overall (No Selection) │ 100%     │ 82.9%        │ 0.0pp       │ N/A             │
+│ Confidence-only @90%   │ 90.2%    │ 87.1%        │ +4.2pp      │ 3.2×            │
+│ Confidence-only @80%   │ 80.1%    │ 90.3%        │ +7.4pp      │ 3.8×            │
+│ Confidence-only @70%   │ 70.3%    │ 92.5%        │ +9.6pp      │ 4.2×            │
+└────────────────────────┴──────────┴──────────────┴─────────────┴─────────────────┘
+
+Notes:
+- Improvement = Selective Acc - Overall Acc
+- Rejection Quality = Error Rate (Rejected) / Error Rate (Accepted)
+- Target coverage: 90% (clinical deployment standard)
+```
+
+**Format:** CSV + LaTeX
+**Location:** `results/tables/rq3_selective_prediction.csv`
+
+---
+
+### **Table 10: AURC Metrics**
+```
+┌────────────────────────┬──────────┬──────────┬─────────────┐
+│ Strategy               │ AURC     │ E-AURC   │ vs Baseline │
+├────────────────────────┼──────────┼──────────┼─────────────┤
+│ Random Baseline        │ 0.150    │ N/A      │ N/A         │
+│ Confidence-only        │ 0.0348   │ 0.0178   │ -76.8%      │
+└────────────────────────┴──────────┴──────────┴─────────────┘
+
+Notes:
+- AURC: Area Under Risk-Coverage Curve (lower is better)
+- E-AURC: Excess AURC (AURC - optimal_risk)
+- Random baseline: Theoretical worst case
+```
+
+**Format:** CSV + LaTeX
+**Location:** `results/tables/rq3_aurc.csv`
+
+---
+
+### **Table 11: Statistical Tests (RQ3)**
+```
+┌──────────────────────────────┬─────────────┬─────────┬──────────┬───────────────┐
+│ Test                         │ Metric      │ Value   │ p-value  │ Interpretation│
+├──────────────────────────────┼─────────────┼─────────┼──────────┼───────────────┤
+│ H3.1: Selective Improvement  │ Δ Acc @90%  │ +4.3pp  │ 0.0023   │ Significant   │
+│ H3.2: Rejection Quality      │ Error Ratio │ 3.2×    │ < 0.001  │ Highly Sig    │
+│ H3.3: AURC Performance       │ AURC        │ 0.0348  │ N/A      │ Target < 0.05 │
+└──────────────────────────────┴─────────────┴─────────┴──────────┴───────────────┘
+Format: CSV + LaTeX
+Location: results/tables/rq3_statistical_tests.csv
+________________________________________
+Figure 9: Coverage-Accuracy Curve
+Type: Line plot with markers
+Axes:
+	X-axis: Coverage (0-100%)
+	Y-axis: Selective Accuracy (%)
+Lines:
+	Confidence-only selective prediction (blue)
+	Overall accuracy baseline (horizontal gray dashed line)
+Key Annotations:
+	Mark 90% coverage point with vertical dashed line
+	Annotate improvement at 90%: "+4.3pp"
+	Shade area between curve and baseline (improvement region)
+Format: PDF 300 DPI
+Location: results/figures/rq3_coverage_accuracy.pdf
+python
+fig, ax = plt.subplots(figsize=(8, 6))
+
+# Plot coverage-accuracy curve
+ax.plot(coverage, selective_acc, 'b-', linewidth=2, label='Selective Prediction')
+
+# Overall accuracy baseline
+ax.axhline(y=overall_acc, color='gray', linestyle='--',
+           linewidth=1.5, label='Overall Accuracy')
+
+# Mark 90% coverage
+ax.axvline(x=0.90, color='red', linestyle=':', alpha=0.5)
+ax.plot(0.90, selective_acc_90, 'ro', markersize=10)
+ax.annotate(f'+{improvement_90:.1f}pp\n@90% coverage',
+            xy=(0.90, selective_acc_90),
+            xytext=(0.75, selective_acc_90 + 0.03),
+            arrowprops=dict(arrowstyle='->', color='red'),
+            fontsize=11, color='red')
+
+# Shaded improvement region
+ax.fill_between(coverage, overall_acc, selective_acc,
+                alpha=0.2, color='green', label='Improvement')
+
+ax.set_xlabel('Coverage (%)', fontsize=12)
+ax.set_ylabel('Selective Accuracy (%)', fontsize=12)
+ax.set_title('Selective Prediction Performance\n(Tri-objective, ISIC 2018)', fontsize=14)
+ax.legend(fontsize=11)
+ax.grid(alpha=0.3)
+ax.set_xlim(0.5, 1.0)
+ax.set_ylim(0.80, 0.95)
+
+plt.tight_layout()
+plt.savefig('results/figures/rq3_coverage_accuracy.pdf', dpi=300, bbox_inches='tight')
+________________________________________
+Figure 10: Risk-Coverage Curve
+Type: Line plot
+Axes:
+	X-axis: Coverage (0-100%)
+	Y-axis: Selective Risk (error rate, %)
+Lines:
+	Confidence-only (blue decreasing curve)
+	Optimal risk (horizontal dashed line at minimum risk)
+AURC Annotation:
+	Shade area between curve and x-axis
+	Annotate: "AURC = 0.0348"
+Format: PDF 300 DPI
+Location: results/figures/rq3_risk_coverage.pdf
+________________________________________
+RQ3 Execution Plan
+Time Estimate: 1-2 hours
+Step 1: Confidence Extraction (15 min)
+python
+# Load tri-objective model (seed 42 or all 3)
+model = load_model('tri_objective', seed=42)
+
+# Compute confidences on test set
+confidences, predictions, labels = extract_confidences(model, test_loader)
+Step 2: Selective Prediction Analysis (30 min)
+python
+# Compute metrics at different thresholds
+results = []
+for tau in np.linspace(0.5, 0.99, 50):
+    metrics = compute_selective_metrics(confidences, predictions, labels, tau)
+    results.append(metrics)
+
+# Find optimal threshold for 90% coverage
+optimal_90 = find_threshold_for_coverage(results, target=0.90)
+Step 3: AURC Computation (15 min)
+python
+aurc, e_aurc = compute_aurc(confidences, predictions, labels)
+Step 4: Statistical Tests (15 min)
+python
+# Test selective improvement
+p_value_improvement = test_selective_improvement(optimal_90, overall_acc)
+
+# Test rejection quality
+p_value_rejection = test_rejection_quality(confidences, predictions, labels, optimal_90['threshold'])
+Step 5: Generate Tables (10 min)
+python
+generate_table_9(results, optimal_90)
+generate_table_10(aurc, e_aurc)
+generate_table_11(p_value_improvement, p_value_rejection, aurc)
+Step 6: Generate Figures (15 min)
+python
+generate_figure_9_coverage_accuracy(results, overall_acc)
+generate_figure_10_risk_coverage(results, aurc)

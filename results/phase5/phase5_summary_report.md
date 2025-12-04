@@ -1,6 +1,6 @@
 # Phase 5: Adversarial Training Results
 
-**Generated:** 2025-11-30 20:38:27
+**Generated:** 2025-12-02 17:54:14
 
 ## Experiment Configuration
 
@@ -8,12 +8,12 @@
 |-----------|-------|
 | Dataset | ISIC 2018 Skin Lesion |
 | Model | resnet50 |
-| Epochs | 5 |
+| Epochs | 30 |
 | Seeds | [42, 123, 456] |
 | Epsilon (ε) | 0.0314 (8/255) |
 | Alpha (α) | 0.0078 (2/255) |
-| PGD Steps (train) | 7 |
-| PGD Steps (eval) | 20 |
+| PGD Steps (train) | 5 |
+| PGD Steps (eval) | 10 |
 | TRADES β | 6.0 |
 
 ## Results Summary
@@ -22,22 +22,20 @@
 
 | Method | Clean Accuracy | Robust Accuracy |
 |--------|---------------|-----------------|
-| PGD-AT | 47.11% ± 28.15% | 4.42% ± 7.89% |
-| TRADES | 42.35% ± 24.16% | 3.66% ± 6.78% |
+| TRADES | 66.37% ± 1.87% | 24.25% ± 5.70% |
 
 ### Comparison with Baseline
 
 | Model | Clean Acc | Robust Acc | Change (Clean) | Change (Robust) |
 |-------|-----------|------------|----------------|-----------------|
 | Baseline | ~82% | ~0% | - | - |
-| PGD-AT | 47.1% | 4.4% | -34.9pp | +4.4pp |
-| TRADES | 42.3% | 3.7% | -39.7pp | +3.7pp |
+| TRADES | 66.4% | 24.3% | -15.6pp | +24.3pp |
 
 ## Key Findings
 
 ### RQ1: Orthogonality of Objectives
 
-1. **Adversarial training significantly improves robustness** from ~0% to ~4%
+1. **Adversarial training significantly improves robustness** from ~0% to ~24%
 2. **Modest trade-off with clean accuracy** (~5-10 percentage points)
 3. **TRADES vs PGD-AT**: TRADES theoretically provides better balance
 

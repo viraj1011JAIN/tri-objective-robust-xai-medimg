@@ -1,0 +1,1872 @@
+# 🎓 TRI-OBJECTIVE ROBUST XAI FOR MEDICAL IMAGING
+## COMPREHENSIVE PHASE 8-13 CHECKLIST v2.0
+## Aligned with Revised Research Questions & Current Progress
+
+---
+
+**Project Status:**
+- ✅ Phases 1-7: COMPLETED
+- ⏳ Phases 8-13: IN PROGRESS
+- 📅 Submission Deadline: December 7, 2025
+- 📝 Dissertation Writing: Chapters 1-3 COMPLETED
+
+**Current Scope:**
+- **Dataset:** ISIC 2018 only (train/val/test)
+- **Architecture:** ResNet-50 only
+- **Models:** Baseline, TRADES, Tri-objective
+- **Seeds:** 42, 123, 456 (n=3)
+- **Focus:** Single-site adversarial robustness + explainability + selective prediction
+
+---
+
+## 📋 PHASE 8: SELECTIVE PREDICTION IMPLEMENTATION
+**Goal:** Implement confidence-based selective prediction system for safe deployment
+
+**Time Estimate:** 8-10 hours
+**Completion Criteria:**
+- ✅ Confidence extraction working for all 3 models
+- ✅ Selective predictor implements thresholding correctly
+- ✅ Can compute coverage-accuracy curves
+- ✅ Unit tests passing
+
+---
+
+### 8.1 Confidence Scoring Module
+
+**File to Create:** `src/selection/confidence_scorer.py`
+
+**What Should Be Inside:**
+```python
+"""
+Confidence scoring for selective prediction.
+Extracts model confidence scores for classification decisions.
+"""
+
+import torch
+import torch.nn.functional as F
+from typing import Tuple, Optional
+import numpy as np
+
+class ConfidenceScorer:
+    """
+    Extracts confidence scores from model predictions.
+
+    Methods:
+    - softmax_max: Maximum softmax probability (most common)
+    - entropy: Predictive entropy (uncertainty measure)
+    - margin: Difference between top-2 predictions
+    """
+
+    def __init__(self, method: str = 'softmax_max'):
+        """
+        Args:
+            method: 'softmax_max', 'entropy', or 'margin'
+        """
+        self.method = method
+
+    def compute_confidence(
+        self,
+        logits: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Compute confidence scores from logits.
+
+        Args:
+            logits: (N, num_classes) raw model outputs
+
+        Returns:
+            confidences: (N,) confidence score per sample
+        """
+        probs = F.softmax(logits, dim=1)
+
+        if self.method == 'softmax_max':
+            # Maximum probability (simplest, most interpretable)
+            confidences = probs.max(dim=1)[0]
+
+        elif self.method == 'entropy':
+            # Predictive entropy (lower entropy = higher confidence)
+            entropy = -(probs * torch.log(probs + 1e-10)).sum(dim=1)
+            # Normalize to [0, 1] range (0=high entropy, 1=low entropy)
+            max_entropy = np.log(probs.size(1))
+            confidences = 1 - (entropy / max_entropy)
+
+        elif self.method == 'margin':
+            # Margin between top-2 predictions
+            sorted_probs = torch.sort(probs, dim=1, descending=True)[0]
+            margin = sorted_probs[:, 0] - sorted_probs[:, 1]
+            confidences = margin
+
+        else:
+            raise ValueError(f"Unknown method: {self.method}")
+
+        return confidences
+
+    def extract_from_loader(
+        self,
+        model: torch.nn.Module,
+        data_loader: torch.utils.data.DataLoader,
+        device: torch.device
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Extract confidences, predictions, and labels from entire dataset.
+
+        Args:
+            model: Trained model
+            data_loader: Data loader for test set
+            device: Device to run on
+
+        Returns:
+            confidences: (N,) confidence scores
+            predictions: (N,) predicted class labels
+            labels: (N,) ground truth labels
+        """
+        model.eval()
+
+        all_confidences = []
+        all_predictions = []
+        all_labels = []
+
+        with torch.no_grad():
+            for images, targets in data_loader:
+                images = images.to(device)
+                targets = targets.to(device)
+
+                # Forward pass
+                logits = model(images)
+
+                # Compute confidence
+                confidences = self.compute_confidence(logits)
+                predictions = logits.argmax(dim=1)
+
+                # Store
+                all_confidences.append(confidences.cpu().numpy())
+                all_predictions.append(predictions.cpu().numpy())
+                all_labels.append(targets.cpu().numpy())
+
+        # Concatenate
+        confidences = np.concatenate(all_confidences)
+        predictions = np.concatenate(all_predictions)
+        labels = np.concatenate(all_labels)
+
+        return confidences, predictions, labels
+```
+
+**Unit Tests to Create:** `tests/test_confidence_scorer.py`
+```python
+def test_confidence_scorer_softmax_max():
+    """Test softmax_max confidence computation."""
+    scorer = ConfidenceScorer(method='softmax_max')
+    logits = torch.tensor([[2.0, 1.0, 0.5], [1.0, 3.0, 0.5]])
+    confidences = scorer.compute_confidence(logits)
+
+    # Should return max softmax probability
+    assert confidences.shape == (2,)
+    assert 0.0 <= confidences.min() <= 1.0
+    assert confidences.max() <= 1.0
+
+def test_confidence_scorer_entropy():
+    """Test entropy-based confidence."""
+    scorer = ConfidenceScorer(method='entropy')
+    # High confidence: one probability dominates
+    logits_high = torch.tensor([[10.0, 0.0, 0.0]])
+    # Low confidence: uniform distribution
+    logits_low = torch.tensor([[1.0, 1.0, 1.0]])
+
+    conf_high = scorer.compute_confidence(logits_high)
+    conf_low = scorer.compute_confidence(logits_low)
+
+    assert conf_high > conf_low  # High conf > Low conf
+```
+
+---
+
+### 8.2 Selective Predictor Module
+
+**File to Create:** `src/selection/selective_predictor.py`
+
+**What Should Be Inside:**
+```python
+"""
+Selective prediction using confidence thresholding.
+Accepts predictions above threshold, rejects below.
+"""
+
+import numpy as np
+from typing import Dict, Tuple
+
+class SelectivePredictor:
+    """
+    Confidence-based selective prediction.
+
+    Accepts predictions with confidence > threshold.
+    Rejects predictions with confidence ≤ threshold.
+    """
+
+    def __init__(self, threshold: float = 0.8):
+        """
+        Args:
+            threshold: Confidence threshold for acceptance (0-1)
+        """
+        self.threshold = threshold
+
+    def predict(
+        self,
+        confidences: np.ndarray,
+        predictions: np.ndarray,
+        labels: np.ndarray
+    ) -> Dict[str, float]:
+        """
+        Apply selective prediction and compute metrics.
+
+        Args:
+            confidences: (N,) confidence scores
+            predictions: (N,) predicted labels
+            labels: (N,) ground truth labels
+
+        Returns:
+            metrics: Dictionary of selective prediction metrics
+        """
+        # Create acceptance mask
+        accepted = confidences > self.threshold
+        rejected = ~accepted
+
+        # Coverage (fraction accepted)
+        coverage = accepted.mean()
+
+        # Overall accuracy (no selection)
+        overall_acc = (predictions == labels).mean()
+
+        # Selective accuracy (on accepted only)
+        if accepted.sum() > 0:
+            selective_acc = (predictions[accepted] == labels[accepted]).mean()
+        else:
+            selective_acc = 0.0
+
+        # Risk on rejected samples
+        if rejected.sum() > 0:
+            risk_rejected = (predictions[rejected] != labels[rejected]).mean()
+        else:
+            risk_rejected = 0.0
+
+        # Risk on accepted samples
+        if accepted.sum() > 0:
+            risk_accepted = 1.0 - selective_acc
+        else:
+            risk_accepted = 0.0
+
+        # Improvement
+        improvement = selective_acc - overall_acc
+
+        # Rejection quality (how much worse are rejected samples?)
+        if risk_accepted > 0:
+            rejection_quality = risk_rejected / risk_accepted
+        else:
+            rejection_quality = float('inf')
+
+        return {
+            'threshold': self.threshold,
+            'coverage': coverage,
+            'overall_accuracy': overall_acc,
+            'selective_accuracy': selective_acc,
+            'improvement': improvement,
+            'risk_accepted': risk_accepted,
+            'risk_rejected': risk_rejected,
+            'rejection_quality': rejection_quality,
+            'num_accepted': accepted.sum(),
+            'num_rejected': rejected.sum()
+        }
+
+    def compute_coverage_accuracy_curve(
+        self,
+        confidences: np.ndarray,
+        predictions: np.ndarray,
+        labels: np.ndarray,
+        num_points: int = 50
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """
+        Compute coverage-accuracy curve across thresholds.
+
+        Args:
+            confidences, predictions, labels: As above
+            num_points: Number of threshold points to evaluate
+
+        Returns:
+            thresholds: (num_points,) threshold values
+            coverages: (num_points,) coverage at each threshold
+            accuracies: (num_points,) selective accuracy at each threshold
+        """
+        # Threshold range: 0.5 to 0.99
+        thresholds = np.linspace(0.5, 0.99, num_points)
+
+        coverages = []
+        accuracies = []
+
+        for tau in thresholds:
+            self.threshold = tau
+            metrics = self.predict(confidences, predictions, labels)
+            coverages.append(metrics['coverage'])
+            accuracies.append(metrics['selective_accuracy'])
+
+        return thresholds, np.array(coverages), np.array(accuracies)
+```
+
+**Unit Tests:** `tests/test_selective_predictor.py`
+```python
+def test_selective_predictor():
+    """Test selective prediction logic."""
+    predictor = SelectivePredictor(threshold=0.8)
+
+    # Mock data: 10 samples
+    confidences = np.array([0.9, 0.85, 0.75, 0.6, 0.95,
+                           0.7, 0.82, 0.65, 0.88, 0.55])
+    predictions = np.array([0, 0, 1, 1, 0, 1, 0, 1, 0, 1])
+    labels =      np.array([0, 0, 0, 1, 0, 0, 0, 1, 0, 0])
+    # Correct:              Y  Y  N  Y  Y  N  Y  Y  Y  N
+
+    metrics = predictor.predict(confidences, predictions, labels)
+
+    # Should accept 5 samples (conf > 0.8): indices 0,1,4,6,8
+    # Among accepted: 4 correct (0,1,4,8), 1 wrong (6)
+    # Selective acc: 4/5 = 0.8
+    # Coverage: 5/10 = 0.5
+
+    assert metrics['coverage'] == 0.5
+    assert metrics['selective_accuracy'] == 0.8
+    assert metrics['overall_accuracy'] == 0.7  # 7/10 correct
+```
+
+---
+
+### 8.3 AURC (Area Under Risk-Coverage Curve) Module
+
+**File to Create:** `src/selection/aurc.py`
+
+**What Should Be Inside:**
+```python
+"""
+AURC (Area Under Risk-Coverage Curve) computation.
+Lower AURC = better selective prediction performance.
+"""
+
+import numpy as np
+from sklearn.metrics import auc
+
+def compute_aurc(
+    confidences: np.ndarray,
+    predictions: np.ndarray,
+    labels: np.ndarray
+) -> Tuple[float, float]:
+    """
+    Compute AURC and E-AURC metrics.
+
+    Args:
+        confidences: (N,) confidence scores
+        predictions: (N,) predicted labels
+        labels: (N,) ground truth labels
+
+    Returns:
+        aurc: Area Under Risk-Coverage Curve
+        e_aurc: Excess AURC (AURC - optimal_risk)
+    """
+    # Sort by confidence (descending)
+    sorted_indices = np.argsort(confidences)[::-1]
+    confidences_sorted = confidences[sorted_indices]
+    predictions_sorted = predictions[sorted_indices]
+    labels_sorted = labels[sorted_indices]
+
+    # Compute cumulative errors
+    errors = (predictions_sorted != labels_sorted).astype(float)
+
+    # Coverage and risk at each threshold
+    n = len(confidences)
+    coverages = []
+    risks = []
+
+    for k in range(1, n + 1):
+        # Accept top-k confident samples
+        coverage = k / n
+        risk = errors[:k].mean()  # Error rate on accepted
+
+        coverages.append(coverage)
+        risks.append(risk)
+
+    # AURC: integrate risk over coverage
+    aurc = auc(coverages, risks)
+
+    # Optimal risk (minimum achievable risk)
+    optimal_risk = errors.mean()
+
+    # E-AURC: excess over optimal
+    e_aurc = aurc - optimal_risk
+
+    return aurc, e_aurc
+```
+
+---
+
+### 8.4 Evaluation Script
+
+**File to Create:** `scripts/evaluation/evaluate_selective_prediction.py`
+
+**What Should Be Inside:**
+```python
+"""
+Evaluate selective prediction for all models.
+Computes coverage-accuracy curves, AURC, and metrics at target coverage.
+"""
+
+import argparse
+import torch
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+
+from src.selection.confidence_scorer import ConfidenceScorer
+from src.selection.selective_predictor import SelectivePredictor
+from src.selection.aurc import compute_aurc
+from src.datasets.isic_dataset import ISICDataset
+from src.models.resnet import ResNet50Classifier
+
+def main(args):
+    """Main evaluation function."""
+
+    # Setup
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load test data
+    test_dataset = ISICDataset(
+        root=args.data_root,
+        split='test',
+        transform=None  # Use default test transform
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=4
+    )
+
+    # Initialize confidence scorer
+    scorer = ConfidenceScorer(method='softmax_max')
+
+    # Results storage
+    all_results = []
+
+    # Evaluate each model
+    for model_name in args.models:  # ['baseline', 'trades', 'tri_objective']
+        for seed in args.seeds:  # [42, 123, 456]
+
+            print(f"\n{'='*60}")
+            print(f"Evaluating {model_name} (seed {seed})")
+            print(f"{'='*60}")
+
+            # Load model
+            checkpoint_path = Path(args.checkpoint_dir) / f"{model_name}_seed{seed}_best.pth"
+            model = ResNet50Classifier(num_classes=7)
+            model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+            model = model.to(device)
+
+            # Extract confidences
+            print("Extracting confidences...")
+            confidences, predictions, labels = scorer.extract_from_loader(
+                model, test_loader, device
+            )
+
+            # Overall accuracy (no selection)
+            overall_acc = (predictions == labels).mean()
+            print(f"Overall Accuracy: {overall_acc*100:.2f}%")
+
+            # Compute AURC
+            print("Computing AURC...")
+            aurc, e_aurc = compute_aurc(confidences, predictions, labels)
+            print(f"AURC: {aurc:.4f}")
+            print(f"E-AURC: {e_aurc:.4f}")
+
+            # Find threshold for 90% coverage
+            print("Computing selective metrics at 90% coverage...")
+            predictor = SelectivePredictor()
+
+            # Binary search for 90% coverage threshold
+            target_coverage = 0.90
+            tau_low, tau_high = 0.0, 1.0
+
+            for _ in range(20):  # Binary search iterations
+                tau_mid = (tau_low + tau_high) / 2
+                predictor.threshold = tau_mid
+                metrics = predictor.predict(confidences, predictions, labels)
+
+                if metrics['coverage'] > target_coverage:
+                    tau_low = tau_mid
+                else:
+                    tau_high = tau_mid
+
+            # Final metrics at ~90% coverage
+            best_metrics = predictor.predict(confidences, predictions, labels)
+
+            print(f"Threshold for ~90% coverage: {best_metrics['threshold']:.3f}")
+            print(f"Coverage: {best_metrics['coverage']*100:.2f}%")
+            print(f"Selective Accuracy: {best_metrics['selective_accuracy']*100:.2f}%")
+            print(f"Improvement: {best_metrics['improvement']*100:+.2f}pp")
+            print(f"Rejection Quality: {best_metrics['rejection_quality']:.2f}×")
+
+            # Compute full coverage-accuracy curve
+            print("Computing coverage-accuracy curve...")
+            thresholds, coverages, accuracies = predictor.compute_coverage_accuracy_curve(
+                confidences, predictions, labels, num_points=50
+            )
+
+            # Save curve data
+            curve_df = pd.DataFrame({
+                'threshold': thresholds,
+                'coverage': coverages,
+                'selective_accuracy': accuracies
+            })
+            curve_path = output_dir / f'curve_{model_name}_seed{seed}.csv'
+            curve_df.to_csv(curve_path, index=False)
+
+            # Store results
+            result = {
+                'model': model_name,
+                'seed': seed,
+                'overall_accuracy': overall_acc,
+                'aurc': aurc,
+                'e_aurc': e_aurc,
+                'threshold_90': best_metrics['threshold'],
+                'coverage_90': best_metrics['coverage'],
+                'selective_acc_90': best_metrics['selective_accuracy'],
+                'improvement_90': best_metrics['improvement'],
+                'rejection_quality_90': best_metrics['rejection_quality']
+            }
+            all_results.append(result)
+
+    # Aggregate results across seeds
+    results_df = pd.DataFrame(all_results)
+
+    # Compute mean ± std per model
+    summary = results_df.groupby('model').agg(['mean', 'std'])
+
+    print("\n" + "="*60)
+    print("SUMMARY ACROSS SEEDS")
+    print("="*60)
+    print(summary)
+
+    # Save results
+    results_df.to_csv(output_dir / 'selective_prediction_results.csv', index=False)
+    summary.to_csv(output_dir / 'selective_prediction_summary.csv')
+
+    print(f"\nResults saved to {output_dir}")
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, required=True)
+    parser.add_argument('--checkpoint_dir', type=str, required=True)
+    parser.add_argument('--output_dir', type=str, default='results/rq3_selective')
+    parser.add_argument('--models', nargs='+', default=['baseline', 'trades', 'tri_objective'])
+    parser.add_argument('--seeds', nargs='+', type=int, default=[42, 123, 456])
+    parser.add_argument('--batch_size', type=int, default=64)
+
+    args = parser.parse_args()
+    main(args)
+```
+
+**How to Run:**
+```bash
+python scripts/evaluation/evaluate_selective_prediction.py \
+    --data_root data/ISIC2018 \
+    --checkpoint_dir results/checkpoints \
+    --output_dir results/rq3_selective \
+    --models baseline trades tri_objective \
+    --seeds 42 123 456
+```
+
+---
+
+### 8.5 Notebook for Interactive Exploration
+
+**Notebook to Create:** `notebooks/08_selective_prediction_analysis.ipynb`
+
+**What Should Be Inside:**
+```python
+# Cell 1: Imports
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
+# Cell 2: Load results
+results_dir = Path('results/rq3_selective')
+results_df = pd.read_csv(results_dir / 'selective_prediction_results.csv')
+summary_df = pd.read_csv(results_dir / 'selective_prediction_summary.csv')
+
+print("Results loaded:")
+print(results_df.head())
+
+# Cell 3: Compare models at 90% coverage
+fig, ax = plt.subplots(figsize=(10, 6))
+
+models = results_df['model'].unique()
+for model in models:
+    model_data = results_df[results_df['model'] == model]
+
+    # Plot mean with error bars (std)
+    mean_cov = model_data['coverage_90'].mean()
+    mean_acc = model_data['selective_acc_90'].mean()
+    std_acc = model_data['selective_acc_90'].std()
+
+    ax.errorbar(mean_cov, mean_acc, yerr=std_acc,
+                marker='o', markersize=10, capsize=5,
+                label=f'{model.upper()}', linewidth=2)
+
+# Overall accuracy baseline (horizontal line)
+overall_acc = results_df['overall_accuracy'].mean()
+ax.axhline(y=overall_acc, color='gray', linestyle='--',
+           linewidth=2, label='Overall Acc (no selection)')
+
+ax.set_xlabel('Coverage', fontsize=14)
+ax.set_ylabel('Selective Accuracy', fontsize=14)
+ax.set_title('Selective Prediction @ 90% Coverage', fontsize=16)
+ax.legend(fontsize=12)
+ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.savefig(results_dir / 'selective_comparison.pdf', dpi=300)
+plt.show()
+
+# Cell 4: Full coverage-accuracy curves
+fig, ax = plt.subplots(figsize=(10, 6))
+
+for model in models:
+    # Load curve for seed 42 (representative)
+    curve_df = pd.read_csv(results_dir / f'curve_{model}_seed42.csv')
+
+    ax.plot(curve_df['coverage'], curve_df['selective_accuracy'],
+            linewidth=2, label=f'{model.upper()}')
+
+ax.axhline(y=overall_acc, color='gray', linestyle='--',
+           linewidth=2, label='Overall Acc')
+ax.axvline(x=0.90, color='red', linestyle=':', alpha=0.5,
+           label='90% coverage target')
+
+ax.set_xlabel('Coverage', fontsize=14)
+ax.set_ylabel('Selective Accuracy', fontsize=14)
+ax.set_title('Coverage-Accuracy Curves (Seed 42)', fontsize=16)
+ax.legend(fontsize=12)
+ax.grid(alpha=0.3)
+ax.set_xlim(0.5, 1.0)
+plt.tight_layout()
+plt.savefig(results_dir / 'coverage_accuracy_curves.pdf', dpi=300)
+plt.show()
+
+# Cell 5: AURC comparison
+fig, ax = plt.subplots(figsize=(8, 6))
+
+model_names = []
+aurc_means = []
+aurc_stds = []
+
+for model in models:
+    model_data = results_df[results_df['model'] == model]
+    model_names.append(model.upper())
+    aurc_means.append(model_data['aurc'].mean())
+    aurc_stds.append(model_data['aurc'].std())
+
+ax.bar(model_names, aurc_means, yerr=aurc_stds, capsize=5, alpha=0.7)
+ax.set_ylabel('AURC (lower is better)', fontsize=14)
+ax.set_title('AURC Comparison', fontsize=16)
+ax.grid(alpha=0.3, axis='y')
+plt.tight_layout()
+plt.savefig(results_dir / 'aurc_comparison.pdf', dpi=300)
+plt.show()
+
+# Cell 6: Statistical test (improvement at 90%)
+from scipy import stats
+
+baseline_impr = results_df[results_df['model'] == 'baseline']['improvement_90'].values
+triobj_impr = results_df[results_df['model'] == 'tri_objective']['improvement_90'].values
+
+# Paired t-test
+t_stat, p_value = stats.ttest_rel(triobj_impr, baseline_impr, alternative='greater')
+
+print(f"\nStatistical Test: Tri-objective vs Baseline")
+print(f"Baseline improvement: {baseline_impr.mean()*100:.2f}% ± {baseline_impr.std()*100:.2f}%")
+print(f"Tri-obj improvement:  {triobj_impr.mean()*100:.2f}% ± {triobj_impr.std()*100:.2f}%")
+print(f"t-statistic: {t_stat:.3f}")
+print(f"p-value: {p_value:.4f}")
+print(f"Significant: {'YES' if p_value < 0.01 else 'NO'}")
+```
+
+---
+
+### 8.6 Phase 8 Completion Checklist
+
+**Check These Before Moving to Phase 9:**
+
+- [ ] `src/selection/confidence_scorer.py` created and tested
+  - [ ] Softmax_max method works correctly
+  - [ ] Can extract confidences from full dataset
+  - [ ] Unit tests pass
+
+- [ ] `src/selection/selective_predictor.py` created and tested
+  - [ ] Thresholding logic correct
+  - [ ] Computes all required metrics
+  - [ ] Coverage-accuracy curve function works
+  - [ ] Unit tests pass
+
+- [ ] `src/selection/aurc.py` created and tested
+  - [ ] AURC computation correct
+  - [ ] E-AURC computed
+
+- [ ] `scripts/evaluation/evaluate_selective_prediction.py` works
+  - [ ] Can load all 3 models × 3 seeds
+  - [ ] Extracts confidences successfully
+  - [ ] Finds threshold for 90% coverage
+  - [ ] Computes full curves
+  - [ ] Saves results to CSV
+
+- [ ] `notebooks/08_selective_prediction_analysis.ipynb` created
+  - [ ] Visualizes coverage-accuracy curves
+  - [ ] Compares models
+  - [ ] Statistical tests implemented
+  - [ ] Figures saved to PDF (300 DPI)
+
+- [ ] Run evaluation script successfully:
+  ```bash
+  python scripts/evaluation/evaluate_selective_prediction.py \
+      --data_root data/ISIC2018 \
+      --checkpoint_dir results/checkpoints
+  ```
+
+**Expected Results:**
+- Baseline improvement @ 90% coverage: ~2-3%
+- Tri-objective improvement @ 90% coverage: ~4-5%
+- AURC < 0.05 for all models
+- Rejection quality ratio > 3.0× for tri-objective
+- CSV files created: `selective_prediction_results.csv`, `selective_prediction_summary.csv`
+- Curve CSVs for each model-seed combination
+- Figures: `coverage_accuracy_curves.pdf`, `selective_comparison.pdf`, `aurc_comparison.pdf`
+
+**Phase Complete When:**
+✅ All code files created and tested
+✅ Evaluation script runs without errors
+✅ Results saved to `results/rq3_selective/`
+✅ Notebook generates all visualizations
+✅ Tri-objective shows >4pp improvement at 90% coverage
+
+---
+
+## 📊 PHASE 9: RQ1 COMPREHENSIVE EVALUATION
+**Goal:** Complete evaluation of adversarial robustness with task performance preservation
+
+**Time Estimate:** 12-16 hours
+**Completion Criteria:**
+- ✅ All models evaluated on clean + robust performance
+- ✅ Attack spectrum analysis complete (ε ∈ {2, 4, 8}/255)
+- ✅ Calibration metrics computed
+- ✅ Statistical tests performed (H1.1, H1.2, H1.3, H1.4)
+- ✅ All RQ1 tables and figures generated
+
+---
+
+### 9.1 Comprehensive Metrics Module
+
+**File to Create:** `src/evaluation/rq1_metrics.py`
+
+**What Should Be Inside:**
+```python
+"""
+Comprehensive metrics computation for RQ1.
+Includes clean performance, robustness, calibration.
+"""
+
+import torch
+import torch.nn.functional as F
+import numpy as np
+from sklearn.metrics import (
+    accuracy_score, roc_auc_score, f1_score,
+    precision_recall_fscore_support, matthews_corrcoef,
+    confusion_matrix
+)
+from typing import Dict, Tuple
+
+class RQ1MetricsComputer:
+    """Compute all metrics for RQ1 evaluation."""
+
+    def __init__(self, num_classes: int = 7):
+        self.num_classes = num_classes
+
+    def compute_clean_metrics(
+        self,
+        predictions: np.ndarray,
+        labels: np.ndarray,
+        probabilities: np.ndarray
+    ) -> Dict[str, float]:
+        """
+        Compute clean task performance metrics.
+
+        Args:
+            predictions: (N,) predicted class labels
+            labels: (N,) ground truth labels
+            probabilities: (N, num_classes) class probabilities
+
+        Returns:
+            metrics: Dictionary of metric_name -> value
+        """
+        metrics = {}
+
+        # Accuracy
+        metrics['accuracy'] = accuracy_score(labels, predictions)
+
+        # AUROC (per-class and macro)
+        if len(np.unique(labels)) == self.num_classes:
+            # One-hot encode labels
+            labels_oh = np.eye(self.num_classes)[labels]
+
+            # Macro AUROC
+            metrics['auroc_macro'] = roc_auc_score(
+                labels_oh, probabilities,
+                average='macro', multi_class='ovr'
+            )
+
+            # Per-class AUROC
+            for c in range(self.num_classes):
+                try:
+                    auroc_c = roc_auc_score(
+                        labels_oh[:, c], probabilities[:, c]
+                    )
+                    metrics[f'auroc_class{c}'] = auroc_c
+                except:
+                    metrics[f'auroc_class{c}'] = np.nan
+        else:
+            metrics['auroc_macro'] = np.nan
+
+        # F1 Score (weighted)
+        metrics['f1_weighted'] = f1_score(labels, predictions, average='weighted')
+
+        # Matthews Correlation Coefficient
+        metrics['mcc'] = matthews_corrcoef(labels, predictions)
+
+        # Per-class Precision, Recall, F1
+        precision, recall, f1, support = precision_recall_fscore_support(
+            labels, predictions, average=None, zero_division=0
+        )
+
+        for c in range(self.num_classes):
+            metrics[f'precision_class{c}'] = precision[c]
+            metrics[f'recall_class{c}'] = recall[c]
+            metrics[f'f1_class{c}'] = f1[c]
+
+        # Confusion Matrix
+        cm = confusion_matrix(labels, predictions)
+        metrics['confusion_matrix'] = cm
+
+        return metrics
+
+    def compute_robust_metrics(
+        self,
+        predictions_adv: np.ndarray,
+        labels: np.ndarray,
+        predictions_clean: np.ndarray
+    ) -> Dict[str, float]:
+        """
+        Compute adversarial robustness metrics.
+
+        Args:
+            predictions_adv: (N,) predictions on adversarial examples
+            labels: (N,) ground truth labels
+            predictions_clean: (N,) predictions on clean images
+
+        Returns:
+            metrics: Dictionary of robustness metrics
+        """
+        metrics = {}
+
+        # Robust accuracy
+        metrics['robust_accuracy'] = accuracy_score(labels, predictions_adv)
+
+        # Attack success rate
+        # ASR = fraction of clean correct that become incorrect under attack
+        clean_correct = (predictions_clean == labels)
+        attack_success = (predictions_adv != labels) & clean_correct
+
+        if clean_correct.sum() > 0:
+            metrics['attack_success_rate'] = attack_success.sum() / clean_correct.sum()
+        else:
+            metrics['attack_success_rate'] = 0.0
+
+        # Per-class robust accuracy
+        for c in range(self.num_classes):
+            mask_c = (labels == c)
+            if mask_c.sum() > 0:
+                robust_acc_c = (predictions_adv[mask_c] == labels[mask_c]).mean()
+                metrics[f'robust_acc_class{c}'] = robust_acc_c
+
+        # Accuracy gap (Clean - Robust)
+        clean_acc = accuracy_score(labels, predictions_clean)
+        metrics['accuracy_gap'] = clean_acc - metrics['robust_accuracy']
+
+        return metrics
+
+    def compute_calibration_metrics(
+        self,
+        probabilities: np.ndarray,
+        predictions: np.ndarray,
+        labels: np.ndarray,
+        n_bins: int = 15
+    ) -> Dict[str, float]:
+        """
+        Compute calibration metrics (ECE, MCE, Brier).
+
+        Args:
+            probabilities: (N, num_classes) predicted probabilities
+            predictions: (N,) predicted labels
+            labels: (N,) ground truth labels
+            n_bins: Number of bins for ECE/MCE
+
+        Returns:
+            metrics: Calibration metrics
+        """
+        metrics = {}
+
+        # Get confidence (max probability)
+        confidences = probabilities.max(axis=1)
+
+        # Accuracies (boolean)
+        accuracies = (predictions == labels).astype(float)
+
+        # Expected Calibration Error (ECE)
+        bin_boundaries = np.linspace(0, 1, n_bins + 1)
+        ece = 0.0
+        mce = 0.0
+
+        for i in range(n_bins):
+            bin_lower = bin_boundaries[i]
+            bin_upper = bin_boundaries[i + 1]
+
+            in_bin = (confidences > bin_lower) & (confidences <= bin_upper)
+
+            if in_bin.sum() > 0:
+                bin_acc = accuracies[in_bin].mean()
+                bin_conf = confidences[in_bin].mean()
+                bin_weight = in_bin.mean()
+
+                ece += np.abs(bin_acc - bin_conf) * bin_weight
+                mce = max(mce, np.abs(bin_acc - bin_conf))
+
+        metrics['ece'] = ece
+        metrics['mce'] = mce
+
+        # Brier Score
+        labels_oh = np.eye(self.num_classes)[labels]
+        brier = ((probabilities - labels_oh) ** 2).sum(axis=1).mean()
+        metrics['brier_score'] = brier
+
+        # Reliability diagram data (for plotting)
+        bin_accs = []
+        bin_confs = []
+        bin_counts = []
+
+        for i in range(n_bins):
+            bin_lower = bin_boundaries[i]
+            bin_upper = bin_boundaries[i + 1]
+            in_bin = (confidences > bin_lower) & (confidences <= bin_upper)
+
+            if in_bin.sum() > 0:
+                bin_accs.append(accuracies[in_bin].mean())
+                bin_confs.append(confidences[in_bin].mean())
+                bin_counts.append(in_bin.sum())
+            else:
+                bin_accs.append(0)
+                bin_confs.append((bin_lower + bin_upper) / 2)
+                bin_counts.append(0)
+
+        metrics['reliability_diagram'] = {
+            'bin_accuracies': bin_accs,
+            'bin_confidences': bin_confs,
+            'bin_counts': bin_counts
+        }
+
+        return metrics
+```
+
+---
+
+### 9.2 Attack Spectrum Evaluation
+
+**File to Create:** `scripts/evaluation/evaluate_rq1_attack_spectrum.py`
+
+**What Should Be Inside:**
+```python
+"""
+Evaluate robustness across multiple epsilon values.
+Generates attack spectrum curves showing accuracy vs perturbation strength.
+"""
+
+import argparse
+import torch
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+
+from src.attacks.pgd import PGDAttack
+from src.datasets.isic_dataset import ISICDataset
+from src.models.resnet import ResNet50Classifier
+
+def evaluate_at_epsilon(
+    model: torch.nn.Module,
+    data_loader: torch.utils.data.DataLoader,
+    epsilon: float,
+    device: torch.device
+) -> float:
+    """
+    Evaluate robust accuracy at a single epsilon value.
+
+    Args:
+        model: Model to evaluate
+        data_loader: Test data loader
+        epsilon: Perturbation budget (L-inf norm)
+        device: Device to run on
+
+    Returns:
+        robust_accuracy: Accuracy on adversarial examples
+    """
+    model.eval()
+
+    # Initialize PGD attack
+    attack = PGDAttack(
+        model=model,
+        epsilon=epsilon,
+        alpha=epsilon / 4,  # Step size
+        num_steps=10,
+        norm='inf',
+        random_init=True
+    )
+
+    all_predictions = []
+    all_labels = []
+
+    for images, labels in tqdm(data_loader, desc=f"Attacking ε={epsilon:.4f}"):
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Generate adversarial examples
+        images_adv = attack(images, labels)
+
+        # Predict on adversarial
+        with torch.no_grad():
+            logits_adv = model(images_adv)
+            preds_adv = logits_adv.argmax(dim=1)
+
+        all_predictions.append(preds_adv.cpu().numpy())
+        all_labels.append(labels.cpu().numpy())
+
+    # Compute robust accuracy
+    predictions = np.concatenate(all_predictions)
+    labels = np.concatenate(all_labels)
+    robust_acc = (predictions == labels).mean()
+
+    return robust_acc
+
+def main(args):
+    """Main function."""
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load test data
+    test_dataset = ISICDataset(
+        root=args.data_root,
+        split='test',
+        transform=None
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=4
+    )
+
+    # Epsilon values to evaluate
+    epsilons = [0, 2/255, 4/255, 8/255]  # Including 0 for clean accuracy
+
+    # Results storage
+    all_results = []
+
+    # Evaluate each model
+    for model_name in args.models:
+        for seed in args.seeds:
+
+            print(f"\n{'='*60}")
+            print(f"Evaluating {model_name} (seed {seed})")
+            print(f"{'='*60}")
+
+            # Load model
+            checkpoint_path = Path(args.checkpoint_dir) / f"{model_name}_seed{seed}_best.pth"
+            model = ResNet50Classifier(num_classes=7)
+            model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+            model = model.to(device)
+
+            # Evaluate at each epsilon
+            for eps in epsilons:
+                if eps == 0:
+                    # Clean accuracy (no attack)
+                    print("Evaluating clean accuracy...")
+                    model.eval()
+                    correct = 0
+                    total = 0
+
+                    with torch.no_grad():
+                        for images, labels in tqdm(test_loader):
+                            images = images.to(device)
+                            labels = labels.to(device)
+
+                            logits = model(images)
+                            preds = logits.argmax(dim=1)
+
+                            correct += (preds == labels).sum().item()
+                            total += labels.size(0)
+
+                    acc = correct / total
+                else:
+                    # Robust accuracy under attack
+                    acc = evaluate_at_epsilon(model, test_loader, eps, device)
+
+                print(f"ε={eps:.4f}: Accuracy = {acc*100:.2f}%")
+
+                # Store result
+                all_results.append({
+                    'model': model_name,
+                    'seed': seed,
+                    'epsilon': eps,
+                    'accuracy': acc
+                })
+
+    # Save results
+    results_df = pd.DataFrame(all_results)
+    results_df.to_csv(output_dir / 'attack_spectrum.csv', index=False)
+
+    # Aggregate across seeds
+    summary = results_df.groupby(['model', 'epsilon'])['accuracy'].agg(['mean', 'std'])
+    print("\n" + "="*60)
+    print("ATTACK SPECTRUM SUMMARY")
+    print("="*60)
+    print(summary)
+
+    summary.to_csv(output_dir / 'attack_spectrum_summary.csv')
+
+    # Plot attack spectrum curves
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    for model in args.models:
+        model_data = results_df[results_df['model'] == model]
+
+        # Group by epsilon, compute mean and std
+        eps_groups = model_data.groupby('epsilon')['accuracy']
+        eps_means = eps_groups.mean()
+        eps_stds = eps_groups.std()
+        eps_values = eps_means.index.values
+
+        ax.plot(eps_values, eps_means.values * 100,
+                marker='o', linewidth=2, markersize=8,
+                label=f'{model.upper()}')
+        ax.fill_between(eps_values,
+                        (eps_means - eps_stds).values * 100,
+                        (eps_means + eps_stds).values * 100,
+                        alpha=0.2)
+
+    ax.set_xlabel('Perturbation Budget (ε)', fontsize=14)
+    ax.set_ylabel('Accuracy (%)', fontsize=14)
+    ax.set_title('Attack Spectrum: Accuracy vs Perturbation Strength', fontsize=16)
+    ax.legend(fontsize=12)
+    ax.grid(alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(output_dir / 'attack_spectrum.pdf', dpi=300, bbox_inches='tight')
+    plt.show()
+
+    print(f"\nResults saved to {output_dir}")
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, required=True)
+    parser.add_argument('--checkpoint_dir', type=str, required=True)
+    parser.add_argument('--output_dir', type=str, default='results/rq1_attack_spectrum')
+    parser.add_argument('--models', nargs='+', default=['baseline', 'trades', 'tri_objective'])
+    parser.add_argument('--seeds', nargs='+', type=int, default=[42, 123, 456])
+    parser.add_argument('--batch_size', type=int, default=64)
+
+    args = parser.parse_args()
+    main(args)
+```
+
+**How to Run:**
+```bash
+python scripts/evaluation/evaluate_rq1_attack_spectrum.py \
+    --data_root data/ISIC2018 \
+    --checkpoint_dir results/checkpoints \
+    --output_dir results/rq1_attack_spectrum
+```
+
+**Expected Runtime:** 2-4 hours (depends on GPU speed)
+
+---
+
+### 9.3 Complete RQ1 Evaluation Script
+
+**File to Create:** `scripts/evaluation/evaluate_rq1_complete.py`
+
+**What Should Be Inside:**
+```python
+"""
+Complete RQ1 evaluation: clean, robust, calibration, statistical tests.
+Generates all tables and figures for RQ1.
+"""
+
+import argparse
+import torch
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from scipy import stats
+
+from src.evaluation.rq1_metrics import RQ1MetricsComputer
+from src.attacks.pgd import PGDAttack
+from src.datasets.isic_dataset import ISICDataset
+from src.models.resnet import ResNet50Classifier
+
+def evaluate_model_complete(
+    model: torch.nn.Module,
+    test_loader: torch.utils.data.DataLoader,
+    device: torch.device,
+    attack_epsilon: float = 8/255
+) -> Dict[str, any]:
+    """
+    Complete evaluation: clean + robust + calibration.
+
+    Returns:
+        metrics: Dictionary with all RQ1 metrics
+    """
+    model.eval()
+    metrics_computer = RQ1MetricsComputer(num_classes=7)
+
+    # Initialize PGD attack
+    attack = PGDAttack(
+        model=model,
+        epsilon=attack_epsilon,
+        alpha=attack_epsilon / 4,
+        num_steps=10,
+        norm='inf',
+        random_init=True
+    )
+
+    # Storage
+    all_probs_clean = []
+    all_preds_clean = []
+    all_preds_adv = []
+    all_labels = []
+
+    print("Evaluating model...")
+    for images, labels in tqdm(test_loader):
+        images = images.to(device)
+        labels = labels.to(device)
+
+        # Clean evaluation
+        with torch.no_grad():
+            logits_clean = model(images)
+            probs_clean = torch.softmax(logits_clean, dim=1)
+            preds_clean = logits_clean.argmax(dim=1)
+
+        # Adversarial evaluation
+        images_adv = attack(images, labels)
+        with torch.no_grad():
+            logits_adv = model(images_adv)
+            preds_adv = logits_adv.argmax(dim=1)
+
+        # Store
+        all_probs_clean.append(probs_clean.cpu().numpy())
+        all_preds_clean.append(preds_clean.cpu().numpy())
+        all_preds_adv.append(preds_adv.cpu().numpy())
+        all_labels.append(labels.cpu().numpy())
+
+    # Concatenate
+    probs_clean = np.concatenate(all_probs_clean)
+    preds_clean = np.concatenate(all_preds_clean)
+    preds_adv = np.concatenate(all_preds_adv)
+    labels = np.concatenate(all_labels)
+
+    # Compute metrics
+    results = {}
+
+    # Clean metrics
+    print("Computing clean metrics...")
+    clean_metrics = metrics_computer.compute_clean_metrics(
+        preds_clean, labels, probs_clean
+    )
+    results.update({'clean_' + k: v for k, v in clean_metrics.items()})
+
+    # Robust metrics
+    print("Computing robust metrics...")
+    robust_metrics = metrics_computer.compute_robust_metrics(
+        preds_adv, labels, preds_clean
+    )
+    results.update({'robust_' + k: v for k, v in robust_metrics.items()})
+
+    # Calibration metrics (clean)
+    print("Computing calibration metrics...")
+    calib_metrics = metrics_computer.compute_calibration_metrics(
+        probs_clean, preds_clean, labels
+    )
+    results.update({'calib_' + k: v for k, v in calib_metrics.items()})
+
+    return results
+
+def compute_statistical_tests(results_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute all statistical tests for RQ1 hypotheses.
+
+    Returns:
+        tests_df: DataFrame with test results
+    """
+    tests = []
+
+    # Extract data
+    baseline_clean = results_df[results_df['model'] == 'baseline']['clean_accuracy'].values
+    baseline_robust = results_df[results_df['model'] == 'baseline']['robust_robust_accuracy'].values
+
+    trades_clean = results_df[results_df['model'] == 'trades']['clean_accuracy'].values
+    trades_robust = results_df[results_df['model'] == 'trades']['robust_robust_accuracy'].values
+
+    triobj_clean = results_df[results_df['model'] == 'tri_objective']['clean_accuracy'].values
+    triobj_robust = results_df[results_df['model'] == 'tri_objective']['robust_robust_accuracy'].values
+
+    # H1.1: Robustness Improvement (Tri-obj vs Baseline)
+    print("\nH1.1: Testing robustness improvement...")
+    t_stat, p_value = stats.ttest_rel(triobj_robust, baseline_robust, alternative='greater')
+
+    mean_diff = triobj_robust.mean() - baseline_robust.mean()
+    pooled_std = np.sqrt((triobj_robust.var() + baseline_robust.var()) / 2)
+    cohens_d = mean_diff / pooled_std
+
+    # Bootstrap CI
+    diffs = triobj_robust - baseline_robust
+    ci_lower = np.percentile(diffs, 2.5)
+    ci_upper = np.percentile(diffs, 97.5)
+
+    tests.append({
+        'hypothesis': 'H1.1: Robust Acc Improvement',
+        'metric': 'Robust Accuracy',
+        'baseline_mean': baseline_robust.mean(),
+        'baseline_std': baseline_robust.std(),
+        'triobj_mean': triobj_robust.mean(),
+        'triobj_std': triobj_robust.std(),
+        'improvement': mean_diff,
+        't_statistic': t_stat,
+        'p_value': p_value,
+        'cohens_d': cohens_d,
+        'ci_lower': ci_lower,
+        'ci_upper': ci_upper,
+        'significant': 'YES' if p_value < 0.01 else 'NO',
+        'target_met': 'YES' if mean_diff > 0.35 else 'NO'
+    })
+
+    print(f"  Improvement: {mean_diff*100:.2f}pp")
+    print(f"  t({len(triobj_robust)-1}) = {t_stat:.3f}, p = {p_value:.4f}")
+    print(f"  Cohen's d = {cohens_d:.3f}")
+    print(f"  95% CI: [{ci_lower*100:.2f}pp, {ci_upper*100:.2f}pp]")
+    print(f"  Target (>35pp): {'MET' if mean_diff > 0.35 else 'NOT MET'}")
+
+    # H1.2: Task Performance Maintenance (Tri-obj vs Baseline)
+    print("\nH1.2: Testing task performance maintenance...")
+
+    # TOST for equivalence (within ±2pp)
+    delta = 0.02  # Equivalence margin
+    t1, p1 = stats.ttest_rel(triobj_clean, baseline_clean - delta, alternative='greater')
+    t2, p2 = stats.ttest_rel(triobj_clean, baseline_clean + delta, alternative='less')
+    p_equiv = max(p1, p2)
+
+    mean_diff_clean = triobj_clean.mean() - baseline_clean.mean()
+
+    tests.append({
+        'hypothesis': 'H1.2: Clean Acc Maintenance',
+        'metric': 'Clean Accuracy',
+        'baseline_mean': baseline_clean.mean(),
+        'baseline_std': baseline_clean.std(),
+        'triobj_mean': triobj_clean.mean(),
+        'triobj_std': triobj_clean.std(),
+        'difference': mean_diff_clean,
+        'equivalence_p': p_equiv,
+        'significant': 'YES' if p_equiv < 0.05 else 'NO',
+        'target_met': 'YES' if abs(mean_diff_clean) < 0.02 else 'NO'
+    })
+
+    print(f"  Difference: {mean_diff_clean*100:+.2f}pp")
+    print(f"  TOST p-value: {p_equiv:.4f}")
+    print(f"  Equivalent: {'YES' if p_equiv < 0.05 else 'NO'}")
+    print(f"  Target (|Δ| < 2pp): {'MET' if abs(mean_diff_clean) < 0.02 else 'NOT MET'}")
+
+    # H1.3: Superiority over TRADES (Harmonic Mean)
+    print("\nH1.3: Testing superiority over TRADES...")
+
+    # Compute harmonic means
+    def harmonic_mean(clean, robust):
+        return 2 * (clean * robust) / (clean + robust)
+
+    trades_hm = np.array([harmonic_mean(c, r) for c, r in zip(trades_clean, trades_robust)])
+    triobj_hm = np.array([harmonic_mean(c, r) for c, r in zip(triobj_clean, triobj_robust)])
+
+    t_stat_hm, p_value_hm = stats.ttest_rel(triobj_hm, trades_hm, alternative='greater')
+    improvement_hm = triobj_hm.mean() - trades_hm.mean()
+
+    tests.append({
+        'hypothesis': 'H1.3: vs TRADES (Harmonic Mean)',
+        'metric': 'Harmonic Mean',
+        'trades_mean': trades_hm.mean(),
+        'trades_std': trades_hm.std(),
+        'triobj_mean': triobj_hm.mean(),
+        'triobj_std': triobj_hm.std(),
+        'improvement': improvement_hm,
+        't_statistic': t_stat_hm,
+        'p_value': p_value_hm,
+        'significant': 'YES' if p_value_hm < 0.01 else 'NO',
+        'target_met': 'YES' if improvement_hm > 0.15 else 'NO'
+    })
+
+    print(f"  TRADES HM: {trades_hm.mean()*100:.2f}%")
+    print(f"  Tri-obj HM: {triobj_hm.mean()*100:.2f}%")
+    print(f"  Improvement: {improvement_hm*100:+.2f}pp")
+    print(f"  t({len(triobj_hm)-1}) = {t_stat_hm:.3f}, p = {p_value_hm:.4f}")
+    print(f"  Target (>15pp): {'MET' if improvement_hm > 0.15 else 'NOT MET'}")
+
+    # H1.4: Calibration (Tri-obj vs TRADES)
+    print("\nH1.4: Testing calibration...")
+
+    trades_ece = results_df[results_df['model'] == 'trades']['calib_ece'].values
+    triobj_ece = results_df[results_df['model'] == 'tri_objective']['calib_ece'].values
+    baseline_ece = results_df[results_df['model'] == 'baseline']['calib_ece'].values
+
+    # Test: Tri-obj ECE < TRADES ECE
+    t_stat_ece, p_value_ece = stats.ttest_rel(triobj_ece, trades_ece, alternative='less')
+
+    # Test: Tri-obj ECE ≈ Baseline ECE (equivalence)
+    diff_ece_baseline = triobj_ece.mean() - baseline_ece.mean()
+
+    tests.append({
+        'hypothesis': 'H1.4: Calibration',
+        'metric': 'ECE',
+        'baseline_ece': baseline_ece.mean(),
+        'trades_ece': trades_ece.mean(),
+        'triobj_ece': triobj_ece.mean(),
+        'vs_trades_t': t_stat_ece,
+        'vs_trades_p': p_value_ece,
+        'vs_baseline_diff': diff_ece_baseline,
+        'significant': 'YES' if p_value_ece < 0.05 else 'NO',
+        'target_met': 'YES' if (triobj_ece.mean() < trades_ece.mean() and
+                                abs(diff_ece_baseline) < 0.02) else 'NO'
+    })
+
+    print(f"  Baseline ECE: {baseline_ece.mean():.4f}")
+    print(f"  TRADES ECE: {trades_ece.mean():.4f}")
+    print(f"  Tri-obj ECE: {triobj_ece.mean():.4f}")
+    print(f"  Tri-obj < TRADES: {'YES' if triobj_ece.mean() < trades_ece.mean() else 'NO'}")
+    print(f"  Tri-obj ≈ Baseline: {'YES' if abs(diff_ece_baseline) < 0.02 else 'NO'}")
+
+    return pd.DataFrame(tests)
+
+def main(args):
+    """Main function."""
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    output_dir = Path(args.output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    # Load test data
+    test_dataset = ISICDataset(
+        root=args.data_root,
+        split='test',
+        transform=None
+    )
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset,
+        batch_size=args.batch_size,
+        shuffle=False,
+        num_workers=4
+    )
+
+    # Results storage
+    all_results = []
+
+    # Evaluate each model
+    for model_name in args.models:
+        for seed in args.seeds:
+
+            print(f"\n{'='*80}")
+            print(f"EVALUATING: {model_name.upper()} (Seed {seed})")
+            print(f"{'='*80}")
+
+            # Load model
+            checkpoint_path = Path(args.checkpoint_dir) / f"{model_name}_seed{seed}_best.pth"
+            model = ResNet50Classifier(num_classes=7)
+            model.load_state_dict(torch.load(checkpoint_path, map_location=device))
+            model = model.to(device)
+
+            # Complete evaluation
+            metrics = evaluate_model_complete(
+                model, test_loader, device, attack_epsilon=8/255
+            )
+
+            # Add metadata
+            metrics['model'] = model_name
+            metrics['seed'] = seed
+
+            all_results.append(metrics)
+
+            # Print summary
+            print(f"\nSummary for {model_name} (seed {seed}):")
+            print(f"  Clean Acc:  {metrics['clean_accuracy']*100:.2f}%")
+            print(f"  Robust Acc: {metrics['robust_robust_accuracy']*100:.2f}%")
+            print(f"  ECE:        {metrics['calib_ece']:.4f}")
+
+    # Save detailed results
+    results_df = pd.DataFrame(all_results)
+    results_df.to_csv(output_dir / 'rq1_complete_results.csv', index=False)
+
+    # Aggregate across seeds
+    summary_df = results_df.groupby('model').agg({
+        'clean_accuracy': ['mean', 'std'],
+        'clean_auroc_macro': ['mean', 'std'],
+        'clean_f1_weighted': ['mean', 'std'],
+        'robust_robust_accuracy': ['mean', 'std'],
+        'robust_attack_success_rate': ['mean', 'std'],
+        'calib_ece': ['mean', 'std'],
+        'calib_brier_score': ['mean', 'std']
+    })
+
+    print("\n" + "="*80)
+    print("SUMMARY ACROSS SEEDS")
+    print("="*80)
+    print(summary_df)
+
+    summary_df.to_csv(output_dir / 'rq1_summary.csv')
+
+    # Compute statistical tests
+    print("\n" + "="*80)
+    print("STATISTICAL TESTS (RQ1 HYPOTHESES)")
+    print("="*80)
+
+    tests_df = compute_statistical_tests(results_df)
+    tests_df.to_csv(output_dir / 'rq1_statistical_tests.csv', index=False)
+
+    # Generate summary table (for dissertation)
+    print("\n" + "="*80)
+    print("HYPOTHESIS SUMMARY")
+    print("="*80)
+
+    for _, test in tests_df.iterrows():
+        print(f"\n{test['hypothesis']}:")
+        print(f"  Result: {test['target_met']}")
+        print(f"  Significant: {test['significant']}")
+
+    print(f"\nAll results saved to {output_dir}")
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--data_root', type=str, required=True)
+    parser.add_argument('--checkpoint_dir', type=str, required=True)
+    parser.add_argument('--output_dir', type=str, default='results/rq1_complete')
+    parser.add_argument('--models', nargs='+', default=['baseline', 'trades', 'tri_objective'])
+    parser.add_argument('--seeds', nargs='+', type=int, default=[42, 123, 456])
+    parser.add_argument('--batch_size', type=int, default=64)
+
+    args = parser.parse_args()
+    main(args)
+```
+
+**How to Run:**
+```bash
+python scripts/evaluation/evaluate_rq1_complete.py \
+    --data_root data/ISIC2018 \
+    --checkpoint_dir results/checkpoints \
+    --output_dir results/rq1_complete
+```
+
+---
+
+### 9.4 RQ1 Figures Generation
+
+**File to Create:** `scripts/results/generate_rq1_figures.py`
+
+**What Should Be Inside:**
+```python
+"""
+Generate all figures for RQ1.
+- Figure 1: Clean vs Robust accuracy scatter plot
+- Figure 2: Attack spectrum curves
+- Figure 3: Calibration reliability diagrams
+- Figure 4: Per-class performance comparison
+"""
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from pathlib import Path
+
+def generate_figure1_clean_robust_scatter(results_df, output_dir):
+    """
+    Figure 1: Clean vs Robust Accuracy Scatter Plot with Pareto Frontier.
+    """
+    fig, ax = plt.subplots(figsize=(10, 8))
+
+    colors = {'baseline': '#1f77b4', 'trades': '#ff7f0e', 'tri_objective': '#2ca02c'}
+    markers = {'baseline': 'o', 'trades': 's', 'tri_objective': '^'}
+
+    for model in results_df['model'].unique():
+        model_data = results_df[results_df['model'] == model]
+
+        clean_acc = model_data['clean_accuracy'].values * 100
+        robust_acc = model_data['robust_robust_accuracy'].values * 100
+
+        # Plot individual seeds
+        ax.scatter(clean_acc, robust_acc,
+                  s=200, alpha=0.6,
+                  color=colors[model],
+                  marker=markers[model],
+                  edgecolors='black', linewidth=1.5,
+                  label=f'{model.upper()}')
+
+        # Plot mean with error bars
+        mean_clean = clean_acc.mean()
+        mean_robust = robust_acc.mean()
+        std_clean = clean_acc.std()
+        std_robust = robust_acc.std()
+
+        ax.errorbar(mean_clean, mean_robust,
+                   xerr=std_clean, yerr=std_robust,
+                   fmt='none', color=colors[model],
+                   capsize=8, capthick=2, elinewidth=2)
+
+    # Diagonal line (equal clean and robust)
+    ax.plot([0, 100], [0, 100], 'k--', alpha=0.3, linewidth=1,
+           label='Clean = Robust')
+
+    ax.set_xlabel('Clean Accuracy (%)', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Robust Accuracy (PGD ε=8/255) (%)', fontsize=16, fontweight='bold')
+    ax.set_title('RQ1: Clean vs Robust Accuracy Trade-off', fontsize=18, fontweight='bold')
+    ax.legend(fontsize=14, loc='lower right')
+    ax.grid(alpha=0.3)
+    ax.set_xlim(50, 90)
+    ax.set_ylim(0, 60)
+
+    plt.tight_layout()
+    plt.savefig(output_dir / 'figure1_clean_robust_scatter.pdf', dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_figure2_attack_spectrum(spectrum_df, output_dir):
+    """
+    Figure 2: Attack Spectrum Curves (already created in attack_spectrum script).
+    This just copies/refines it.
+    """
+    # Load attack spectrum data
+    # Already generated by evaluate_rq1_attack_spectrum.py
+    pass
+
+def generate_figure3_calibration_reliability(results_df, output_dir):
+    """
+    Figure 3: Calibration Reliability Diagrams.
+    """
+    fig, axes = plt.subplots(1, 3, figsize=(18, 6))
+
+    models = ['baseline', 'trades', 'tri_objective']
+    titles = ['Baseline', 'TRADES', 'Tri-Objective']
+
+    for idx, (model, title) in enumerate(zip(models, titles)):
+        ax = axes[idx]
+
+        # Get reliability diagram data (from first seed)
+        model_data = results_df[results_df['model'] == model].iloc[0]
+        rel_diag = model_data['calib_reliability_diagram']
+
+        bin_confs = rel_diag['bin_confidences']
+        bin_accs = rel_diag['bin_accuracies']
+
+        # Plot
+        ax.plot([0, 1], [0, 1], 'k--', label='Perfect Calibration')
+        ax.bar(bin_confs, bin_accs, width=0.06, alpha=0.7,
+              edgecolor='black', label='Model')
+
+        # ECE annotation
+        ece = model_data['calib_ece']
+        ax.text(0.05, 0.95, f'ECE = {ece:.4f}',
+               transform=ax.transAxes, fontsize=12,
+               verticalalignment='top',
+               bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
+
+        ax.set_xlabel('Confidence', fontsize=12)
+        ax.set_ylabel('Accuracy', fontsize=12)
+        ax.set_title(f'{title}\n(Seed 42)', fontsize=14, fontweight='bold')
+        ax.legend(fontsize=10)
+        ax.grid(alpha=0.3)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+
+    plt.tight_layout()
+    plt.savefig(output_dir / 'figure3_calibration_reliability.pdf', dpi=300, bbox_inches='tight')
+    plt.close()
+
+def generate_figure4_perclass_comparison(results_df, output_dir):
+    """
+    Figure 4: Per-Class Accuracy Comparison (Baseline vs Tri-objective).
+    """
+    # Extract per-class accuracies
+    baseline_data = results_df[results_df['model'] == 'baseline']
+    triobj_data = results_df[results_df['model'] == 'tri_objective']
+
+    num_classes = 7
+    class_names = ['MEL', 'NV', 'BCC', 'AKIEC', 'BKL', 'DF', 'VASC']
+
+    # Average across seeds
+    baseline_perclass = []
+    triobj_perclass = []
+
+    for c in range(num_classes):
+        baseline_perclass.append(
+            baseline_data[f'clean_recall_class{c}'].mean()
+        )
+        triobj_perclass.append(
+            triobj_data[f'clean_recall_class{c}'].mean()
+        )
+
+    # Plot
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    x = np.arange(num_classes)
+    width = 0.35
+
+    ax.bar(x - width/2, baseline_perclass, width,
+          label='Baseline', alpha=0.8, color='#1f77b4', edgecolor='black')
+    ax.bar(x + width/2, triobj_perclass, width,
+          label='Tri-Objective', alpha=0.8, color='#2ca02c', edgecolor='black')
+
+    ax.set_xlabel('Class', fontsize=14, fontweight='bold')
+    ax.set_ylabel('Recall (Sensitivity)', fontsize=14, fontweight='bold')
+    ax.set_title('Per-Class Performance Comparison', fontsize=16, fontweight='bold')
+    ax.set_xticks(x)
+    ax.set_xticklabels(class_names, fontsize=12)
+    ax.legend(fontsize=12)
+    ax.grid(alpha=0.3, axis='y')
+    ax.set_ylim(0, 1.0)
+
+    plt.tight_layout()
+    plt.savefig(output_dir / 'figure4_perclass_comparison.pdf', dpi=300, bbox_inches='tight')
+    plt.close()
+
+def main():
+    """Generate all RQ1 figures."""
+
+    # Load results
+    results_dir = Path('results/rq1_complete')
+    results_df = pd.read_csv(results_dir / 'rq1_complete_results.csv')
+
+    output_dir = Path('results/figures/rq1')
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    print("Generating RQ1 figures...")
+
+    print("  Figure 1: Clean vs Robust scatter...")
+    generate_figure1_clean_robust_scatter(results_df, output_dir)
+
+    print("  Figure 3: Calibration reliability diagrams...")
+    generate_figure3_calibration_reliability(results_df, output_dir)
+
+    print("  Figure 4: Per-class comparison...")
+    generate_figure4_perclass_comparison(results_df, output_dir)
+
+    print(f"\nAll figures saved to {output_dir}")
+
+if __name__ == '__main__':
+    main()
+```
+
+---
+
+### 9.5 Phase 9 Completion Checklist
+
+**Check These Before Moving to Phase 10:**
+
+- [ ] `src/evaluation/rq1_metrics.py` created and tested
+  - [ ] Clean metrics computation works
+  - [ ] Robust metrics computation works
+  - [ ] Calibration metrics computed correctly
+  - [ ] Reliability diagram data generated
+
+- [ ] `scripts/evaluation/evaluate_rq1_attack_spectrum.py` works
+  - [ ] Evaluates at ε ∈ {0, 2/255, 4/255, 8/255}
+  - [ ] Generates attack spectrum curve
+  - [ ] CSV saved: `attack_spectrum.csv`
+  - [ ] Figure saved: `attack_spectrum.pdf`
+
+- [ ] `scripts/evaluation/evaluate_rq1_complete.py` works
+  - [ ] All 3 models × 3 seeds evaluated
+  - [ ] Clean + Robust + Calibration metrics computed
+  - [ ] Statistical tests performed (H1.1, H1.2, H1.3, H1.4)
+  - [ ] CSV saved: `rq1_complete_results.csv`, `rq1_statistical_tests.csv`
+
+- [ ] `scripts/results/generate_rq1_figures.py` works
+  - [ ] Figure 1: Clean vs Robust scatter generated
+  - [ ] Figure 3: Calibration diagrams generated
+  - [ ] Figure 4: Per-class comparison generated
+  - [ ] All figures 300 DPI PDF format
+
+- [ ] Run complete RQ1 evaluation:
+  ```bash
+  # Step 1: Attack spectrum
+  python scripts/evaluation/evaluate_rq1_attack_spectrum.py \
+      --data_root data/ISIC2018 \
+      --checkpoint_dir results/checkpoints
+
+  # Step 2: Complete evaluation
+  python scripts/evaluation/evaluate_rq1_complete.py \
+      --data_root data/ISIC2018 \
+      --checkpoint_dir results/checkpoints
+
+  # Step 3: Generate figures
+  python scripts/results/generate_rq1_figures.py
+  ```
+
+**Expected Results:**
+
+| Model | Clean Acc | Robust Acc | ECE | Harmonic Mean |
+|-------|-----------|------------|-----|---------------|
+| Baseline | 83.3% ± 0.8% | 12.0% ± 2.0% | 0.08 | 20.8% |
+| TRADES | 60.0% ± 2.0% | 28.0% ± 1.5% | 0.15 | 38.2% |
+| Tri-obj | 83.0% ± 1.4% | 47.0% ± 3.0% | 0.09 | 59.9% |
+
+**Hypothesis Results:**
+- ✅ H1.1: Robust acc improvement > 35pp (✓)
+- ✅ H1.2: Clean acc maintained within 2pp (✓)
+- ✅ H1.3: Harmonic mean > TRADES by >15pp (✓)
+- ✅ H1.4: ECE < TRADES, ECE ≈ Baseline (✓)
+
+**Phase Complete When:**
+✅ All 4 hypotheses tested with statistical rigor
+✅ All tables generated (clean, robust, calibration, tests)
+✅ All figures generated (4+ publication-quality PDFs)
+✅ CSV files saved to `results/rq1_complete/`
+✅ Tri-objective demonstrates superior clean-robust trade-off
+
+---
+
+Would you like me to continue with **Phase 10 (RQ2 Evaluation)** and the remaining phases? I'll create the same level of detail for:
+
+- **Phase 10:** RQ2 Explainability Evaluation (SSIM, TCAV, Faithfulness)
+- **Phase 11:** RQ3 Selective Prediction Full Evaluation
+- **Phase 12:** Results Tables and Dissertation Integration
+- **Phase 13:** Final Polishing and Submission Preparation
+
+Let me know if you'd like me to continue, or if you need any modifications to Phase 8-9 first!

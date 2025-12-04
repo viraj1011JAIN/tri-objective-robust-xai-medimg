@@ -1,0 +1,634 @@
+% !BIB program = biber
+\documentclass{mproj}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{array}
+\usepackage{float}
+\usepackage{url}
+\usepackage{fancyvrb}
+\usepackage[final]{pdfpages}
+\usepackage{times}
+\usepackage{enumitem}
+\usepackage{textgreek}
+\usepackage[nottoc,numbib]{tocbibind}
+\usepackage[nottoc]{tocbibind}
+ \usepackage{booktabs}
+% Bibliography Setup (CRITICAL - Add this!)
+\usepackage[
+    style=ieee,
+    backend=biber
+]{biblatex}
+\addbibresource{mproj.bib}
+
+% for alternative page numbering, use the following package
+% and see documentation for commands
+\usepackage{fancyhdr}
+
+% other potentially useful packages
+%\uspackage{amssymb,amsmath}
+\usepackage{url}
+\usepackage{fancyvrb}
+\usepackage[final]{pdfpages}
+
+\begin{document}
+\pagenumbering{gobble}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Tri-Objective Adversarial Training for Robust and Explainable
+Skin Lesion Classification: Joint Optimisation of Task Performance,
+Adversarial Robustness, and Concept-Grounded Explanations}
+\author{Viraj Pankaj Jain}
+\date{5th December 2025}
+\maketitle
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{abstract}
+
+Deep learning models achieve dermatologist-level performance on skin lesion classification, but clinical deployment is hindered by vulnerability to adversarial perturbations, unstable artifact-driven explanations, and lack of safe rejection mechanisms. This dissertation proposes a tri-objective adversarial training framework for dermoscopy classification that jointly optimises task performance, adversarial robustness via TRADES, and explanation stability by penalising discrepancies in latent feature maps between clean and adversarial inputs. Evaluated on ISIC 2018 using ResNet-50, the method is compared against a baseline and TRADES-only model. To verify robustness is achieved for clinically meaningful reasons, a concept bank from Derm7pt is used with Testing with Concept Activation Vectors (TCAV) to quantify reliance on medical concepts (pigment network, blue-white veil) versus artifacts (rulers, hair, ink marks). Results show the tri-objective model substantially improves robustness under multi-step PGD attack while preserving clean accuracy, achieves more stable Grad-CAM explanations, demonstrates reduced artifact reliance and increased medical concept sensitivity via TCAV, and enables selective prediction that combines confidence and explanation stability to improve accuracy at fixed coverage and concentrate errors in rejected samples. These findings suggest tri-objective adversarial training produces skin lesion classifiers that are more robust, interpretable, and clinically safer by explicitly regularising both robustness and explanation behaviour during training.
+
+\end{abstract}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\educationalconsent
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Acknowledgements}
+
+As I reach the end of my Master’s degree at the University of Glasgow and finish this dissertation, I look back on a year that was both challenging and truly rewarding. There have been late nights, difficult moments, and plenty of opportunities for growth. I am grateful for the many people who have helped and supported me along the way.
+
+I am especially grateful to my supervisor, Dr. Jan Siebert. His steady support, thoughtful advice, and encouragement helped me stay focused during difficult times. I have learned a lot from his expertise and genuine care for my progress.
+
+I want to thank all the patients whose medical images were used for my research. Their participation was absolutely essential, and I deeply appreciate their contribution.
+
+My parents in India deserve enormous recognition. Their love, encouragement and faith in me were a constant source of strength. Our long video calls kept me going, even when things got tough.
+
+I also want to thank my roommate. They always did extra chores, especially when I was unwell, so I could focus on my studies. Their help in proofreading and polishing my writing made a huge difference. I am grateful for your patience, understanding, and steady support.
+
+This dissertation is the end of an important chapter and the beginning of new opportunities. The lessons and kindness I received from everyone will remain with me as I move forward.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\tableofcontents
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Introduction}\label{Introductiono}
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\section{Motivation and Problem Statement}
+
+Deep learning models have achieved performance comparable to human experts in classifying skin lesions from dermoscopy images \cite{estevaDermatologistlevelClassificationSkin2017, tschandlHumanComputerCollaborationSkin2020}. Despite this high accuracy, their clinical deployment is hindered by three critical limitations.
+
+First, these models are vulnerable to adversarial perturbations. Small, imperceptible changes to an input image can cause the model to produce incorrect predictions with high confidence \cite{apostolidisSurveyAdversarialDeep2021, finlaysonAdversarialAttacksMedical2019}. This fragility poses a significant safety risk in medical settings where reliability is paramount. Second, the interpretability of these models remains a challenge. Visual explanation methods, such as Grad-CAM, often highlight irrelevant artifacts—such as rulers, hair, or ink marks—rather than diagnostic lesion features \cite{bhatiSurveyExplainableArtificial2024}. This suggests that models may rely on spurious correlations rather than robust medical features. Third, current systems lack reliable mechanisms to abstain from making predictions when they are uncertain, which is essential for patient safety \cite{delcorsoRobustClinicalAI2025, abbasExplainableAIClinical2025}.
+
+These issues are interconnected. Standard adversarial training improves robustness but often degrades accuracy on clean images and does not necessarily improve explanation quality \cite{chalasaniConciseExplanationsNeural}. Consequently, there is a need for a unified training framework that simultaneously addresses accuracy, adversarial robustness, and explanation alignment.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Project Objectives and Research Questions}
+
+The primary objective of this dissertation is to develop a skin lesion classifier that is accurate, robust to adversarial attacks, and grounded in clinically relevant features. This study focuses on the ISIC 2018 dataset using a ResNet-50 architecture.
+
+The research is guided by the following three questions:
+
+\textbf{RQ1: Adversarial Robustness with Task Performance Preservation}
+
+Can a tri-objective training framework—combining task loss, TRADES-based robustness \cite{zhangTheoreticallyPrincipledTradeoff2019}, and feature stability—improve adversarial robustness on ISIC 2018 while preserving classification accuracy on clean images?
+
+\textbf{RQ2: Concept-Grounded Explanation Stability}
+
+Does this training approach produce explanations that are stable under perturbation and aligned with medical concepts? Specifically, does the model demonstrate reduced reliance on imaging artifacts (e.g., rulers) and increased sensitivity to diagnostic features (e.g., pigment networks) as measured by Testing with Concept Activation Vectors (TCAV) \cite{kimInterpretabilityBeyondFeature2018}?
+
+\textbf{RQ3: Safe Selective Prediction}
+
+Can a selective prediction mechanism, which integrates predictive confidence with explanation stability, improve system reliability by correctly rejecting uncertain or unstable predictions?
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Contributions}
+
+This dissertation makes the following technical and empirical contributions:
+
+\textbf{Tri-Objective Training Framework:} A novel training objective is formulated to jointly optimize classification accuracy, adversarial robustness via TRADES \cite{zhangTheoreticallyPrincipledTradeoff2019}, and latent feature stability. This integration ensures the model learns representations that are both discriminative and robust.
+
+\textbf{Two-Phase Curriculum Learning:} A training schedule is introduced that priorities feature learning in the early epochs before imposing stability constraints. This approach mitigates gradient conflicts and prevents the model from converging to trivial solutions.
+
+\textbf{Concept-Grounded Evaluation via TCAV:} A curated concept bank is constructed using the Derm7pt dataset \cite{kawaharaSevenPointChecklistDermatoscopy2019} to evaluate model reasoning. TCAV is used to quantitatively verify whether the model relies on clinical features or imaging artifacts.
+
+\textbf{Empirical Analysis on ISIC 2018:} A comprehensive evaluation is performed comparing a standard baseline, a robust TRADES model, and the proposed tri-objective model. The study analyzes trade-offs between accuracy, robustness, and explainability.
+
+\textbf{Dual-Gating Selective Prediction:} A safety module is developed that filters predictions based on both softmax confidence and explanation stability, thereby enhancing the reliability of the system in clinical scenarios.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Dissertation Structure}
+
+The remainder of this dissertation is organized as follows:
+
+\textbf{Chapter 2} reviews the relevant literature, covering deep learning in medical imaging, adversarial robustness (PGD, TRADES), explainable AI methods (Grad-CAM, TCAV), and techniques for selective prediction.
+
+\textbf{Chapter 3} details the methodology. It describes the tri-objective formulation, dataset preprocessing, ResNet-50 architecture, adversarial training configuration, and the experimental design for TCAV analysis.
+
+\textbf{Chapter 4} presents the experimental results. It provides a comparative analysis of the models, discusses the accuracy-robustness trade-offs, and interprets the concept sensitivity findings.
+
+\textbf{Chapter 5} concludes the study. It summarizes the key findings, discusses the limitations of the current scope, and outlines directions for future research.
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Background and Related Work}\label{Background and Related Work}
+\section{Medical Imaging AI Overview}
+
+Deep learning has transformed medical image analysis, achieving remarkable success in tasks such as skin lesion classification, pneumonia detection, and tumour segmentation \cite{estevaDermatologistlevelClassificationSkin2017, tschandlHumanComputerCollaborationSkin2020}. The International Skin Imaging Collaboration (ISIC) archive \cite{codellaSkinLesionAnalysis2018} has played a pivotal role by providing large-scale dermoscopy datasets, enabling the development of high-performance Convolutional Neural Networks (CNNs).
+
+Despite these advances, clinical adoption remains limited. Trustworthiness is a major barrier; clinicians require models that are not only accurate but also robust to data shifts and capable of explaining their decisions \cite{bhatiSurveyExplainableArtificial2024, abbasExplainableAIClinical2025}. Unlike in general computer vision, where a misclassification might be trivial, an error in medical diagnosis can have severe consequences for patient outcomes \cite{delcorsoRobustClinicalAI2025}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Deep Learning for Medical Image Classification}
+
+Most current medical image classifiers are based on convolutional neural networks (CNNs). CNNs are well suited to image data because they learn hierarchical feature representations, from edges and textures in early layers to more complex structures in deeper layers. Several architectures have become common baselines in medical imaging studies.
+
+\subsection{ResNet‑50}
+ResNet‑50 is a 50‑layer CNN that uses residual, or skip, connections to ease the training of deep networks. These connections allow gradients to flow more easily during backpropagation and reduce the risk of vanishing gradients. ResNet variants are widely used in medical imaging because they provide a strong balance between accuracy, parameter count, and training stability \cite{cuiApplicationQuantitativeInterpretability2025, bhatiSurveyExplainableArtificial2024}. ResNet‑50 also works well with gradient‑based explanation methods such as Class Activation Mapping and Grad‑CAM, because it has clearly defined convolutional blocks that can be probed for saliency \cite{cuiApplicationQuantitativeInterpretability2025, lamprouGradCAMVsHiResCAM}.
+
+In this dissertation, ResNet‑50 is chosen as the sole backbone architecture. This keeps the experimental design focused and allows a deeper analysis of robustness and explanation behaviour at the level of individual layers and feature maps.
+
+\subsection{Other CNN Architectures}
+Other efficient CNN architectures, such as EfficientNet, have been studied in medical imaging because they achieve competitive accuracy with fewer parameters and lower computational cost. EfficientNet uses a compound scaling strategy to balance network depth, width, and input resolution, and has been evaluated in several medical imaging benchmarks \cite{bhatiSurveyExplainableArtificial2024}. While these models are relevant as related work, they are not used directly in this project and are instead considered as potential targets for future extensions.
+
+\subsection{Vision Transformers}
+Vision Transformers (ViTs) apply self‑attention mechanisms to image patches rather than using convolutions. They have shown strong performance on general computer vision benchmarks and are increasingly studied in medical imaging, where their global receptive field can capture long‑range dependencies in high‑resolution images \cite{laiInterpretableMedicalImagery2024}. Reviews of ViT‑based medical classifiers highlight both their predictive strength and the need for dedicated explainability tools, since standard CNN‑based saliency methods do not always transfer directly \cite{laiInterpretableMedicalImagery2024}. In this dissertation, ViTs are discussed as part of the background but are not included in the empirical study, which focuses on a single, well‑established CNN backbone.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adversarial Robustness in Medical Imaging}
+Adversarial examples are inputs that have been intentionally perturbed to cause a model to make a wrong prediction, while remaining visually almost identical to the original image. Early work showed that even small, norm‑bounded perturbations can reliably fool image classifiers. Subsequent studies demonstrated that this vulnerability extends to medical imaging, where adversarial attacks can alter diagnoses or hide critical findings in chest X‑rays, fundus images, and dermoscopy \cite{finlaysonAdversarialAttacksMedical2019, apostolidisSurveyAdversarialDeep2021, dongSurveyAdversarialAttack2025}.
+
+Common gradient‑based attacks include the Fast Gradient Sign Method (FGSM) and Projected Gradient Descent (PGD). FGSM applies a single perturbation step in the direction of the gradient of the loss with respect to the input. PGD extends this idea to multiple steps, projecting the perturbed image back into an allowed norm‑ball around the original after each update. PGD with many steps is widely considered a strong first‑order adversary and has become a standard tool for evaluating robustness \cite{madryTowardsDeepLearning2018, apostolidisSurveyAdversarialDeep2021}.
+
+Defence methods for medical imaging can be grouped into input preprocessing, detection of adversarial examples, and model‑level defences. Preprocessing methods try to remove perturbations before inference, for example by denoising or compressing the input, but attackers can often adapt to these defences \cite{dongSurveyAdversarialAttack2025}. Detection methods attempt to flag suspicious inputs based on changes in internal activations or explanation maps \cite{deaguiarRADARMIXHowUncover2024}. Model‑level defences, and in particular adversarial training, modify the training process so that the model learns to classify adversarial examples correctly. Among these, the TRADES framework has become a widely used baseline because it explicitly trades off clean accuracy and robustness through a regularisation term based on Kullback–Leibler divergence between clean and adversarial predictions \cite{zhangTheoreticallyPrincipledTradeoff2019}.
+
+Surveys focused on medical imaging emphasise that adversarial robustness is not yet well understood in clinical settings. They highlight open questions about how robustness interacts with dataset shifts, fairness, and interpretability, and call for more comprehensive evaluation protocols \cite{apostolidisSurveyAdversarialDeep2021, dongSurveyAdversarialAttack2025, dietrichAdversarialArtificialIntelligence2025}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Explainable AI (XAI) in Medicine}
+Explainable AI (XAI) aims to make the behaviour of complex models more transparent, so that clinicians and regulators can understand and trust their decisions. In medical imaging, visual explanations are especially attractive, as they can be overlaid directly on the original image and inspected by experts \cite{bhatiSurveyExplainableArtificial2024, abbasExplainableAIClinical2025}.
+
+\subsection{Saliency and Attribution Methods}
+Saliency and attribution methods assign an importance score to each pixel or region of the input image. Gradient‑based methods, such as Grad‑CAM and its variants, use gradients flowing into a chosen convolutional layer to produce a coarse heatmap of the regions that contributed most to the prediction. These methods have been widely adopted in medical imaging as a convenient way to visualise what the model is “looking at” \cite{bhatiSurveyExplainableArtificial2024, cuiApplicationQuantitativeInterpretability2025}.
+
+However, several studies have raised concerns about the faithfulness and stability of these explanations. Quantitative evaluations show that different saliency methods can produce inconsistent maps, and that small perturbations to the input, including adversarial noise, can cause large changes in the highlighted regions \cite{deaguiarAssessingVulnerabilitiesDeep2023, lamprouEvaluationDeepLearning2024}. Some work has proposed modified methods, such as HiResCAM, which aim to improve faithfulness by aligning explanations more closely with the model’s actual gradient flow \cite{draelosUseHiResCAMInstead2021, lamprouGradCAMVsHiResCAM}. Overall, the literature suggests that visual inspection alone is insufficient, and that explanation quality should be assessed with quantitative metrics and stress‑tested under perturbations.
+
+\subsection{Concept‑Based Explanations and TCAV}
+Pixel‑level saliency does not always align well with how clinicians reason about images, which is often in terms of higher‑level concepts such as “pigment network” or “blue‑white veil” in dermoscopy. Concept‑based methods address this by operating in the latent space of the network rather than directly on pixels. Testing with Concept Activation Vectors (TCAV) measures how sensitive a model’s predictions are to specific human‑defined concepts by training linear classifiers on internal activations to define concept directions, and then computing directional derivatives along these directions \cite{kimInterpretabilityBeyondFeature2018}.
+
+TCAV has been adapted to medical imaging to study model bias and concept reliance. For example, Correa et al. use concept activation vectors to detect and reduce dependence on protected attributes, such as race, in chest X‑ray and mammography models \cite{correaEfficientAdversarialDebiasing2024}. In dermatology, the Derm7pt dataset encodes clinically meaningful dermoscopic patterns aligned with the seven‑point checklist, and can be used as a source of concept examples for TCAV analysis \cite{kawaharaSevenPointChecklistDermatoscopy2019}. These approaches offer a way to test whether a model relies on clinically accepted features or on spurious artefacts, such as rulers and ink markings.
+
+Recent reviews emphasise that explainability in clinical AI must go beyond producing visually appealing heatmaps. Explanations should be quantitatively evaluated, robust to small perturbations, and aligned with clinical concepts to support safe decision‑making \cite{bhatiSurveyExplainableArtificial2024, abbasExplainableAIClinical2025, laiInterpretableMedicalImagery2024}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Multi‑Objective Optimisation in Robust and Explainable Models}
+Most deep learning models are trained to minimise a single objective, usually a task loss such as cross‑entropy. However, in safety‑critical applications, models must satisfy multiple requirements at once, such as accuracy, robustness, and interpretability. This leads to a multi‑objective setting where improving one property can degrade another.
+
+A common approach is to combine several loss terms into a weighted sum. For example, a model might be trained with a combination of standard task loss, robustness loss, and an explanation‑based regulariser. Adjusting the weights moves the solution along a trade‑off curve between these objectives \cite{chalasaniConciseExplanationsNeural, liInterpretableDeepLearning2022}. Prior work has shown that adversarial training can change attribution patterns and sometimes make explanations sparser or more stable, but it can also reduce accuracy if not tuned carefully \cite{chalasaniConciseExplanationsNeural}. Other work on trustworthy AI frameworks for security and healthcare also suggests combining robustness and explainability constraints to build more reliable systems \cite{deepakkejriwalAdversarialAIThreats2023, chinuResilientCyberDefense2025}.
+
+Concept‑based models that incorporate human‑interpretable concepts directly into the architecture are another way to handle multiple objectives. These models aim to produce decisions that can be decomposed into concept contributions, making them easier to audit and constrain \cite{debotInterpretableConceptBasedMemory, kwuidaInterpretabilitySimilarityConceptBased2021}. While promising, such models are still relatively rare in medical imaging, and often require extensive concept annotations.
+
+The present work follows the weighted‑sum approach, defining a tri‑objective loss that combines task performance, adversarial robustness, and explanation stability. This builds directly on insights from adversarial training and concept‑based interpretability, but applies them in a unified framework.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Selective Prediction and Calibration}
+
+In clinical practice, it is often safer for an AI system to defer a decision than to return a confident but incorrect prediction. Selective prediction formalises this idea by allowing the model to abstain on cases where its predictions are unreliable. This requires two ingredients: a confidence or uncertainty estimate, and a rule for mapping that estimate to accept or reject decisions.
+
+Deep neural networks are known to be poorly calibrated; their predicted probabilities often do not match the true likelihood of correctness \cite{liInterpretableDeepLearning2022}. This is especially problematic in medicine, where miscalibrated confidence can mask high‑risk errors. Recent work on trustworthy clinical AI emphasises the need to report calibration metrics, such as Expected Calibration Error (ECE) and Brier score, and to use calibrated probabilities when setting decision thresholds \cite{abbasExplainableAIClinical2025, delcorsoRobustClinicalAI2025}.
+
+Several techniques can improve calibration, including temperature scaling and Platt scaling, which adjust the logits or predicted scores based on a held‑out validation set. Once calibrated, confidence scores can be used to implement selective prediction: the model accepts predictions above a chosen confidence threshold, and refers the remaining cases to a human expert. Studies in radiology and oncology argue that such hybrid human–AI workflows are more realistic than full automation and can improve safety by concentrating errors into a rejected subset \cite{dietrichAdversarialArtificialIntelligence2025, delcorsoRobustClinicalAI2025}.
+
+In addition to confidence, recent work has explored using explanation signals, such as the stability of saliency maps, as indicators of when a model may be under attack or facing an out‑of‑distribution input \cite{deaguiarRADARMIXHowUncover2024}. This motivates combining confidence with explanation stability in a dual‑gating selective prediction module, as explored in this dissertation.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Research Gaps Addressed in This Project}
+The literature reviewed in this chapter highlights several gaps that this dissertation aims to address.
+
+First, most medical imaging studies treat adversarial robustness, explainability, and selective prediction as separate topics. Robustness work focuses on accuracy under attack, often without examining how explanations change. Explainability work commonly evaluates saliency maps on clean images only, without testing their stability under perturbations or attacks \cite{deaguiarAssessingVulnerabilitiesDeep2023, lamprouEvaluationDeepLearning2024}. Selective prediction and calibration are typically discussed at the level of confidence scores, without integrating explanation quality into the decision process \cite{abbasExplainableAIClinical2025, delcorsoRobustClinicalAI2025}.
+
+Second, concept‑based methods such as TCAV are mostly used as post‑hoc analysis tools to study bias and model behaviour, rather than being integrated into the training objective. There is limited work on using concept‑based regularisation to reduce reliance on known artefacts or to encourage sensitivity to clinically meaningful patterns in medical imaging \cite{correaEfficientAdversarialDebiasing2024, kawaharaSevenPointChecklistDermatoscopy2019}.
+
+Third, there is a shortage of systematic studies that jointly quantify accuracy, robustness, explanation stability, concept reliance, and selective prediction behaviour for the same model family and dataset. Surveys repeatedly call for more holistic evaluation protocols that reflect realistic clinical demands rather than focusing on a single performance metric \cite{dongSurveyAdversarialAttack2025, apostolidisSurveyAdversarialDeep2021, abbasExplainableAIClinical2025}.
+
+This dissertation responds to these gaps by proposing and evaluating a tri‑objective training framework for skin lesion classification on ISIC 2018 with ResNet‑50. The framework combines standard task loss, TRADES‑based adversarial robustness, and a latent feature stability loss. It then uses TCAV with a dermoscopy concept bank to analyse reliance on medical concepts versus artefacts, and integrates explanation stability into a dual‑gating selective prediction module.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Methodology and Experimental Design}\label{Methodology and Experimental Design}
+This chapter describes how the models are trained and evaluated. It first introduces the tri‑objective loss that combines task performance, robustness, and explanation stability. It then explains the explanation objective, dataset preparation, model architecture, adversarial training, concept‑based analysis with TCAV, selective prediction, and the metrics used to measure success.
+
+\section{Tri-Objective Problem Formulation}
+For this project, a classifier \(f\theta : X \rightarrow Y\)  is trained to map input images  $x \in X$ (dermoscopy images) to class labels $y \in Y$ (skin lesion types). The goal is not only to predict labels correctly on clean images, but also to remain robust to adversarial perturbations and to produce stable explanations.
+
+These three requirements are combined into a single optimisation problem. Given a dataset \(D = {\{(x_i,y_i)\}}^{N}_{i=1}\), the model parameters $\theta$ are found by minimising a weighted sum of three loss terms:
+
+\[
+\theta^* = {arg} \min_{\theta} \Big[ \lambda_1 L_{\text{task}}(\theta) + \lambda_2 L_{\text{robust}}(\theta) + \lambda_3 L_{\text{explain}}(\theta).\Big]
+\]
+where:
+\begin{itemize}
+    \item \(L_{task}\) is the standard cross-entropy loss on clean images, measuring classification accuracy.
+    \item \(L_{robust}\) is the TRADES adversarial robustness loss, which penalises sensitivity to worst-case perturbations within an \(\ell_\infty\) ball (detailed in Section 3.5).
+    \item \(L_{explain}\) is the latent feature stability loss, which encourages the internal feature maps that underpin Grad‑CAM explanations to remain stable under adversarial perturbations.
+\end{itemize}
+
+The weights \(\lambda_{task},\lambda_{rob},\lambda_{expl} \geq 0\) control the trade-off between objectives. In the experiments, \(\lambda_{task} = 1.0\) is fixed, and \(\lambda_{rob}\) and \(\lambda_{expl}\) are selected based on validation performance.
+
+\textbf{Unlike approaches that treat robustness and explainability as separate post-hoc concerns, this formulation embeds both into training, allowing the model to learn features that are simultaneously discriminative, robust, and interpretable \cite{jyotiRobustnessExplanationsDeep2022, kolarikExplainabilityDeepLearning2022, grazianiDeepLearningInterpretability2023}}.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Explainability Objective}
+
+\subsection{Latent Feature Stability}
+A straightforward way to enforce explanation stability would be to directly penalise differences between saliency maps (such as gradients or Grad‑CAM heatmaps) for clean and adversarial images. However, this approach has two main drawbacks. First, computing and differentiating through saliency maps is computationally expensive because it often requires second‑order derivatives. Second, input gradients can be noisy and dominated by high‑frequency artefacts that are not meaningful for clinicians \cite{bhatiSurveyExplainableArtificial2024}.
+
+Instead, this project focuses on the stability of the internal feature maps that Grad‑CAM uses to construct explanations. Let \(\phi_{\theta}^{(L)} (x) \in \mathbb{R}^{C \times H \times W}\) denote the feature maps at the final convolutional layer \(L\) (Layer 4 for ResNet-50) for an input \(x\). An adversarial version of this image, $x_{adv}$, is created by a PGD attack within an $\ell_\infty$ ball of radius
+$\epsilon$ (see Section \ref{sec:adv-training}). The explanation loss is then defined over mini‑batches $B$ as:
+
+The explanation loss is defined as:
+\[L_{\text{explain}}(\theta) = \frac{1}{|B|} \sum_{(x, y) \in B}
+\left\| \,\overline{\phi_{\theta}^{(L)}(x)} - \overline{\phi_{\theta}^{(L)}(x_{\text{adv}})} \,\right\|_{2}^{2}\]
+
+where \(\bar{\phi}\) denotes the \(\ell_2\)-normalised feature maps along the channel dimension. Normalisation ensures that the loss focuses on alignment of feature directions rather than raw magnitude.
+
+This design has three advantages:
+
+1. \textbf{Efficiency}: Only requires standard forward passes and backward passes through the network.
+
+2. \textbf{Reduced noise}: Convolutional features at deep layers are smoother and more semantically meaningful than raw input gradients \cite{cuiApplicationQuantitativeInterpretability2025}.
+
+3. \textbf{Indirect explanation stability}: Since Grad‑CAM explanations are formed by a weighted combination of these feature maps, stabilising the features encourages the resulting heatmaps to change less under small perturbations. This is later verified with structural similarity (SSIM) between clean and adversarial Grad‑CAM maps.
+
+
+\subsection{Two-Phase Training Strategy}
+If all three loss terms are applied from the very start of training, there is a risk of gradient conflict. The model may try to satisfy stability constraints before it has learned useful features, leading to degenerate solutions such as focusing only on background regions. To avoid this, a simple two‑phase training schedule is used:
+
+\textbf{Phase 1 — Feature Learning (Epochs 1–10):}
+
+The model is trained with task and robustness losses only:
+\[L_{phase1} = \lambda_{task}L_{task} + \lambda_{rob}L_{robust},\] with \(\lambda_{expl} = 0\). This allows the network to learn discriminative and robust features without being constrained by explanation stability.
+
+\textbf{Phase 2 — Feature Alignment (Epochs 11–60):}
+
+The explanation loss is activated: \[(\lambda_{expl} > 0)\]. During this phase, the lower layers of ResNet‑50 (Layers 1–3) are frozen, and only the final convolutional block (Layer 4) and the classifier head remain trainable. This focuses the stability constraint on high‑level representations that drive Grad‑CAM, while preserving the low‑level features learned in Phase 1.
+
+This curriculum ensures that the model first learns what to explain, and only then learns to explain it in a stable way. Similar staged strategies have been recommended in work that links robustness and explanation regularisation \cite{chalasaniConciseExplanationsNeural}.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Dataset Preparation}
+This project focuses on dermoscopy images for skin lesion classification, using the ISIC 2018 challenge dataset as the main benchmark. Additional dermoscopy datasets are used only to construct concept banks for TCAV analysis (Section \ref{sec:tcav}), not for training the classifiers.
+
+\subsection{Datasets Used}
+This project uses the ISIC 2018 dermoscopy challenge dataset \cite{codellaSkinLesionAnalysis2018}.It consists of 10,015 dermoscopy images labelled into seven diagnostic categories:
+\begin{itemize}
+    \item Melanoma
+    \item Melanocytic nevus
+    \item Basal cell carcinoma
+    \item Actinic keratosis / Bowen’s disease
+    \item Benign keratosis
+    \item Dermatofibroma
+    \item Vascular lesion
+\end{itemize}
+The official training and validation splits provided by the challenge are used. The training set contains 7,013 images and the validation set contains 1,512 images. The remaining images form a held‑out test set, which is used only for final evaluation of the models.
+
+For concept‑based analysis with TCAV, additional dermoscopy images and labels from the Derm7pt dataset are used to define clinically meaningful concepts such as pigment network and blue‑white veil \cite{kawaharaSevenPointChecklistDermatoscopy2019}. These images are not used to train the classifier; they are only used to build concept banks.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Preprocessing Pipeline}
+All dermoscopy images follow the same preprocessing steps:
+
+1. \textbf{Resizing}: Images are resized to $224×224$ pixels to match the input size expected by ResNet-50.
+
+2. \textbf{Normalisation}: Pixel intensities are scaled to $[0,1]$ and then normalised using the ImageNet mean and standard deviation values (mean = [0.485, 0.456, 0.406], standard deviation = [0.229, 0.224, 0.225]).
+
+3. \textbf{Data Augmentation}: During training, random augmentations are applied using the Albumentations library \cite{buslaevAlbumentationsFastFlexible2020}:
+\begin{itemize}
+    \item Random horizontal flip (probability 0.5)
+    \item Rotation up to 20 degrees (probability 0.5)
+    \item Colour jitter affecting brightness, contrast
+    \item Gaussian noise (probability 0.3)
+\end{itemize}
+These augmentations improve generalisation by exposing the model to natural variations in pose, lighting, and minor acquisition differences.
+
+4. \textbf{Reproducibility} : All preprocessing steps are tracked using Data Version Control (DVC), including dataset versions, augmentation parameters, and file hashes. This allows the exact data state to be recovered later if needed.
+
+\subsection{Ethics and Data Provenance}
+All dermoscopy datasets used in this work (ISIC 2018 and Derm7pt) are publicly available and were released by their original creators under research‑use or open licences. The original providers obtained ethics approval and removed personally identifiable information before release. No new patient data were collected for this project, and no additional clinical data were linked to the images. As a result, no new ethics approval was required, in line with standard practice for secondary analysis of de‑identified public datasets \cite{abbasExplainableAIClinical2025}.
+
+Appendix A provides a summary of dataset licences, sources, and compliance information.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Model Architecture}
+All experiments use ResNet‑50 as the backbone classifier. ResNet‑50 is a 50‑layer convolutional neural network with residual connections, which help gradients propagate through the network and make deep models easier to train. ResNet architectures are widely used in medical imaging and have been shown to work well with saliency methods such as Grad‑CAM \cite{cuiApplicationQuantitativeInterpretability2025, bhatiSurveyExplainableArtificial2024}.
+
+For this project:
+\begin{itemize}
+    \item The network is initialised with ImageNet‑pretrained weights.
+    \item The final fully connected layer is replaced with a new layer that outputs seven logits, one per ISIC 2018 class.
+    \item Grad‑CAM explanations are computed from the final convolutional block (Layer 4), which provides a good balance between spatial resolution and high‑level semantics.
+    \item All models share a common training configuration, summarised in Table \ref{tab:train-config}.
+\end{itemize}
+\begin{table}[H]
+    \centering
+  \begin{tabular}{|l|l|}
+        \hline
+        Setting & Value \\
+        \hline
+        Input size & 224 \(\times\) 224 pixels \\\hline
+        Pretrained weights & ImageNet \\\hline
+        Optimizer & AdamW \\\hline
+        Learning rate & \(1 \times 10^{-4}\)\\\hline
+        Weight decay & \(1 \times 10^{-4}\)\\\hline
+        Betas & (0.9, 0.999) \\\hline
+        Scheduler & CosineAnnealingLR \\\hline
+        \(T_{\max}\) & 60 (max epochs) \\\hline
+        \(\eta_{\min}\) & \(1 \times 10^{-6}\)\\\hline
+        Warmup epochs & 5 \\\hline
+        Batch size & 32 \\\hline
+        Max epochs & 60 \\\hline
+        Early stopping patience & 15 epochs \\\hline
+        Gradient clipping & 1.0 (global norm) \\
+        \hline
+    \end{tabular}
+
+\caption{Common Training Settings}
+    \label{tab:train-config}
+\end{table}
+These values follow common practice in medical imaging and have been found to provide a stable training regime \cite{cuiApplicationQuantitativeInterpretability2025}.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Adversarial Training Algorithm}
+\label{sec:adv-training}
+
+To improve robustness, the model is trained using adversarial examples generated on the fly. The training follows the TRADES framework, which balances accuracy on clean images with robustness to bounded adversarial perturbations \cite{zhangTheoreticallyPrincipledTradeoff2019}.
+
+\subsection{Adversarial Example Generation}
+
+Adversarial examples are generated using multi-step \textbf{projected gradient descent (PGD)} under $\ell_{\infty}$ threath model. For each clean input $x$, the adversarial counterpart $x_{adv}$ is constructed by starting from a small random perturbation within the allowed $\ell_{\infty}$ ball and then iteratively updating the image to increase the TRADES loss:
+
+\[x_0 = x + \delta_0, \quad \delta_0 \sim \mathcal{U}(-\epsilon, \epsilon)
+\]
+\[
+x_{k+1} = \Pi_{\epsilon}\left(x_k + \alpha \cdot \text{sign}\left(\nabla_{x_k} L_{\text{TRADES}}\right)\right)
+\]
+
+where $\Pi_{B_\epsilon(x)}$ projects the perturbed image back into the $\ell_{\infty}$ ball of radius $\epsilon$ around $x$, and $\alpha$ is the PGD step size.
+
+The attack parameters are:
+\begin{itemize}
+    \item \textbf{Maximum perturbation ($\epsilon$)}: $8/255$ ($\approx 0.031$)
+    \item \textbf{Step size ($\alpha$)}: $2/255$ ($\approx 0.008$)
+    \item \textbf{PGD steps during training}: 7
+    \item \textbf{PGD steps during evaluation}: 20
+\end{itemize}
+Using fewer steps during training reduces computation, while using more steps during evaluation provides a stronger attack to test robustness \cite{madryTowardsDeepLearning2018, apostolidisSurveyAdversarialDeep2021}.
+
+\subsection{TRADES-Based Robustness Loss}
+
+The TRADES loss combines a standard classification term with a robustness term that penalises differences between the model’s output on clean and adversarial inputs \cite{zhangTheoreticallyPrincipledTradeoff2019}. For a mini‑batch $B$, it is defined as:
+
+\begin{equation}
+L_{\text{TRADES}} = \frac{1}{|B|} \sum_{(x,y) \in B} \left[ \text{CE}\left(f(x), y\right) + \beta \text{KL}\left(f(x) \parallel f(x_{\text{adv}})\right) \right]
+\end{equation}
+
+where CE is cross-entropy, and KL is the Kullback-Leibler divergence between predicted probability distributions, and $\beta$ is a regularisation parameter that controls the strength of robustness.
+
+In this project, $\beta = 6.0$ is a common choice in TRADESS studies that provides a good balance between clean accuracy and robustness \cite{zhangTheoreticallyPrincipledTradeoff2019}. The robustness loss $L_{\text{robust}}$ used in the tri-objective formulation fris defined as the batch‑averaged TRADES loss:
+\[L_{\text{robust}} = L_{\text{TRADES}}.\]
+The total training loss at each step is therefore:
+\begin{equation}
+L_{\text{total}} = \lambda_{\text{task}} \cdot L_{\text{task}} + \lambda_{\text{rob}} \cdot L_{\text{robust}} + \lambda_{\text{expl}} \cdot L_{\text{explain}}
+\end{equation}
+
+\subsection{Training Loop and Optimisation}
+
+Each model (ResNet-50, EfficientNet-B0, ViT-B16) is trained with the same optimisation setup:
+
+\begin{enumerate}
+    \item Sample a mini-batch of clean images and labels $(x, y)$
+    \item Generate adversarial images $x_{\text{adv}}$ using 7-step PGD with $\epsilon = 8/255$ and $\alpha = 2/255$
+    \item Compute $L_{\text{task}}$ on clean images using cross entropy, $L_{\text{robust}}$ using TRADES loss with $\beta = 6.0$, and $L_{\text{explain}}$ from the latent feature stability term
+    \item Form $L_{\text{total}}$ with the current weights and backpropagate.
+    \item Clip the global gradient norm to 1.0 for stability.
+    \item Update the model parameter using AdamW
+    \item Step the CosineAnnealingLR scheduler
+\end{enumerate}
+
+During evaluation, robustness is measured by attacking the trained model with 20‑step PGD using the same $\epsilon$ and $\alpha$. This follows the standard recommendation that evaluation attacks should be at least as strong as, and usually stronger than, the attacks used during training \cite{apostolidisSurveyAdversarialDeep2021}.
+
+To improve reproducibility, all experiments are repeated with three different random seeds (42, 123, 456). PyTorch’s deterministic options are enabled where possible so that data loading and training behaviour are as consistent as the hardware allows.
+are consistent across runs.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Concept Bank and TCAV Analysis}
+\label{sec:tcav}
+
+To understand whether the model’s robustness and explanations are driven by clinically relevant features or by artefacts, this project uses Testing with Concept Activation Vectors (TCAV) \cite{kimInterpretabilityBeyondFeature2018}.
+
+\subsection{Concept Bank Construction}
+A concept bank is built from dermoscopy images that exhibit specific visual patterns. Two broad types of concepts are defined:
+
+\textbf{Medical concepts}: dermoscopic structures associated with diagnosis, such as:
+\begin{itemize}
+    \item Pigment network
+    \item Blue‑white veil
+    \item Asymmetry
+    \item Dots and globules
+\end{itemize}
+These are sourced from images and annotations in the Derm7pt dataset, which encodes the seven‑point checklist used in clinical dermoscopy \cite{kawaharaSevenPointChecklistDermatoscopy2019}.
+
+\textbf{Artifact concepts}: non‑diagnostic features that are known sources of bias, such as:
+\begin{itemize}
+    \item Ruler marks
+    \item Hair occlusion
+    \item Ink markings
+    \item Black image borders
+\end{itemize}
+These are collected by cropping or selecting patches from ISIC and related dermoscopy images where such artefacts are clearly visible.
+
+For each concept, a set of positive examples (patches containing the concept) and a matching set of random patches that do not contain the concept are stored in a structured directory (for example, $data/concepts/dermoscopy/medical/pigment network, .../artifacts/ruler$). A fixed number of patches per concept (for example, 50–100) is targeted to ensure a balanced concept dataset.
+
+\subsection{TCAV Computation}
+TCAV measures how sensitive the model’s prediction for a given class is to a specific concept. The procedure used in this project is:
+
+1. \textbf{Activation extraction}: For each concept $C$, pass the positive and random patches through the trained ResNet‑50 and extract activations from the final convolutional layer (Layer 4). Global average pooling is applied to obtain one feature vector per patch.
+
+2. \textbf{Concept Activation Vector (CAV):} Train a linear classifier (e.g. a linear SVM or logistic regression) to distinguish concept activations from random activations. The normal vector of the decision boundary defines the Concept Activation Vector $v_C$ in the latent space.
+
+3. \textbf{Directional derivative}: For a set of test images belonging to class
+$k$, compute the directional derivative of the class logit $f_k(x)$ along $v_C$:
+\[S_C(x) = \nabla _ h(x) f_k(x) \cdot v_C,\]
+where $h(x)$ are the activations at the chosen layer. This indicates whether increasing the presence of concept $C$ would increase the logit for class $k$.
+
+4. \textbf{TCAV score:} The TCAV score for concept $C$ and class $k$ is the fraction of test images where the directional derivative is positive:
+
+\[TCAV(C,k) = \frac{1}{|X_k|}|\{x \in X_k : S_C(x) > 0\}| \]
+
+High TCAV scores for medical concepts suggest that the model relies on clinically meaningful patterns, while high TCAV scores for artefact concepts suggest shortcut learning \cite{correaEfficientAdversarialDebiasing2024}. In this project, TCAV is used as an evaluation tool only; it does not enter the training loss. Comparisons between the baseline, TRADES, and tri‑objective models show how the tri‑objective training affects concept reliance.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Selective Prediction Module}
+In clinical practice, a model should be able to refuse a prediction when it is not confident or when its explanation is unstable. This project implements a dual‑gating selective prediction module that uses both predictive confidence and explanation stability.
+
+\subsection{Decision Function}
+For an input $x$, the model produces class probabilities $p(y|x)$ via softmax and a Grad‑CAM heatmap for the predicted class. A second heatmap is computed for a locally perturbed version $x'$ of the same image (for example, a lightly noised or adversarially perturbed version). Let
+$SSIM (H(x),H(x'))$ denote the structural similarity between the two heatmaps.
+
+The model accepts a prediction only if both of the following conditions are met:
+
+1. \textbf{Confidence condition}: $\max_k P(y=k|x) \geq \tau_{conf}$.
+
+2. \textbf{Stability Threshold}: $SSIM (H(x),H(x')) \geq \tau_{stab}$.
+
+Formally:
+\[
+\text{Decision}(x) = \begin{cases} \arg\max_k P(y=k|x) & \text{if } \max P > \tau_{conf} \text{ AND } \text{SSIM} > \tau_{stab} \\ \text{Abstain} & \text{otherwise} \end{cases}
+\]
+This design follows recent work showing that explanation instability is a useful signal for detecting adversarial manipulation and other abnormal inputs \cite{deaguiarAssessingVulnerabilitiesDeep2023, deaguiarRADARMIXHowUncover2024}. By requiring both high confidence and stable explanations, the system aims to reject cases where predictions are likely to be unreliable.
+
+\subsection{Threshold Selection}
+The thresholds $\tau_{conf} and\tau_{stab}$ are chosen using the validation set. A grid search is performed over reasonable ranges (for example, $\tau_{conf} \in [0.5,0.99], \tau_{stab} \in [0.5,0.95]$, and combinations that achieve a target coverage (such as 90\%) while maximising selective accuracy are selected.
+
+This procedure reflects a realistic clinical setting: the hospital or clinic can decide how much coverage is needed and how much risk is acceptable, and the thresholds can be tuned accordingly \cite{abbasExplainableAIClinical2025, delcorsoRobustClinicalAI2025}. In the experiments, the behaviour of the selective prediction module is analysed by plotting risk (error rate) as a function of coverage.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Evaluation Metrics}
+This section summarises the metrics used to evaluate the three main objectives: task performance, adversarial robustness, and explanation and safety properties.
+
+\subsection{Task Performance and Robustness}
+\begin{itemize}
+    \item \textbf{Accuracy:}The proportion of correctly classified images on the clean test set:
+    \[Accuracy = \frac{1}{n}\sum_{i=1}^{N}1\{\hat{y}_i = y_i\}\]
+    \item \textbf{AUROC (macro):}
+    Area under the Receiver Operating Characteristic curve, averaged across classes. This reflects the model’s ability to rank positive examples above negatives, independent of a fixed threshold.
+    \item \textbf{Robust Accuracy:} Accuracy on adversarial examples generated by PGD-20 ($\epsilon=8/255$). This measures how well the model maintains performance under a strong, white‑box attack \cite{apostolidisSurveyAdversarialDeep2021}.
+    \item \textbf{Clean–robust trade‑off (harmonic mean):}
+    To summarise the balance between clean and robust performance, the harmonic mean $H$ of clean accuracy $A_{clean}$ and robust accuracy $A
+_{rob}$ is reported:
+\[H = \frac{2 A_{clean}A_{rob}}{A_{clean} + A_{rob}}.\]
+    \item \textbf{Calibration:} Expected Calibration Error (ECE) compares the model’s confidence with its actual accuracy across confidence bins. It is computed as:
+    \[ECE = \sum_{m=1}^{M}\frac{|B_m|}{N}|acc(B_m) - conf(B_m)|,\]
+    where $B_m$ is the set of predictions whose confidence falls into bin $m$, $acc(B_m)$ is the accuracy in that bin, and $conf(B_m)$ is the mean confidence. Lower ECE indicates better calibration \cite{abbasExplainableAIClinical2025}.
+\end{itemize}
+
+\subsection{Explanation Quality}
+\begin{itemize}
+    \item \textbf{Explanation Stability (SSIM):}
+    For each test image, the SSIM between clean and adversarial Grad‑CAM heatmaps is computed. SSIM values are averaged across the test set:
+    \[Stability = \frac{1}{N} \sum_{i=1}^{N}SSIM(H(x_i), H(x_i^{adv})).\]
+    Higher values indicate that explanations change less under adversarial perturbations \cite{deaguiarAssessingVulnerabilitiesDeep2023}.
+    \item \textbf{Concept Resilience (TCAV Scores):}For each model and for selected classes (for example, melanoma), TCAV scores are computed for medical and artefact concepts as described in Section \ref{sec:tcav}. The mean TCAV scores for medical concepts and artefact concepts are compared across models to see whether tri‑objective training shifts reliance towards clinically meaningful features \cite{kimInterpretabilityBeyondFeature2018, correaEfficientAdversarialDebiasing2024}.
+\end{itemize}
+Where relevant, additional attribution metrics such as deletion and insertion AUC can also be computed, but the main focus is on stability and concept sensitivity.
+
+\subsection{Clinical Safety and Safety Prediction}
+\begin{itemize}
+    \item \textbf{Selective accuracy at fixed coverage:} For a given pair of thresholds $\tau_{conf}, \tau_{stab}$ the coverage (fraction of samples not rejected) and accuracy on accepted samples are computed. Improvements in selective accuracy over overall accuracy indicate that the selective mechanism is successfully filtering out high‑risk cases.
+    \item \textbf{Risk–coverage curve:}Risk (error rate on accepted samples) is plotted as a function of coverage by sweeping the thresholds. A good selective prediction system achieves low risk at reasonably high coverage \cite{delcorsoRobustClinicalAI2025}.
+    \item \textbf{Rejection quality:} The error rate on rejected samples is compared to the error rate on accepted samples. A high ratio indicates that rejected cases are indeed more difficult or unreliable. When attacks are present, the proportion of adversarial examples that are rejected is also reported, indicating how well the dual‑gating mechanism acts as a safety filter \cite{deaguiarRADARMIXHowUncover2024}.
+\end{itemize}
+Together, these metrics provide a comprehensive view of how the tri‑objective training framework affects not only accuracy and robustness, but also explanation stability, concept reliance, and the safety of the final decision‑making process.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Results and Discussion}\label{res n disc}
+\section{Experimental Setup}
+All experiments were conducted using a consistent hardware and software environment to ensure reproducibility.
+
+\subsection{Implementation Details}
+\textbf{Hardware \& Software:}
+Development, unit testing, and code verification were performed on a local workstation equipped with an NVIDIA RTX 3050 GPU. All intensive model training and evaluation tasks were executed on Google Colab Pro+ instances using an NVIDIA A100 GPU (40GB VRAM).
+
+The software stack was built on PyTorch 2.x with CUDA 12.8 support. Key libraries included Albumentations 2.0.8 for image augmentation, Torchmetrics 1.8.2 for standardized evaluation, and TIMM 1.0.22 for model architectures. Experiment tracking was managed via logging training curves and sample visualizations.
+
+\textbf{Training Protocol:}
+As described in Chapter 3, the Tri-Objective model follows a two-phase training schedule:
+
+\begin{itemize}
+    \item \textbf{Phase 1 (Epochs 1–10):} The model is initialized with ImageNet weights and trained with the TRADES adversarial objective ($\lambda_{rob} > 0, \lambda_{expl}=0$). This warm-up phase allows the network to learn robust features without the constraint of explanation stability.
+    \item \textbf{Phase 2 (Epochs 11–60):} The explanation stability loss is activated ($\lambda_{expl}=0.2$), and the curriculum freezes the lower backbone layers (Layers 1–3). Only the final convolutional block (Layer 4) and the classifier head remain trainable, focusing the optimization on aligning high-level semantic features.
+\end{itemize}
+
+All models were optimized using AdamW with a learning rate of $1 \times 10^{-4}$, weight decay of $1 \times 10^{-4}$, and a cosine annealing scheduler ($T_{max}=60$).
+
+\subsection{Baselines for Comparison}
+To rigorously evaluate the contributions of the proposed framework, we compare three distinct model configurations:
+
+1. \textbf{Standard Baseline (Phase 3):} A ResNet-50 model trained purely with Cross-Entropy loss on clean images. This represents the typical "high-accuracy, low-robustness" model often found in medical imaging literature.
+
+\begin{itemize}
+    \item \textit{Objective}: $\min L_{task}$
+    \item \textit{Status:} High clean accuracy (>90\%), but expected to be vulnerable to attacks.
+\end{itemize}
+
+2. \textbf{Robust Baseline - TRADES (Phase 5):} A ResNet-50 model trained with the TRADES objective ($\beta=6.0$) but without the explanation stability term. This serves as the state-of-the-art baseline for adversarial robustness.
+
+\begin{itemize}
+    \item \textit{Objective}: $\min (L_{task} + \lambda_{rob} L_{robust})$
+    \item \textit{Status}: Lower clean accuracy (~65%) due to the robustness trade-off, but high resistance to PGD attacks.
+\end{itemize}
+
+3. \textbf{Tri-Objective Model (Phase 7 - Ours):} The proposed method, which adds the latent feature stability term to the TRADES objective.
+
+\begin{itemize}
+    \item \textit{Objective}: $\min (L_{task} + 0.3 \cdot L_{robust} + 0.2 \cdot L_{explain})$
+    \item \textit{Configuration}: Uses temperature scaling ($T=1.5$) and label smoothing (0.1) to further improve calibration and stability.
+\end{itemize}
+
+Comparisons are conducted on the ISIC 2018 test set for both clean and adversarially perturbed inputs (PGD-20, $\epsilon=8/255$).
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{Conclusion and Future Work}\label{conc n fw}
+
+Main conclusions of your project. Here you should also include suggestions for future work.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\appendix
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\chapter{First Appendix}
+
+\section{Dataset Compliance}
+
+\begin{table} [H]
+\centering
+\begin{tabular}{|>{\raggedright\arraybackslash}p{0.15\linewidth}|>{\centering\arraybackslash}p{0.12\linewidth}|>{\raggedright\arraybackslash}p{0.6\linewidth}|}
+\hline
+\textbf{Dataset} & \textbf{Licence} & \textbf{Source URL} \\
+\hline
+
+\hline
+ISIC 2018 (HAM10000) & CC BY-NC 4.0 & \url{https://challenge.isic-archive.com/data/#2018} \\
+\hline
+ISIC 2019 & CC BY-NC 4.0 & \url{https://challenge.isic-archive.com/data/#2019} \\
+\hline
+ISIC 2020 & CC BY-NC 4.0 & \url{https://challenge.isic-archive.com/data/#2020}\\
+\hline
+Derm7pt & Academic/
+Research use & \url{https://derm.cs.sfu.ca/Welcome.html}\\
+\hline
+NIH ChestX-ray14 & Public Domain (CC0) & \url{https://www.kaggle.com/datasets/nih-chest-xrays/data} \\
+\hline
+PadChest (Sample) & CC BY-NC-SA 4.0 & \url{https://www.kaggle.com/datasets/raddar/padchest-chest-xrays-sample}\\
+\hline
+\end{tabular}
+\end{table}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\chapter{Second Appendix}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Print bibliography at the end
+\printbibliography[title=References]
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
