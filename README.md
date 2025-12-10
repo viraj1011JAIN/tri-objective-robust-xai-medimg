@@ -2411,12 +2411,13 @@ This project is licensed under the **MIT License** - see [LICENSE](LICENSE) for 
 
 **Viraj Pankaj Jain**
 MSc Computing Science, University of Glasgow
-📧 Email: [your-email@glasgow.ac.uk](mailto:your-email@glasgow.ac.uk)
-🔗 LinkedIn: [linkedin.com/in/viraj-jain](https://linkedin.com/in/viraj-jain)
-🐙 GitHub: [github.com/virajjain](https://github.com/virajjain)
+📧 Email: [virajjain1011@gmail.com](mailto:virajjain1011@gmail.com)
+🔗 LinkedIn: [linkedin.com/in/virajjain1011](https://www.linkedin.com/in/virajjain1011/)
+🐙 GitHub: [github.com/viraj1011JAIN](https://github.com/viraj1011JAIN)
+📦 Project Repository: [tri-objective-robust-xai-medimg](https://github.com/viraj1011JAIN/tri-objective-robust-xai-medimg)
 
 **Issues & Questions:**
-- Open an issue on GitHub: [github.com/virajjain/tri-objective-xai/issues](https://github.com/virajjain/tri-objective-xai/issues)
+- Open an issue on GitHub: [github.com/viraj1011JAIN/tri-objective-robust-xai-medimg/issues](https://github.com/viraj1011JAIN/tri-objective-robust-xai-medimg/issues)
 - For sensitive inquiries, email directly
 
 ---
