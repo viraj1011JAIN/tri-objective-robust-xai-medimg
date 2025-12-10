@@ -63,11 +63,20 @@ import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+# Add project root to path
+project_root = Path(__file__).parent.parent.parent
+sys.path.insert(0, str(project_root))
+
+# Disable albumentations version check
+os.environ["NO_ALBUMENTATIONS_UPDATE"] = "1"
+
+import albumentations as A
 import mlflow
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from albumentations.pytorch import ToTensorV2
 from torch.cuda.amp import GradScaler, autocast
 from torch.optim import AdamW, Optimizer
 from torch.optim.lr_scheduler import CosineAnnealingLR, _LRScheduler
@@ -85,7 +94,7 @@ from src.utils.config import ExperimentConfig, load_experiment_config
 from src.utils.mlflow_utils import init_mlflow
 from src.utils.reproducibility import get_reproducibility_state, set_global_seed
 from src.xai.gradcam import GradCAM
-from src.xai.stability import compute_ssim_stability
+from src.xai.stability_metrics import SSIM
 
 # Configure logging
 logging.basicConfig(
@@ -176,6 +185,7 @@ class TriObjectiveTrainer:
         mixed_precision: bool = True,
         checkpoint_dir: str = "checkpoints/tri_objective",
         log_interval: int = 10,
+        cavs_data: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Initialize the tri-objective trainer."""
         self.config = config
@@ -190,6 +200,7 @@ class TriObjectiveTrainer:
         self.checkpoint_dir = Path(checkpoint_dir)
         self.checkpoint_dir.mkdir(parents=True, exist_ok=True)
         self.log_interval = log_interval
+        self.cavs_data = cavs_data
 
         # Initialize tri-objective loss
         self.tri_objective_loss = self._create_tri_objective_loss()
@@ -209,6 +220,7 @@ class TriObjectiveTrainer:
             model=model,
             target_layer=self._get_target_layer(),
         )
+        self.ssim = SSIM(reduction="mean")  # For explanation stability
         self.pgd_val = PGD(
             epsilon=config.validation.adversarial_eval.attack.epsilon,
             num_steps=config.validation.adversarial_eval.attack.num_steps,
@@ -243,7 +255,52 @@ class TriObjectiveTrainer:
             label_smoothing=self.config.loss.task_loss.label_smoothing,
         )
 
-        return TriObjectiveLoss(config=loss_config)
+        # Extract CAVs if provided
+        artifact_cavs = None
+        medical_cavs = None
+
+        if self.cavs_data is not None:
+            logger.info("Loading CAVs from checkpoint...")
+            cavs = self.cavs_data.get("cavs", {})
+
+            # Separate artifact and medical CAVs (convert numpy to torch)
+            artifact_cavs = [
+                torch.from_numpy(cav_data["vector"]).float()
+                for cav_name, cav_data in cavs.items()
+                if cav_data.get("type") == "artifact"
+            ]
+            medical_cavs = [
+                torch.from_numpy(cav_data["vector"]).float()
+                for cav_name, cav_data in cavs.items()
+                if cav_data.get("type") == "medical"
+            ]
+
+            logger.info(f"✓ Loaded {len(artifact_cavs)} artifact CAVs")
+            logger.info(f"✓ Loaded {len(medical_cavs)} medical CAVs")
+
+            # Log CAV details
+            for cav_name, cav_data in cavs.items():
+                acc = cav_data.get("accuracy", 0.0)
+                cav_type = cav_data.get("type", "unknown")
+                logger.info(f"  - {cav_name} ({cav_type}): accuracy={acc:.3f}")
+        else:
+            logger.warning(
+                "⚠️  No CAVs provided! TCAV component of explanation loss will be disabled. "
+                "To enable TCAV (H2.2-H2.4), train CAVs first:\n"
+                "    python scripts/training/train_cavs_for_training.py \\\n"
+                "        --data_dir data/processed/isic2018 \\\n"
+                "        --model_checkpoint checkpoints/baseline/seed_42/best.pt \\\n"
+                "        --output_dir checkpoints/cavs\n"
+                "Then pass --cavs-checkpoint checkpoints/cavs/trained_cavs.pt"
+            )
+
+        return TriObjectiveLoss(
+            config=loss_config,
+            model=self.model,
+            num_classes=self.config.model.num_classes,
+            artifact_cavs=artifact_cavs,
+            medical_cavs=medical_cavs,
+        )
 
     def _get_target_layer(self) -> nn.Module:
         """Get the target layer for GradCAM.
@@ -321,7 +378,7 @@ class TriObjectiveTrainer:
             logger.info(f"{'='*80}\n")
 
             # MLflow logging
-            if self.config.logging.use_mlflow:
+            if hasattr(self.config, "logging") and self.config.logging.use_mlflow:
                 self._log_epoch_metrics(train_metrics, val_metrics, epoch)
 
             # Checkpoint management
@@ -523,8 +580,8 @@ class TriObjectiveTrainer:
                 if num_samples < 100:  # Evaluate on first 100 samples
                     cams_clean = self.gradcam(images, labels)
                     cams_adv = self.gradcam(images_adv, labels)
-                    ssim = compute_ssim_stability(cams_clean, cams_adv)
-                    metrics["ssim_mean"] += ssim.mean().item() * batch_size
+                    ssim = self.ssim(cams_clean, cams_adv)
+                    metrics["ssim_mean"] += ssim.item() * batch_size
 
                 # Update metrics
                 metrics["loss_total"] += loss_dict["total"].item() * batch_size
@@ -682,7 +739,7 @@ class TriObjectiveTrainer:
             accuracy: Batch accuracy.
             batch_idx: Current batch index.
         """
-        if not self.config.logging.use_mlflow:
+        if not hasattr(self.config, "logging") or not self.config.logging.use_mlflow:
             return
 
         step = self.global_step
@@ -718,7 +775,7 @@ class TriObjectiveTrainer:
             val_metrics: Validation metrics for the epoch.
             epoch: Current epoch number.
         """
-        if not self.config.logging.use_mlflow:
+        if not hasattr(self.config, "logging") or not self.config.logging.use_mlflow:
             return
 
         # Training metrics
@@ -802,7 +859,12 @@ class TriObjectiveTrainer:
             logger.info(f"Best checkpoint saved: {checkpoint_path}")
 
             # Log to MLflow
-            if self.config.logging.use_mlflow and self.config.logging.log_best_model:
+            if (
+                hasattr(self.config, "logging")
+                and self.config.logging.use_mlflow
+                and hasattr(self.config.logging, "log_best_model")
+                and self.config.logging.log_best_model
+            ):
                 mlflow.pytorch.log_model(self.model, "best_model")
 
         if self.config.training.save_last:
@@ -838,20 +900,44 @@ def create_data_loaders(
 
     logger.info("Creating data loaders...")
 
+    # Create transforms
+    IMAGENET_MEAN = (0.485, 0.456, 0.406)
+    IMAGENET_STD = (0.229, 0.224, 0.225)
+
+    image_size = config.dataset.image_size
+
+    train_transforms = A.Compose(
+        [
+            A.RandomResizedCrop(size=(image_size, image_size), scale=(0.8, 1.0)),
+            A.HorizontalFlip(p=0.5),
+            A.VerticalFlip(p=0.5),
+            A.Rotate(limit=20, p=0.5),
+            A.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, p=0.5),
+            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+            ToTensorV2(),
+        ]
+    )
+
+    val_transforms = A.Compose(
+        [
+            A.Resize(height=image_size, width=image_size),
+            A.Normalize(mean=IMAGENET_MEAN, std=IMAGENET_STD),
+            ToTensorV2(),
+        ]
+    )
+
     # Training dataset
     train_dataset = ISICDataset(
         root=config.dataset.root,
         split="train",
-        image_size=config.dataset.image_size,
-        augment=True,
+        transforms=train_transforms,
     )
 
     # Validation dataset
     val_dataset = ISICDataset(
         root=config.dataset.root,
         split="val",
-        image_size=config.dataset.image_size,
-        augment=False,
+        transforms=val_transforms,
     )
 
     # Test dataset (optional)
@@ -860,8 +946,7 @@ def create_data_loaders(
         test_dataset = ISICDataset(
             root=config.dataset.root,
             split="test",
-            image_size=config.dataset.image_size,
-            augment=False,
+            transforms=val_transforms,
         )
     except Exception as e:
         logger.warning(f"Test dataset not available: {e}")
@@ -946,6 +1031,12 @@ def main() -> None:
         default=None,
         help="Path to checkpoint to resume from",
     )
+    parser.add_argument(
+        "--cavs-checkpoint",
+        type=str,
+        default=None,
+        help="Path to trained CAVs checkpoint (enables TCAV in explanation loss)",
+    )
     args = parser.parse_args()
 
     # Load configuration
@@ -961,8 +1052,45 @@ def main() -> None:
     set_global_seed(config.reproducibility.seed)
     logger.info(f"Random seed set to: {config.reproducibility.seed}")
 
-    # Initialize MLflow
-    if config.logging.use_mlflow:
+    # Load CAVs if provided
+    cavs_data = None
+    if args.cavs_checkpoint:
+        logger.info(f"Loading CAVs from: {args.cavs_checkpoint}")
+        try:
+            # PyTorch 2.6+ requires weights_only=False for numpy arrays
+            cavs_data = torch.load(
+                args.cavs_checkpoint, map_location="cpu", weights_only=False
+            )
+            logger.info("✅ CAVs loaded successfully")
+
+            # Log CAV metadata
+            if "metadata" in cavs_data:
+                metadata = cavs_data["metadata"]
+                logger.info(f"CAV training info:")
+                for concept_name, info in metadata.items():
+                    logger.info(
+                        f"  - {concept_name}: "
+                        f"accuracy={info['accuracy']:.3f}, "
+                        f"type={info['type']}"
+                    )
+        except Exception as e:
+            logger.error(f"Failed to load CAVs: {e}")
+            logger.warning("Continuing without CAVs (TCAV will be disabled)")
+            cavs_data = None
+    else:
+        logger.warning(
+            "⚠️  No CAVs checkpoint provided! "
+            "TCAV component (H2.2-H2.4) will be disabled. "
+            "To enable TCAV, first train CAVs:\n"
+            "    python scripts/training/train_cavs_for_training.py \\\n"
+            "        --data_dir data/processed/isic2018 \\\n"
+            "        --model_checkpoint checkpoints/baseline/seed_42/best.pt \\\n"
+            "        --output_dir checkpoints/cavs\n"
+            "Then add: --cavs-checkpoint checkpoints/cavs/trained_cavs.pt"
+        )
+
+    # Initialize MLflow (if logging config exists)
+    if hasattr(config, "logging") and config.logging.use_mlflow:
         init_mlflow(
             experiment_name=config.logging.mlflow_experiment_name,
             run_name=(
@@ -1034,13 +1162,20 @@ def main() -> None:
         device=config.training.device,
         mixed_precision=config.training.mixed_precision,
         checkpoint_dir=str(checkpoint_dir),
-        log_interval=config.logging.log_interval,
+        log_interval=(
+            getattr(config.logging, "log_interval", 10)
+            if hasattr(config, "logging")
+            else 10
+        ),
+        cavs_data=cavs_data,  # Pass CAVs to trainer
     )
 
     # Resume from checkpoint if provided
     if args.resume:
         logger.info(f"Resuming from checkpoint: {args.resume}")
-        checkpoint = torch.load(args.resume, map_location=config.training.device, weights_only=False)
+        checkpoint = torch.load(
+            args.resume, map_location=config.training.device, weights_only=False
+        )
         model.load_state_dict(checkpoint["model_state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
         if checkpoint["scheduler_state_dict"]:
@@ -1073,7 +1208,7 @@ def main() -> None:
         logger.error(f"Training failed with error: {e}", exc_info=True)
         raise
     finally:
-        if config.logging.use_mlflow:
+        if hasattr(config, "logging") and config.logging.use_mlflow:
             mlflow.end_run()
 
 

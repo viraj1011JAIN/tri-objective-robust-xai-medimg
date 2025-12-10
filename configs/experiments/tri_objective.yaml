@@ -66,7 +66,7 @@ model:
 # Dataset configuration
 dataset:
   name: "isic2018"
-  root: "/content/drive/MyDrive/data/processed/isic2018"
+  root: "data/processed/isic2018"
   batch_size: 32  # Optimized for 4GB GPU (RTX 3050)
   num_workers: 0  # Disabled for Windows compatibility
   pin_memory: true

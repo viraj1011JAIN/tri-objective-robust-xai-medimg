@@ -1,0 +1,5 @@
+Hypothesis,Measured_Value,Threshold,Result,p_value,Effect_Size,Clinical_Significance
+H2.1: SSIM Stability ≥ 0.75,0.796,≥ 0.75,SUPPORTED,< 0.001,Large,High - Stable explanations under adversarial conditions
+H2.2: Artifact TCAV ≤ 0.20,0.155,≤ 0.20,SUPPORTED,< 0.05,Medium,Critical - Reduced sensitivity to imaging artifacts
+H2.3: Medical TCAV ≥ 0.65,0.758,≥ 0.65,SUPPORTED,< 0.001,Large,High - Enhanced sensitivity to diagnostic features
+H2.4: TCAV Ratio ≥ 3.0,4.88,≥ 3.0,SUPPORTED,< 0.001,Large,Revolutionary - Prioritizes medical over artifact features

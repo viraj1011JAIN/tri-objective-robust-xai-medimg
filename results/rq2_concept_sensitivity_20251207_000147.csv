@@ -1,0 +1,9 @@
+Concept,Type,Baseline_TCAV,TriObjective_TCAV,Change,Performance,Direction,Meets_Threshold
+Dark Borders,Artifact,0.187,0.169,-0.019,↓ Better,Lower is Better,✓
+Ruler Artifacts,Artifact,0.245,0.103,-0.142,↓ Better,Lower is Better,✓
+Hair Occlusion,Artifact,0.223,0.207,-0.016,↓ Better,Lower is Better,✗
+Ink Marks,Artifact,0.210,0.143,-0.067,↓ Better,Lower is Better,✓
+Asymmetry,Medical,0.673,0.752,+0.078,↑ Better,Higher is Better,✓
+Pigment Network,Medical,0.673,0.759,+0.086,↑ Better,Higher is Better,✓
+Blue White Veil,Medical,0.659,0.779,+0.120,↑ Better,Higher is Better,✓
+Irregular Borders,Medical,0.780,0.742,-0.038,↓ Worse,Higher is Better,✓
