@@ -309,7 +309,7 @@ class TestConceptBank:
         assert "TRAINING CONCEPT ACTIVATION VECTORS" in captured.out
         assert "CAV TRAINING SUMMARY" in captured.out
 
-    def test_save_and_load_cavs(self, concept_root, simple_model, device):
+    def test_save_and_load_cavs(self, concept_root, simple_model, device, capsys):
         """Test saving and loading CAVs."""
         cav_path = concept_root / "cavs.pth"
         bank = ConceptBank(str(concept_root), str(cav_path))
@@ -331,6 +331,10 @@ class TestConceptBank:
         for concept in bank.cavs:
             np.testing.assert_array_equal(bank2.cavs[concept], bank.cavs[concept])
             assert bank2.cav_accuracies[concept] == bank.cav_accuracies[concept]
+
+        # Check that load message was printed
+        captured = capsys.readouterr()
+        assert "Loaded" in captured.out and "CAVs" in captured.out
 
     def test_load_cavs_file_not_found(self, tmp_path):
         """Test error when loading non-existent CAV file."""
@@ -453,7 +457,9 @@ class TestEdgeCases:
 
         tcav.cleanup()
 
-    def test_concept_bank_load_prints_message(self, concept_root, simple_model, device, capsys):
+    def test_concept_bank_load_prints_message(
+        self, concept_root, simple_model, device, capsys
+    ):
         """Test that load_cavs prints confirmation message."""
         cav_path = concept_root / "cavs.pth"
         bank = ConceptBank(str(concept_root), str(cav_path))
@@ -467,7 +473,10 @@ class TestEdgeCases:
         bank2.load_cavs()
 
         captured = capsys.readouterr()
-        assert "Loaded 7 CAVs" in captured.out
+        # Check for the key parts of the message (checkmark may not render consistently)
+        assert "Loaded" in captured.out
+        assert "7 CAVs" in captured.out
+        assert str(cav_path) in captured.out
 
     def test_compute_tcav_score_with_gradients(self, simple_model, device):
         """Test TCAV score computation covers gradient code paths."""

@@ -201,16 +201,20 @@ class TCAV:
             if self.activations is None:  # type: ignore[attr-defined]
                 raise RuntimeError("Activations not captured by hook")
 
-            activations = self.activations.clone().detach().requires_grad_(True)            # Compute gradient of logit w.r.t. activations
+            activations = (
+                self.activations.clone().detach().requires_grad_(True)
+            )  # Compute gradient of logit w.r.t. activations
             # ∇_a S_c(x) for each example
             for i in range(batch_size):
                 if activations.grad is not None:  # pragma: no cover
                     # Note: This branch is difficult to test due to PyTorch hook limitations
                     # Activations captured by hooks don't maintain computation graph
                     activations.grad.zero_()
-                    
+
                 # Re-compute logit from activations for gradient
-                target_logits[i].backward(retain_graph=True if i < batch_size - 1 else False)
+                target_logits[i].backward(
+                    retain_graph=True if i < batch_size - 1 else False
+                )
 
                 # Get gradient if available
                 if activations.grad is not None:  # pragma: no cover
@@ -373,7 +377,7 @@ class ConceptBank:
         if not self.cav_save_path.exists():
             raise FileNotFoundError(f"CAV file not found: {self.cav_save_path}")
 
-        save_dict = torch.load(self.cav_save_path)
+        save_dict = torch.load(self.cav_save_path, weights_only=False)
 
         self.cavs = save_dict["cavs"]
         self.cav_accuracies = save_dict["accuracies"]

@@ -38,6 +38,40 @@ class TestValidationModuleImports:
         assert TemperatureScaledScorer is not None
         assert compute_confidence_metrics is not None
 
+    def test_stability_scorer_imports(self):
+        """Test that stability scoring components are always available."""
+        from src.validation import (
+            SSIMStabilityScorer,
+            StabilityMethod,
+            StabilityScore,
+            StabilityScorer,
+        )
+
+        # Verify all are imported and not None
+        assert SSIMStabilityScorer is not None
+        assert StabilityMethod is not None
+        assert StabilityScore is not None
+        assert StabilityScorer is not None
+
+    def test_threshold_tuner_imports(self):
+        """Test that threshold tuning components are always available."""
+        from src.validation import (
+            ThresholdConfig,
+            ThresholdTuner,
+            TuningObjective,
+            TuningResult,
+            compare_strategies,
+            tune_thresholds_for_dataset,
+        )
+
+        # Verify all are imported and not None
+        assert ThresholdConfig is not None
+        assert ThresholdTuner is not None
+        assert TuningObjective is not None
+        assert TuningResult is not None
+        assert compare_strategies is not None
+        assert tune_thresholds_for_dataset is not None
+
     def test_validator_imports_when_available(self):
         """Test that validator components import when module exists."""
         # If the module exists, these should be available
@@ -246,13 +280,14 @@ class TestValidationConditionalImports:
         # Save original modules
         original_validator = sys.modules.get("src.validation.tri_objective_validator")
         original_curves = sys.modules.get("src.validation.training_curves")
+        original_validation = sys.modules.get("src.validation")
 
-        # Prevent imports
+        # Prevent imports - this will cause ImportError when try blocks execute
         sys.modules["src.validation.tri_objective_validator"] = None
         sys.modules["src.validation.training_curves"] = None
 
         try:
-            # Force reimport - this should trigger lines 41 and 56
+            # Remove validation module to force fresh import
             if "src.validation" in sys.modules:
                 del sys.modules["src.validation"]
 
@@ -263,7 +298,7 @@ class TestValidationConditionalImports:
             assert "ConfidenceScore" in src.validation.__all__
 
             # These shouldn't be in __all__ if imports failed
-            # (this tests that lines 75 and 93 are NOT executed)
+            # (this tests that lines 93 and 111 are NOT executed)
             if not src.validation._HAS_VALIDATOR:
                 assert "TriObjectiveValidator" not in src.validation.__all__
             if not src.validation._HAS_CURVES:
@@ -282,9 +317,89 @@ class TestValidationConditionalImports:
             elif "src.validation.training_curves" in sys.modules:
                 del sys.modules["src.validation.training_curves"]
 
+            # Restore validation module
+            if original_validation is not None:
+                sys.modules["src.validation"] = original_validation
+            elif "src.validation" in sys.modules:
+                del sys.modules["src.validation"]
+
             # Reimport to restore normal state
+            import src.validation
+
+    def test_force_validator_import_error(self):
+        """Force ImportError in validator import to cover except block."""
+        import sys
+
+        # Save original
+        original_validator = sys.modules.get("src.validation.tri_objective_validator")
+        original_validation = sys.modules.get("src.validation")
+
+        # Block the import
+        sys.modules["src.validation.tri_objective_validator"] = None
+
+        try:
+            # Delete validation module to force re-execution of import
             if "src.validation" in sys.modules:
                 del sys.modules["src.validation"]
+
+            # This should trigger the except ImportError block at line 59
+            import src.validation as val_module
+
+            # Verify the except block was executed
+            assert hasattr(val_module, "_HAS_VALIDATOR")
+            assert val_module._HAS_VALIDATOR == False  # Line 59 executed
+
+        finally:
+            # Restore
+            if original_validator is not None:
+                sys.modules["src.validation.tri_objective_validator"] = (
+                    original_validator
+                )
+            elif "src.validation.tri_objective_validator" in sys.modules:
+                del sys.modules["src.validation.tri_objective_validator"]
+
+            if original_validation is not None:
+                sys.modules["src.validation"] = original_validation
+            elif "src.validation" in sys.modules:
+                del sys.modules["src.validation"]
+
+            import src.validation
+
+    def test_force_curves_import_error(self):
+        """Force ImportError in training_curves import to cover except block."""
+        import sys
+
+        # Save original
+        original_curves = sys.modules.get("src.validation.training_curves")
+        original_validation = sys.modules.get("src.validation")
+
+        # Block the import
+        sys.modules["src.validation.training_curves"] = None
+
+        try:
+            # Delete validation module to force re-execution of import
+            if "src.validation" in sys.modules:
+                del sys.modules["src.validation"]
+
+            # This should trigger the except ImportError block at line 74
+            import src.validation as val_module
+
+            # Verify the except block was executed
+            assert hasattr(val_module, "_HAS_CURVES")
+            assert val_module._HAS_CURVES == False  # Line 74 executed
+
+        finally:
+            # Restore
+            if original_curves is not None:
+                sys.modules["src.validation.training_curves"] = original_curves
+            elif "src.validation.training_curves" in sys.modules:
+                del sys.modules["src.validation.training_curves"]
+
+            if original_validation is not None:
+                sys.modules["src.validation"] = original_validation
+            elif "src.validation" in sys.modules:
+                del sys.modules["src.validation"]
+
             import src.validation
 
     def test_all_dynamic_building_with_all_modules(self):
@@ -297,16 +412,60 @@ class TestValidationConditionalImports:
         assert "ConfidenceScore" in src.validation.__all__
 
         # If optional modules are available, check they're included
-        # This tests that lines 75 and 93 are executed when modules are present
+        # This tests that lines 93 and 111 are executed when modules are present
         if src.validation._HAS_VALIDATOR:
+            # Line 93 executed - __all__.extend called for validator
             assert "TriObjectiveValidator" in src.validation.__all__
             assert "ValidationMetrics" in src.validation.__all__
             assert "DEFAULT_TARGETS" in src.validation.__all__
 
         if src.validation._HAS_CURVES:
+            # Line 111 executed - __all__.extend called for curves
             assert "TrainingCurvePlotter" in src.validation.__all__
             assert "TrainingHistory" in src.validation.__all__
             assert "METRIC_COLORS" in src.validation.__all__
+
+    def test_ensure_all_extend_for_validator(self):
+        """Ensure the __all__.extend() for validator is called when module available."""
+        import src.validation
+
+        # If the module actually exists and was imported
+        if src.validation._HAS_VALIDATOR:
+            # These should all be in __all__ (line 93-107 executed)
+            expected_exports = [
+                "TriObjectiveValidator",
+                "ValidationMetrics",
+                "ValidationResult",
+                "ValidationStatus",
+                "ObjectiveType",
+                "ConvergenceAnalyzer",
+                "ConvergenceAnalysis",
+                "MultiSeedAggregator",
+                "create_validator",
+                "DEFAULT_TARGETS",
+                "BASELINE_VALUES",
+            ]
+            for export in expected_exports:
+                assert export in src.validation.__all__, f"{export} not in __all__"
+
+    def test_ensure_all_extend_for_curves(self):
+        """Ensure the __all__.extend() for curves is called when module available."""
+        import src.validation
+
+        # If the module actually exists and was imported
+        if src.validation._HAS_CURVES:
+            # These should all be in __all__ (line 111-121 executed)
+            expected_exports = [
+                "TrainingCurvePlotter",
+                "TrainingHistory",
+                "create_plotter",
+                "PUBLICATION_STYLE",
+                "OBJECTIVE_COLORS",
+                "METRIC_COLORS",
+                "SEED_COLORS",
+            ]
+            for export in expected_exports:
+                assert export in src.validation.__all__, f"{export} not in __all__"
 
 
 class TestValidationModuleStructure:
@@ -349,15 +508,27 @@ class TestValidationModuleStructure:
     def test_reimport_stability(self):
         """Test that module can be reimported without issues."""
         import importlib
+        import sys
 
-        import src.validation
+        # Ensure module is in sys.modules before attempting reload
+        if "src.validation" not in sys.modules:
+            import src.validation
+
+        # Get the module from sys.modules
+        validation_module = sys.modules["src.validation"]
+
+        # Save initial state
+        initial_all = list(validation_module.__all__)
 
         # Should be able to reload without errors
-        importlib.reload(src.validation)
+        reloaded = importlib.reload(validation_module)
 
-        # Basic checks still work
-        assert hasattr(src.validation, "__all__")
-        assert "ConfidenceMethod" in src.validation.__all__
+        # Basic checks still work after reload
+        assert hasattr(reloaded, "__all__")
+        assert "ConfidenceMethod" in reloaded.__all__
+
+        # __all__ should be same length (consistent behavior)
+        assert len(reloaded.__all__) == len(initial_all)
 
 
 class TestValidationModuleIntegration:

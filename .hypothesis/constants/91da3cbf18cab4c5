@@ -1,0 +1,4 @@
+# file: C:\Users\Dissertation\tri-objective-robust-xai-medimg\src\xai\tcav_production.py
+# hypothesis_version: 6.148.3
+
+[0.0, 0.224, 0.225, 0.229, 0.3, 0.406, 0.456, 0.485, 0.7, 1.0, 255.0, 224, 5000, '\nArtifacts:', '\nMedical:', '*.jpg', '=', 'CAV TRAINING SUMMARY', 'accuracies', 'artifact_concepts', 'artifacts', 'asymmetry', 'black_borders', 'blue_white_veil', 'cavs', 'hair', 'ink_marks', 'medical', 'medical_concepts', 'pigment_network', 'random', 'ruler', '⚠', '✓']
