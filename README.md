@@ -1109,6 +1109,176 @@ tri-objective-xai/
 - **opencv-python 4.10.0.84:** Image processing
 - **Pillow 11.0.0:** Image I/O
 
+---
+
+## 💾 Google Drive Resources
+
+Due to the large size of datasets, model checkpoints, and experimental results, all project artifacts are hosted on Google Drive for easy access and reproducibility.
+
+### 📂 Available Resources
+
+<table>
+<tr>
+<th width="25%">Resource</th>
+<th width="50%">Description</th>
+<th width="25%">Google Drive Link</th>
+</tr>
+<tr>
+<td><b>🎯 Model Checkpoints</b></td>
+<td>
+• Baseline models (3 seeds)<br>
+• TRADES adversarial models<br>
+• Tri-objective models (best performing)<br>
+• EfficientNet & ResNet variants<br>
+• Includes .pt files with optimizer states
+</td>
+<td>
+<a href="https://drive.google.com/drive/folders/1Qz0GquVWMfIzobkrztzMEnRIRd32k_JT?usp=sharing">
+📁 checkpoints/
+</a>
+</td>
+</tr>
+<tr>
+<td><b>📓 Colab Notebooks</b></td>
+<td>
+• Phase 3-10 execution notebooks<br>
+• Cloud-ready versions with GPU support<br>
+• Complete experimental pipeline<br>
+• Pre-configured environments<br>
+• One-click reproducibility
+</td>
+<td>
+<a href="https://drive.google.com/drive/folders/1MD6Kv7m3alQJul2xQhcJyxc8lBV_yXvx?usp=sharing">
+📁 Colab Notebooks/
+</a>
+</td>
+</tr>
+<tr>
+<td><b>📊 Raw Datasets</b></td>
+<td>
+• ISIC 2018/2019/2020 (dermoscopy)<br>
+• NIH Chest X-ray (112,120 images)<br>
+• PadChest X-ray dataset<br>
+• Derm7pt with metadata<br>
+• Original unprocessed images
+</td>
+<td>
+<a href="https://drive.google.com/drive/folders/1xHCaCOg6dMJc2-QbnoRTNb7Zkfq6i_Ex?usp=sharing">
+📁 data/raw/
+</a>
+</td>
+</tr>
+<tr>
+<td><b>⚡ Processed Datasets</b></td>
+<td>
+• DVC-tracked preprocessed data<br>
+• HDF5 optimized formats<br>
+• Train/Val/Test splits (70/15/15)<br>
+• Augmented concept banks<br>
+• Ready for immediate training
+</td>
+<td>
+<a href="https://drive.google.com/drive/folders/1KnDH1vVfDl1FJ1SOnxwfGQ0y2AIxMI0N?usp=sharing">
+📁 data/processed/
+</a>
+</td>
+</tr>
+<tr>
+<td><b>📈 Experimental Results</b></td>
+<td>
+• Phase 9A: Robustness evaluation<br>
+• Phase 9C: Cross-site generalization<br>
+• Phase 10: Ablation study<br>
+• CSV metrics, plots (PDF/PNG)<br>
+• MLflow tracking logs
+</td>
+<td>
+<a href="https://drive.google.com/drive/folders/1_D1PQol0yDn07GpFfyqvL6yZStdbTldS?usp=sharing">
+📁 results/
+</a>
+</td>
+</tr>
+</table>
+
+### 📥 How to Use
+
+**Option 1: Direct Download (Recommended for Quick Access)**
+
+1. Click on the Google Drive links above
+2. Download the folders you need
+3. Place them in your local project directory:
+   ```bash
+   tri-objective-robust-xai-medimg/
+   ├── checkpoints/        # From Google Drive
+   ├── data/
+   │   ├── raw/           # From Google Drive
+   │   └── processed/     # From Google Drive
+   └── results/           # From Google Drive
+   ```
+
+**Option 2: Using DVC (Recommended for Full Reproducibility)**
+
+```bash
+# Configure DVC remote to Google Drive
+dvc remote add -d gdrive gdrive://1KnDH1vVfDl1FJ1SOnxwfGQ0y2AIxMI0N
+
+# Pull all data
+dvc pull
+
+# Verify data integrity
+dvc status
+```
+
+**Option 3: Mount in Google Colab**
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+
+# Access resources
+import sys
+sys.path.append('/content/drive/MyDrive/tri-objective-xai')
+
+# Load checkpoint
+checkpoint = torch.load('/content/drive/MyDrive/checkpoints/tri_objective/best.pt')
+```
+
+### 📦 Dataset Sizes
+
+| Resource | Size | Files | Download Time (100 Mbps) |
+|----------|------|-------|--------------------------|
+| **Raw Datasets** | ~45 GB | ~130,000 images | ~60 minutes |
+| **Processed Datasets** | ~12 GB | HDF5 files | ~15 minutes |
+| **Checkpoints** | ~3.5 GB | 15 models | ~5 minutes |
+| **Results** | ~800 MB | CSV, plots, logs | ~2 minutes |
+| **Colab Notebooks** | ~50 MB | 10 notebooks | <1 minute |
+| **TOTAL** | **~61 GB** | - | **~80 minutes** |
+
+### ⚠️ Important Notes
+
+1. **Storage Requirements**: Ensure you have at least **100 GB** free space before downloading
+2. **Dataset Licenses**: Review individual dataset licenses before use (see [License](#-license) section)
+3. **Google Drive Quota**: Large downloads may hit Google Drive quota limits; use institutional accounts if available
+4. **Verification**: Always verify MD5 checksums after download (included in DVC files)
+5. **Privacy**: All datasets are publicly available and de-identified; no patient PII included
+
+### 🔄 Keeping Resources Updated
+
+The Google Drive folders are synchronized with the latest experimental runs. To get the most recent updates:
+
+```bash
+# Pull latest checkpoints and results
+dvc pull checkpoints results
+
+# Verify versions match
+dvc status
+git log --oneline -n 5
+```
+
+For issues accessing Google Drive resources, please [open an issue](https://github.com/viraj1011JAIN/tri-objective-robust-xai-medimg/issues) on GitHub.
+
+---
+
 ### **Hardware Requirements**
 
 **Minimum:**
